@@ -37,3 +37,6 @@ tsconfig.tsbuildinfo
 # Configuração local do Claude Code.
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+
+# Scripts temporários de teste.
+scripts/*.tmp.ts

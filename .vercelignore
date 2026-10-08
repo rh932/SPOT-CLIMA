@@ -29,3 +29,6 @@
 .next-*
 tsconfig.tsbuildinfo
 coverage
+
+# Scripts temporários de teste.
+scripts/*.tmp.ts
