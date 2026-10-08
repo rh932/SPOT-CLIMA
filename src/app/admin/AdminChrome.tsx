@@ -39,6 +39,7 @@ const GRUPOS = [
     itens: [
       { href: '/admin/employees', label: 'Avaliação de Experiência' },
       { href: '/admin/evaluations', label: 'Histórico de Avaliações' },
+      { href: '/admin/indicadores', label: 'Indicadores da Experiência' },
       { href: '/admin/trainings', label: 'Treinamentos' },
       { href: '/admin/trainings/report', label: 'Relatório de Treinamentos' },
       { href: '/admin/action-plans', label: 'Plano de Ação' },
