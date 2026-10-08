@@ -68,6 +68,7 @@ function Acesso({ u }: { u: AccessUser }) {
         Já entrou
       </span>
       <span className="text-xs text-spot-gray-500">último acesso {quando(u.lastLoginAt!)}</span>
+      {u.mfaEnabledAt && <span className="text-xs text-spot-gray-500">verificação em duas etapas ligada</span>}
     </span>
   );
 }
@@ -139,6 +140,23 @@ export default function UsersPage() {
     }
   };
 
+  // Quem perdeu o celular e os códigos de recuperação: volta a entrar só com a senha.
+  const zerarDuasEtapas = async (u: AccessUser) => {
+    if (!(await confirmar({
+      titulo: `Desligar a verificação em duas etapas de "${u.name}"?`,
+      texto: 'Use quando a pessoa perdeu o celular e os códigos de recuperação. Ela entra só com a senha e pode ligar de novo.',
+      acao: 'Desligar',
+      perigo: true,
+    }))) return;
+    try {
+      await apiFetch(`/api/admin/admins/${u.id}/mfa-reset`, { method: 'POST' });
+      mostrar(`Verificação em duas etapas de ${u.name.split(' ')[0]} desligada.`);
+      await reload();
+    } catch (err) {
+      mostrar(err instanceof Error ? err.message : 'Não foi possível desligar.');
+    }
+  };
+
   const acoes = (u: AccessUser) => (
     <div className="flex flex-wrap gap-2">
       <button type="button" className="btn-ghost text-xs py-1.5 px-3" onClick={() => copiarMensagem(u)} aria-label={`Copiar a mensagem de acesso de ${u.name}`}>
@@ -147,6 +165,11 @@ export default function UsersPage() {
       <button type="button" className="btn-ghost text-xs py-1.5 px-3" onClick={() => setEditando(u)} aria-label={`Editar ${u.name}`}>
         Editar
       </button>
+      {u.mfaEnabledAt && u.id !== data?.meuId && (
+        <button type="button" className="btn-ghost text-xs py-1.5 px-3" onClick={() => zerarDuasEtapas(u)} aria-label={`Desligar a verificação em duas etapas de ${u.name}`}>
+          Desligar 2 etapas
+        </button>
+      )}
       {u.id !== data?.meuId && (
         <button type="button" className="btn-ghost text-xs py-1.5 px-3 text-spot-danger" onClick={() => excluir(u)} aria-label={`Excluir ${u.name}`}>
           Excluir

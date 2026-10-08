@@ -18,7 +18,9 @@
     "db:seed-training": "tsx scripts/seed-training-forms.ts",
     "db:studio": "drizzle-kit studio",
     "db:set-password": "node scripts/update-admin-password.mjs",
-    "db:backup": "node scripts/backup-db.mjs"
+    "db:backup": "node scripts/backup-db.mjs",
+    "db:decrypt-backup": "node scripts/decrypt-backup.mjs",
+    "db:reset-mfa": "node scripts/reset-mfa.mjs"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
@@ -30,6 +32,7 @@
     "next": "14.2.35",
     "pg": "^8.13.0",
     "playwright-core": "^1.48.0",
+    "qrcode": "^1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "recharts": "2.15.4",
@@ -40,6 +43,7 @@
     "@types/bcryptjs": "2.4.6",
     "@types/node": "20.16.11",
     "@types/pg": "^8.11.10",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "18.3.11",
     "@types/react-dom": "18.3.0",
     "@types/web-push": "^3.6.4",

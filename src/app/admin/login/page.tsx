@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LoginCover } from '@/components/auth/LoginCover';
 import { FirstAccessForm } from '@/components/auth/FirstAccessForm';
+import { MfaStepForm } from '@/components/auth/MfaStepForm';
 import { goAfterLogin } from '@/lib/loginRedirect';
 import { parseFirstAccessHash } from '@/lib/userAccess';
 
@@ -22,6 +23,8 @@ function AdminLoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Conta com verificação em duas etapas: depois da senha, pede o código do app.
+  const [segundaEtapa, setSegundaEtapa] = useState(false);
   // Primeiro acesso de conta do RH: mesmo fluxo do portal dos gestores.
   const [primeiro, setPrimeiro] = useState<{ email: string; code: string } | null>(null);
   useEffect(() => {
@@ -44,6 +47,12 @@ function AdminLoginForm() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? 'Falha no login.');
+      if (body.mfaRequired) {
+        setSegundaEtapa(true);
+        setPassword('');
+        setLoading(false);
+        return;
+      }
       // Navegação de documento, não router.push — ver goAfterLogin().
       // `loading` fica ligado de propósito: a página está saindo.
       goAfterLogin(params.get('next'), '/admin');
@@ -58,11 +67,16 @@ function AdminLoginForm() {
       eyebrow="Painel administrativo"
       title="Clima e pessoas, num lugar só"
       description="Pesquisas de clima, resultados, planos de ação, relatórios e configuração do sistema. Acesso de RH e Super Admin."
-      sheetTitle={primeiro ? 'Primeiro acesso' : 'Entrar'}
+      sheetTitle={primeiro ? 'Primeiro acesso' : segundaEtapa ? 'Verificação em duas etapas' : 'Entrar'}
       sheetSubtitle={primeiro ? 'Crie a sua senha para usar o painel.' : 'Área administrativa — RH e Super Admin.'}
       abrir={Boolean(primeiro)}
     >
-      {primeiro ? (
+      {segundaEtapa ? (
+        <MfaStepForm
+          onSuccess={() => goAfterLogin(params.get('next'), '/admin')}
+          onBack={() => setSegundaEtapa(false)}
+        />
+      ) : primeiro ? (
         <FirstAccessForm
           key={`${primeiro.email}|${primeiro.code}`}
           initialEmail={primeiro.email}

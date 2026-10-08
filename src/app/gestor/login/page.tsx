@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LoginCover } from '@/components/auth/LoginCover';
 import { FirstAccessForm } from '@/components/auth/FirstAccessForm';
+import { MfaStepForm } from '@/components/auth/MfaStepForm';
 import { goAfterLogin } from '@/lib/loginRedirect';
 import { parseFirstAccessHash } from '@/lib/userAccess';
 
@@ -22,6 +23,8 @@ function GestorLoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Conta com verificação em duas etapas: depois da senha, pede o código do app.
+  const [segundaEtapa, setSegundaEtapa] = useState(false);
   // Primeiro acesso: a pessoa cria a própria senha com o código do RH.
   const [primeiro, setPrimeiro] = useState<{ email: string; code: string } | null>(null);
 
@@ -47,6 +50,12 @@ function GestorLoginForm() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? 'Falha no login.');
+      if (body.mfaRequired) {
+        setSegundaEtapa(true);
+        setPassword('');
+        setLoading(false);
+        return;
+      }
       // Navegação de documento, não router.push — ver goAfterLogin().
       goAfterLogin(params.get('next'), '/gestor');
     } catch (err) {
@@ -60,12 +69,17 @@ function GestorLoginForm() {
       eyebrow="Avaliações e Treinamentos"
       title="A sua equipe, do primeiro dia em diante"
       description="Avaliações de 45 e 90 dias, feedbacks e treinamentos dos colaboradores dos seus setores, unidades e turno — com o prazo de cada ciclo à vista."
-      sheetTitle={primeiro ? 'Primeiro acesso' : 'Entrar'}
+      sheetTitle={primeiro ? 'Primeiro acesso' : segundaEtapa ? 'Verificação em duas etapas' : 'Entrar'}
       sheetSubtitle={primeiro ? 'Crie a sua senha para usar o portal.' : 'Acesso de Gestor, Gestor Líder, Treinador e Super Admin.'}
       abrir={Boolean(primeiro)}
       acaoSecundaria={{ rotulo: 'Primeiro acesso? Criar minha senha', onClick: () => setPrimeiro({ email, code: '' }) }}
     >
-      {primeiro ? (
+      {segundaEtapa ? (
+        <MfaStepForm
+          onSuccess={() => goAfterLogin(params.get('next'), '/gestor')}
+          onBack={() => setSegundaEtapa(false)}
+        />
+      ) : primeiro ? (
         <FirstAccessForm
           key={`${primeiro.email}|${primeiro.code}`}
           initialEmail={primeiro.email}

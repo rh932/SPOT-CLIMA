@@ -9,6 +9,20 @@
       "autoPort": true
     },
     {
+      "name": "spot-clima-local",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "-p", "3010"],
+      "port": 3010,
+      "env": {
+        "DATABASE_URL": "postgresql://postgres:postgres@127.0.0.1:5433/postgres?sslmode=disable",
+        "DEMO_ADMIN_EMAIL": "admin@teste.local",
+        "DEMO_ADMIN_PASSWORD": "TesteLocal#2026",
+        "NEXT_PUBLIC_APP_URL": "http://localhost:3010",
+        "CRON_SECRET": "cron-local-de-teste-com-mais-de-32-caracteres",
+        "PG_POOL_MAX": "1"
+      }
+    },
+    {
       "name": "spot-clima-build-auditoria",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "start", "-p", "3099"],

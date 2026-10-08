@@ -30,6 +30,8 @@ export interface AccessUser {
   lastLoginAt: string | null;
   /** Enquanto a conta nunca entrou: o código para a pessoa criar a própria senha. */
   firstAccessCode?: string | null;
+  /** Quando a pessoa ligou a verificação em duas etapas (nulo = desligada). */
+  mfaEnabledAt?: string | null;
 }
 
 export type AccessFilter = '' | 'PENDENTE' | 'ENTROU' | 'INATIVO';

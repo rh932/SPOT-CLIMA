@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/apiClient';
 import { ActionButton, ErrorState, LiveStatus, SkeletonForm, useToast } from '@/components/async';
+import { MfaSettingsCard } from '@/components/admin/MfaSettingsCard';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, unknown>>({});
@@ -150,6 +151,8 @@ export default function SettingsPage() {
               Faixas fixas definidas no briefing do sistema. Para alterar, edite <code>src/lib/calculations.ts</code>.
             </p>
           </div>
+
+          <MfaSettingsCard />
 
           {/* Os usuários ganharam uma aba própria, com busca, filtros e o controle de primeiro acesso. */}
           <Link href="/admin/users" className="card flex items-center justify-between gap-3 hover:bg-spot-gray-50 transition">

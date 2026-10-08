@@ -1,28 +1,36 @@
 /**
- * Dump periódico do banco (somente leitura).
+ * Dump periódico do banco (somente leitura), comprimido e criptografado.
  *
- * Substitui o passo manual do README (`pg_dump` + `date` em bash), que não
- * funciona no PowerShell e exige o cliente PostgreSQL instalado. Usa o
- * driver `pg` já existente no projeto.
+ * Usa o driver `pg` já existente no projeto (o PowerShell não tem pg_dump).
  *
- * - Lê DATABASE_URL do .env
- * - Escreve um SQL data-only em backups/ (fora do git)
+ * - Lê DATABASE_URL e BACKUP_PASSPHRASE do .env
+ * - Grava FORA da pasta do projeto (BACKUP_DIR; padrão: Documentos\spot-clima-backups),
+ *   para o dump nunca subir num deploy nem entrar numa cópia da pasta
+ * - Cifra com AES-256-GCM enquanto gera (scripts/backupCrypto.mjs): o SQL em
+ *   texto puro nunca toca o disco
+ * - Confere o arquivo depois de gravar: decifra e compara o hash com o gerado
+ * - Mantém só os BACKUP_KEEP mais recentes (padrão 30)
  * - Nunca sobrescreve um dump anterior (timestamp no nome)
  * - Não imprime a connection string nem o conteúdo das linhas
  *
  * Uso: npm run db:backup
+ * Agendado: scripts/agendar-backup.ps1 (tarefa diária do Windows)
  *
  * Restaurar (banco já migrado, vazio ou truncado):
- *   psql "$DATABASE_URL" -f backups/spot-clima-YYYYMMDD-HHMMSS.sql
+ *   npm run db:decrypt-backup -- <arquivo.sql.gz.enc> <saida.sql>
+ *   psql "$DATABASE_URL" -f <saida.sql>    (apague o .sql depois)
  */
 import 'dotenv/config';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import pg from 'pg';
+import { EXTENSION, createEncryptedWriter, getPassphrase, hashDecrypted } from './backupCrypto.mjs';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const BATCH = 200;
-const OUT_DIR = path.join(process.cwd(), 'backups');
+const OUT_DIR = process.env.BACKUP_DIR || path.join(os.homedir(), 'Documents', 'spot-clima-backups');
+const KEEP = Math.max(1, Number.parseInt(process.env.BACKUP_KEEP || '30', 10) || 30);
 
 if (!DATABASE_URL) {
   console.error('DATABASE_URL não encontrado no .env.');
@@ -111,9 +119,21 @@ async function orderedTables(client) {
   return ordered;
 }
 
+/** Apaga os backups cifrados mais antigos, mantendo os KEEP mais recentes. */
+function applyRetention() {
+  const files = fs
+    .readdirSync(OUT_DIR)
+    .filter((f) => f.startsWith('spot-clima-') && f.endsWith(EXTENSION))
+    .sort(); // o timestamp no nome ordena do mais antigo para o mais novo
+  const excess = files.slice(0, Math.max(0, files.length - KEEP));
+  for (const f of excess) fs.unlinkSync(path.join(OUT_DIR, f));
+  if (excess.length > 0) console.log(`Retenção: ${excess.length} backup(s) antigo(s) removido(s), ${KEEP} mantido(s).`);
+}
+
 async function main() {
+  const passphrase = getPassphrase();
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const file = path.join(OUT_DIR, `spot-clima-${stamp()}.sql`);
+  const file = path.join(OUT_DIR, `spot-clima-${stamp()}${EXTENSION}`);
   if (fs.existsSync(file)) {
     console.error(`Arquivo já existe: ${file}`);
     process.exit(1);
@@ -121,13 +141,14 @@ async function main() {
 
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 1 });
   const client = await pool.connect();
-  const out = fs.createWriteStream(file, { encoding: 'utf8' });
+  const enc = createEncryptedWriter(file, passphrase);
+  const out = enc.input;
 
   const write = (chunk) =>
     new Promise((resolve, reject) => {
       const onError = (err) => reject(err);
       out.once('error', onError);
-      if (out.write(chunk)) {
+      if (out.write(chunk, 'utf8')) {
         out.off('error', onError);
         resolve();
       } else {
@@ -180,19 +201,23 @@ async function main() {
 
     await write('COMMIT;\n');
     await client.query('COMMIT');
-    await new Promise((resolve, reject) => {
-      out.end((err) => (err ? reject(err) : resolve()));
-    });
+    const plainHash = await enc.finish();
+
+    // Conferência: o arquivo gravado precisa decifrar de volta para o mesmo SQL.
+    if ((await hashDecrypted(file, passphrase)) !== plainHash) {
+      throw new Error('O arquivo cifrado não confere com o que foi gerado.');
+    }
 
     const bytes = fs.statSync(file).size;
-    console.log(`Backup gravado: ${path.relative(process.cwd(), file)} (${bytes} bytes, ${totalRows} linhas, ${tables.length} tabelas)`);
+    console.log(`Backup gravado e conferido: ${file} (${bytes} bytes cifrados, ${totalRows} linhas, ${tables.length} tabelas)`);
+    applyRetention();
   } catch (err) {
     try {
       await client.query('ROLLBACK');
     } catch {
       // ignore
     }
-    out.destroy();
+    enc.abort();
     try {
       fs.unlinkSync(file);
     } catch {

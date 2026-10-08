@@ -60,6 +60,7 @@ describe('autorização em toda rota', () => {
       'src/app/api/auth/login/route.ts',
       'src/app/api/auth/logout/route.ts',
       'src/app/api/auth/me/route.ts',
+      'src/app/api/auth/mfa/verify/route.ts',
       'src/app/api/cron/feedback-reminders/route.ts',
       'src/app/api/public/responses/route.ts',
       'src/app/api/public/surveys/[id]/route.ts',

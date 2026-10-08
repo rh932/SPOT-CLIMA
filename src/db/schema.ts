@@ -138,6 +138,20 @@ export const admins = pgTable('admins', {
   // O escopo de um GESTOR/GESTOR_LIDER (unidades, setores e turnos) mora
   // inteiro nas tabelas adminUnits/adminSectors/adminShifts — vários de cada.
   // SUPER_ADMIN/RH não têm escopo (enxergam tudo pelo painel admin).
+  /**
+   * Verificação em duas etapas (TOTP, app autenticador). Opcional por conta;
+   * quando ativa, vale nos dois portais. Os segredos ficam cifrados com uma
+   * chave derivada do AUTH_SECRET (src/lib/secretBox.ts): uma cópia do banco
+   * sozinha não gera códigos. Ver src/lib/mfa.ts.
+   * - mfaPendingSecret: segredo gerado na configuração, ainda não confirmado.
+   * - mfaLastStep: último passo de 30 s aceito — o mesmo código não entra duas vezes.
+   * - mfaRecoveryCodes: HMAC dos códigos de recuperação ainda não usados.
+   */
+  mfaSecret: text('mfa_secret'),
+  mfaPendingSecret: text('mfa_pending_secret'),
+  mfaEnabledAt: timestamp('mfa_enabled_at'),
+  mfaLastStep: integer('mfa_last_step'),
+  mfaRecoveryCodes: jsonb('mfa_recovery_codes'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
@@ -423,9 +437,41 @@ export const surveys = pgTable('surveys', {
   suggestedNextSurvey: timestamp('suggested_next_survey'),
   duplicatedFromId: text('duplicated_from_id'),
   sourceTemplateId: text('source_template_id'),
+  /**
+   * Exige um código de participação de uso único (survey_access_codes) para
+   * responder. Desligado por padrão: a pesquisa continua aberta como antes até
+   * o RH gerar os códigos e ligar a chave.
+   */
+  requireAccessCode: boolean('require_access_code').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+/**
+ * Códigos de participação de uso único.
+ *
+ * Sem código, a pesquisa pública aceita qualquer envio: alguém podia mandar
+ * respostas falsas para um setor pequeno e, subtraindo, descobrir o que um
+ * colega respondeu. Com código, cada papelzinho entregue na loja vale UMA
+ * resposta.
+ *
+ * Anonimato: esta tabela NÃO aponta para a resposta, e a resposta NÃO aponta
+ * para o código. Só fica registrado que o código foi usado (usedAt, no dia,
+ * sem hora). O código em si nunca é gravado: só o HMAC dele, e o texto aparece
+ * uma única vez, na planilha baixada no momento em que é gerado.
+ */
+export const surveyAccessCodes = pgTable('survey_access_codes', {
+  id: id(),
+  surveyId: text('survey_id').notNull().references(() => surveys.id, { onDelete: 'cascade' }),
+  codeHash: text('code_hash').notNull(),
+  // Lote de geração — para o RH saber quantos códigos saíram em cada impressão.
+  batch: integer('batch').notNull().default(1),
+  usedOn: timestamp('used_on'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  codeHashIdx: uniqueIndex('survey_access_codes_code_hash_idx').on(table.codeHash),
+  surveyIdIdx: index('survey_access_codes_survey_id_idx').on(table.surveyId),
+}));
 
 export const questions = pgTable('questions', {
   id: id(),
@@ -439,6 +485,12 @@ export const questions = pgTable('questions', {
   // Só usados quando type === 'SCALE' (escala numérica genérica, ex. 1 a 10).
   scaleMin: integer('scale_min'),
   scaleMax: integer('scale_max'),
+  /**
+   * Pergunta de eNPS ("De 0 a 10, quanto você recomendaria o Spot como lugar
+   * para trabalhar?"). É uma SCALE 0–10 comum na tela e na resposta; a marca só
+   * diz aos resultados para calcular o eNPS (% promotores − % detratores).
+   */
+  isEnps: boolean('is_enps').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   surveyIdIdx: index('questions_survey_id_idx').on(table.surveyId),
@@ -499,6 +551,7 @@ export const templateQuestions = pgTable('template_questions', {
   active: boolean('active').notNull().default(true),
   scaleMin: integer('scale_min'),
   scaleMax: integer('scale_max'),
+  isEnps: boolean('is_enps').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   templateIdIdx: index('template_questions_template_id_idx').on(table.templateId),
@@ -786,6 +839,7 @@ export const systemSettings = pgTable('system_settings', {
 
 export const surveysRelations = relations(surveys, ({ many, one }) => ({
   questions: many(questions),
+  accessCodes: many(surveyAccessCodes),
   responses: many(surveyResponses),
   actionPlans: many(actionPlans),
   snapshot: one(surveySnapshots, { fields: [surveys.id], references: [surveySnapshots.surveyId] }),
@@ -820,6 +874,10 @@ export const templateQuestionsRelations = relations(templateQuestions, ({ one, m
 
 export const templateQuestionOptionsRelations = relations(templateQuestionOptions, ({ one }) => ({
   question: one(templateQuestions, { fields: [templateQuestionOptions.templateQuestionId], references: [templateQuestions.id] }),
+}));
+
+export const surveyAccessCodesRelations = relations(surveyAccessCodes, ({ one }) => ({
+  survey: one(surveys, { fields: [surveyAccessCodes.surveyId], references: [surveys.id] }),
 }));
 
 export const surveyResponsesRelations = relations(surveyResponses, ({ one, many }) => ({

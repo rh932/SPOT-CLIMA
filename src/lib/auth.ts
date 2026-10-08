@@ -55,6 +55,9 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
   try {
     // Algoritmo fixo: um token com outro `alg` (inclusive "none") é recusado.
     const { payload } = await jwtVerify(token, getSecretKey(), { algorithms: ['HS256'] });
+    // Token com finalidade própria (o desafio da verificação em duas etapas,
+    // src/lib/mfa.ts) é assinado com a mesma chave, mas nunca vale como sessão.
+    if (payload.purpose !== undefined) return null;
     if (typeof payload.adminId !== 'string' || typeof payload.role !== 'string') return null;
     return payload as unknown as SessionPayload;
   } catch {

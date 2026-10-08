@@ -9,6 +9,8 @@ import { consumeRateLimit, clearRateLimit } from '@/lib/rateLimit';
 import { logAudit } from '@/lib/audit';
 import { clientIp } from '@/lib/clientIp';
 import { GESTOR_PORTAL_ROLES } from '@/lib/permissions';
+import { createChallengeToken, setChallengeCookie } from '@/lib/mfa';
+import { passwordFingerprint } from '@/lib/sessionFingerprint';
 
 const INVALIDO = 'E-mail ou senha inválidos.';
 const MUITAS = 'Muitas tentativas de login. Tente novamente em alguns minutos.';
@@ -77,6 +79,20 @@ export async function POST(req: NextRequest) {
       { error: `Esta conta não acessa este painel. Seu acesso fica em ${PORTAL_HINT[conta.role] ?? 'outro painel'}.` },
       { status: 403 },
     );
+  }
+
+  // Conta com verificação em duas etapas: a senha certa só abre o desafio do
+  // código. A sessão sai em /api/auth/mfa/verify (ver src/lib/mfa.ts).
+  if (conta.mfaEnabledAt && conta.mfaSecret) {
+    const challenge = await createChallengeToken({
+      adminId: conta.id,
+      portal: parsed.data.portal,
+      pv: passwordFingerprint(conta.passwordHash),
+    });
+    setChallengeCookie(challenge);
+    await clearRateLimit('login-conta-ip', `${email}|${ip}`);
+    await logAudit({ adminId: conta.id, action: 'login.mfa_challenge', req });
+    return NextResponse.json({ mfaRequired: true });
   }
 
   // O escopo do gestor não entra no token — é lido do banco a cada requisição

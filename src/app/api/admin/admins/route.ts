@@ -18,7 +18,7 @@ export async function GET() {
     requireRole(session, ['SUPER_ADMIN']);
     const rows = await db.query.admins.findMany({
       columns: {
-        id: true, name: true, email: true, role: true, active: true, createdAt: true,
+        id: true, name: true, email: true, role: true, active: true, createdAt: true, mfaEnabledAt: true,
         // Só para calcular o código de primeiro acesso; o hash não sai daqui.
         passwordHash: true,
       },

@@ -8,7 +8,8 @@ const pool =
   globalForDb.pgPool ??
   new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 10,
+    // PG_POOL_MAX=1 só no banco de teste local (PGlite atende uma conexão por vez).
+    max: Number(process.env.PG_POOL_MAX) || 10,
   });
 
 if (process.env.NODE_ENV !== 'production') {

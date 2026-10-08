@@ -27,6 +27,17 @@ export const loginSchema = z.object({
   portal: z.enum(['admin', 'gestor']),
 });
 
+/** Código da verificação em duas etapas: 6 dígitos do app ou XXXX-XXXX de recuperação. */
+export const mfaCodeSchema = z.object({
+  code: z.string().trim().min(6).max(20),
+});
+
+/** Desligar a verificação em duas etapas pede a senha e um código válido. */
+export const mfaDisableSchema = z.object({
+  password: z.string().min(1).max(128),
+  code: z.string().trim().min(6).max(20),
+});
+
 /** Primeiro acesso: sem `password` só confere o código (para a tela cumprimentar pelo nome). */
 export const firstAccessSchema = z.object({
   email: emailSchema,

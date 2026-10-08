@@ -64,6 +64,8 @@ async function getSessionRole(req: NextRequest, cookieName: string): Promise<str
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecretKey(), { algorithms: ['HS256'] });
+    // O desafio da verificação em duas etapas usa a mesma chave, mas não é sessão.
+    if (payload.purpose !== undefined) return null;
     const role = (payload as { role?: unknown }).role;
     return typeof role === 'string' ? role : null;
   } catch {
