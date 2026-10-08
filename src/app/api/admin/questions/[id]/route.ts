@@ -45,7 +45,10 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     // eNPS fixa a escala em 0–10 (src/lib/enps.ts) e só existe uma por pesquisa.
     const isEnps = parsed.data.isEnps ?? current.isEnps;
     const data = isEnps ? { ...enpsQuestionFields({ ...parsed.data, isEnps: true }), options: [] } : parsed.data;
-    if (isEnps && !current.isEnps) {
+    // Vale também para reativar uma eNPS removida enquanto outra está ativa
+    // (o índice questions_enps_ativa_por_pesquisa_idx barra no banco de todo jeito).
+    const ficaAtiva = parsed.data.active ?? current.active;
+    if (isEnps && ficaAtiva && (!current.isEnps || !current.active)) {
       const outra = await db.query.questions.findFirst({
         where: and(
           eq(schema.questions.surveyId, current.surveyId),

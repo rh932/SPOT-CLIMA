@@ -20,7 +20,8 @@
     "db:set-password": "node scripts/update-admin-password.mjs",
     "db:backup": "node scripts/backup-db.mjs",
     "db:decrypt-backup": "node scripts/decrypt-backup.mjs",
-    "db:reset-mfa": "node scripts/reset-mfa.mjs"
+    "db:reset-mfa": "node scripts/reset-mfa.mjs",
+    "db:verify-backup": "node scripts/verificar-backup.mjs"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",

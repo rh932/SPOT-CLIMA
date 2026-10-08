@@ -32,6 +32,14 @@ export const mfaCodeSchema = z.object({
   code: z.string().trim().min(6).max(20),
 });
 
+/**
+ * Ligar a verificação em duas etapas pede a senha: uma sessão esquecida aberta
+ * não pode servir para alguém amarrar a conta ao próprio celular.
+ */
+export const mfaSetupSchema = z.object({
+  password: z.string().min(1).max(128),
+});
+
 /** Desligar a verificação em duas etapas pede a senha e um código válido. */
 export const mfaDisableSchema = z.object({
   password: z.string().min(1).max(128),
@@ -198,8 +206,11 @@ export const surveySubmissionSchema = z.object({
   sectorId: idSchema,
   unitId: idSchema,
   answers: z.array(answerSubmissionSchema).min(1).max(300),
-  /** Código de participação de uso único — só exigido quando a pesquisa pede (surveys.requireAccessCode). */
-  accessCode: z.string().trim().max(20).optional(),
+  /**
+   * Bilhete de resposta (src/lib/surveyTicket.ts), recebido ao trocar o código
+   * de participação — só exigido quando a pesquisa pede (surveys.requireAccessCode).
+   */
+  ticket: z.string().max(1000).optional(),
 });
 
 /** Geração de códigos de participação: um lote por vez, com teto para não travar a impressão. */

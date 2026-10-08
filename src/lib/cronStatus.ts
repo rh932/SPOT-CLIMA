@@ -3,6 +3,7 @@ import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { deliverNotifications } from './notify';
 import { saoPauloDay } from './probation';
+import { errorForLog, errorSummary } from './dbErrors';
 
 /**
  * Vigia da rotina diária de avisos (cron da Vercel, 14h UTC).
@@ -62,7 +63,9 @@ export async function recordCronSuccess(info: { avaliados: number; naJanela: num
  * derrubar a resposta da rotina (que já está falhando).
  */
 export async function recordCronFailure(err: unknown): Promise<void> {
-  const erro = (err instanceof Error ? err.message : String(err)).replace(/\s+/g, ' ').slice(0, 200);
+  // Resumo filtrado (src/lib/dbErrors.ts): a mensagem crua do Drizzle traz os
+  // parâmetros da consulta — nomes de colaboradores, no caso desta rotina.
+  const erro = errorSummary(err).replace(/\s+/g, ' ').slice(0, 200);
   try {
     const anterior = await getCronRun();
     await saveCronRun({ at: new Date().toISOString(), ok: false, erro, lastOkAt: anterior?.ok ? anterior.at : anterior?.lastOkAt ?? null });
@@ -91,6 +94,6 @@ export async function recordCronFailure(err: unknown): Promise<void> {
       })),
     );
   } catch (e) {
-    console.error('[cronStatus] não foi possível registrar a falha da rotina', e);
+    console.error('[cronStatus] não foi possível registrar a falha da rotina', errorForLog(e));
   }
 }

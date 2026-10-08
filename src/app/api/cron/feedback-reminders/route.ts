@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildReminderRows } from '@/lib/reminders';
 import { deliverNotifications } from '@/lib/notify';
 import { recordCronFailure, recordCronSuccess } from '@/lib/cronStatus';
+import { errorForLog } from '@/lib/dbErrors';
 
 /**
  * Rotina diária dos avisos de avaliação pendente.
@@ -41,22 +42,29 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
   }
 
+  let resultado: { avaliados: number; naJanela: number; entrega: Awaited<ReturnType<typeof deliverNotifications>> | null };
   try {
     // A regra de quem recebe e do texto mora em src/lib/reminders.ts, a mesma
     // do botão "Lembrar gestores agora" do RH.
     const { avaliados, naJanela, rows } = await buildReminderRows('rotina');
-    // Quando ninguém está num dia de aviso, a rotina termina sem tocar em admins.
-    if (naJanela === 0) {
-      await recordCronSuccess({ avaliados, naJanela, avisos: 0 });
-      return NextResponse.json({ ok: true, avaliados, avisos: 0 });
-    }
-    const entrega = await deliverNotifications(rows);
-    await recordCronSuccess({ avaliados, naJanela, avisos: entrega.avisos });
-    return NextResponse.json({ ok: true, avaliados, naJanela, ...entrega });
+    const entrega = naJanela === 0 ? null : await deliverNotifications(rows);
+    resultado = { avaliados, naJanela, entrega };
   } catch (err) {
-    console.error('[cron feedback-reminders]', err);
+    console.error('[cron feedback-reminders]', errorForLog(err));
     // Grava a falha e avisa os Super Admins (src/lib/cronStatus.ts).
     await recordCronFailure(err);
     return NextResponse.json({ error: 'Erro ao gerar os avisos.' }, { status: 500 });
   }
+
+  // Fora do try da entrega: os avisos já saíram. Se só a gravação do status
+  // falhar, isso não vira "rotina falhou" nem alerta para o Super Admin.
+  const { avaliados, naJanela, entrega } = resultado;
+  try {
+    await recordCronSuccess({ avaliados, naJanela, avisos: entrega?.avisos ?? 0 });
+  } catch (err) {
+    console.error('[cron feedback-reminders] avisos entregues, mas o status não foi gravado', errorForLog(err));
+  }
+  // Quando ninguém está num dia de aviso, a rotina termina sem tocar em admins.
+  if (!entrega) return NextResponse.json({ ok: true, avaliados, avisos: 0 });
+  return NextResponse.json({ ok: true, avaliados, naJanela, ...entrega });
 }

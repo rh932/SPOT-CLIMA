@@ -41,6 +41,32 @@ function ident(name) {
   return `"${String(name).replace(/"/g, '""')}"`;
 }
 
+// Datas e horas saem como o TEXTO do banco, sem passar por Date: o `pg` lê
+// `timestamp` sem fuso como hora local da máquina, e o dump gravava +3h.
+const TIMESTAMP = 1114;
+const TIMESTAMPTZ = 1184;
+const DATE = 1082;
+const JSON_OID = 114;
+const JSONB = 3802;
+for (const oid of [TIMESTAMP, TIMESTAMPTZ, DATE]) pg.types.setTypeParser(oid, (v) => v);
+
+/**
+ * Literal SQL de um valor, pelo TIPO DA COLUNA (dataTypeID do resultado), não
+ * pelo tipo do valor em JS. Uma coluna jsonb que guarda array chega como
+ * array JS, e uma que guarda texto chega como string — antes isso virava
+ * `ARRAY[...]` (text[]) ou texto sem ::jsonb, e o INSERT falhava na restauração.
+ */
+function columnLiteral(value, typeId) {
+  if (value === null || value === undefined) return 'NULL';
+  if (typeId === JSONB || typeId === JSON_OID) {
+    return `${quote(JSON.stringify(value))}::${typeId === JSONB ? 'jsonb' : 'json'}`;
+  }
+  if (typeId === TIMESTAMP) return `${quote(String(value))}::timestamp`;
+  if (typeId === TIMESTAMPTZ) return `${quote(String(value))}::timestamptz`;
+  if (typeId === DATE) return `${quote(String(value))}::date`;
+  return sqlLiteral(value);
+}
+
 function sqlLiteral(value) {
   if (value === null || value === undefined) return 'NULL';
   if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
@@ -183,14 +209,14 @@ async function main() {
 
       let offset = 0;
       while (offset < n) {
-        const { rows } = await client.query(
+        const { rows, fields } = await client.query(
           `SELECT * FROM ${ident(table)} ORDER BY ctid OFFSET $1 LIMIT $2`,
           [offset, BATCH]
         );
         if (rows.length === 0) break;
-        const cols = Object.keys(rows[0]).map(ident).join(', ');
+        const cols = fields.map((f) => ident(f.name)).join(', ');
         for (const row of rows) {
-          const values = Object.values(row).map(sqlLiteral).join(', ');
+          const values = fields.map((f) => columnLiteral(row[f.name], f.dataTypeID)).join(', ');
           await write(`INSERT INTO ${ident(table)} (${cols}) VALUES (${values});\n`);
         }
         offset += rows.length;

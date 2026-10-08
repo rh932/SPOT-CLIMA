@@ -3,6 +3,7 @@ import * as schema from '@/db/schema';
 import { hashIp } from './hash';
 import { clientIp } from './clientIp';
 import { NextRequest } from 'next/server';
+import { errorForLog } from './dbErrors';
 
 /**
  * Registra uma ação administrativa no log de auditoria.
@@ -30,7 +31,7 @@ export async function logAudit(params: {
     });
   } catch (err) {
     // Auditoria nunca deve derrubar a requisição principal.
-    console.error('Falha ao gravar log de auditoria:', err);
+    console.error('Falha ao gravar log de auditoria:', errorForLog(err));
   }
 }
 

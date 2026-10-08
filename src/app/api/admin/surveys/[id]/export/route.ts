@@ -6,6 +6,7 @@ import { requireAdmin, requirePermission, handleApiError, ApiError } from '@/lib
 import { buildCsv, buildXlsx } from '@/lib/exportReport';
 import { renderUrlToPdf } from '@/lib/pdf';
 import { logAudit } from '@/lib/audit';
+import { errorForLog } from '@/lib/dbErrors';
 
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -72,7 +73,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
         // normalmente não está disponível. Em vez de derrubar a rota com um
         // erro 500 genérico, orientamos o RH a usar as alternativas que não
         // dependem de Chromium no servidor.
-        console.error('Falha ao gerar PDF via Chromium headless:', err);
+        console.error('Falha ao gerar PDF via Chromium headless:', errorForLog(err));
         throw new ApiError(
           503,
           'Geração automática de PDF indisponível neste ambiente de hospedagem. Use "Excel" ou "CSV" acima, ou abra o relatório e use Imprimir > Salvar como PDF no navegador.'

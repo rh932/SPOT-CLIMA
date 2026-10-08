@@ -47,7 +47,12 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         with: { options: { orderBy: (o, { asc }) => asc(o.order) } },
       });
 
+      // Uma eNPS por pesquisa (índice único no banco): se o modelo tiver mais de
+      // uma — modelo antigo —, só a primeira continua marcada.
+      let enpsCopiada = false;
       for (const tq of templateQuestions) {
+        const isEnps = tq.isEnps && !enpsCopiada;
+        if (isEnps) enpsCopiada = true;
         const [newQuestion] = await tx
           .insert(schema.questions)
           .values({
@@ -60,7 +65,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
             active: tq.active,
             scaleMin: tq.scaleMin,
             scaleMax: tq.scaleMax,
-            isEnps: tq.isEnps,
+            isEnps,
           })
           .returning();
         if (tq.options.length > 0) {

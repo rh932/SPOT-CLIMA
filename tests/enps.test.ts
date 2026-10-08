@@ -69,6 +69,13 @@ describe('eNPS nos resultados respeita o anonimato', () => {
     expect(computeSurveyResults(input).enps).toBeNull();
   });
 
+  it('uma eNPS removida (inativa) não toma o lugar da ativa', () => {
+    const input = pesquisa([{ sector: 'a', unit: 'u', enps: [10, 10, 10, 10, 10] }]);
+    // id menor que 'enps': sem o filtro de ativa, seria a escolhida — e sem respostas.
+    input.questions.push({ id: 'a-velha', text: 'E0', type: 'SCALE', dimensionId: null, dimensionName: null, isEnps: true, active: false });
+    expect(computeSurveyResults(input).enps?.score).toBe(100);
+  });
+
   it('pesquisa aberta não mostra eNPS', () => {
     const input = pesquisa([{ sector: 'a', unit: 'u', enps: [10, 10, 10, 10, 10] }]);
     input.survey.status = 'OPEN';

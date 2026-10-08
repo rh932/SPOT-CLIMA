@@ -55,7 +55,14 @@ export function createEncryptedWriter(destPath, passphrase) {
   const gzip = zlib.createGzip({ level: 9 });
   const done = pipeline(gzip, cipher, file, { end: false });
 
-  const input = new Writable({
+  let input;
+  // Falha no meio (disco cheio, abort): sem este handler a promise rejeitada
+  // derrubava o processo antes do catch do chamador, deixando um arquivo
+  // truncado com nome de backup válido. O erro vai para a entrada (a escrita
+  // em curso falha) e reaparece no `await done` de finish().
+  done.catch((err) => input?.destroy(err));
+
+  input = new Writable({
     write(chunk, encoding, cb) {
       const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, encoding);
       plainHash.update(buf);

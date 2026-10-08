@@ -152,7 +152,8 @@ Crítico, 0-49% Muito crítico. Ver `src/lib/calculations.ts` (testado em `tests
 - Rate limiting em memória no login (10 tentativas / 5 min por IP) e no envio de respostas.
 - Headers de segurança (`X-Frame-Options`, `CSP`, etc.) em `next.config.js`.
 - **Verificação em duas etapas** (código do app autenticador), opcional por conta, em
-  Configurações. Vale nos dois portais. Perdeu o celular e os códigos de recuperação: o Super Admin
+  Configurações (ligar pede a senha). Vale nos dois portais. Até 5 códigos errados a cada 15 min e
+  20 por dia por conta. Perdeu o celular e os códigos de recuperação: o Super Admin
   desliga em Usuários; para o próprio Super Admin, `npm run db:reset-mfa -- <email>`.
 - Logs de auditoria (`audit_logs`) para toda ação administrativa — nunca com conteúdo de resposta.
 - Nenhuma chave secreta no frontend; tudo via variáveis de ambiente (`.env`, nunca commitado).
@@ -245,6 +246,13 @@ pesquisas ou na tela da pesquisa), gere um papel por pessoa, imprima e distribua
 **Exigir código**. Cada código vale uma resposta, o QR do papel já abre a pesquisa com o código, e
 nada liga o código à resposta. Os códigos só aparecem na tela na hora de gerar — imprima ali.
 
+Como funciona por dentro: o colaborador digita o código logo depois de **Começar Pesquisa**; ali o
+código é gasto e trocado por um *bilhete* (válido por 12 h, guardado só naquela aba). No envio, só o
+bilhete é conferido — numa transação separada da do código, e o banco não guarda a ligação entre os
+dois. Se a pessoa fechar a aba antes de enviar, o código já foi usado: o RH gera um papel novo.
+Risco que sobra: quem tiver acesso direto ao banco e pouquíssimas respostas no dia ainda pode tentar
+casar pela ordem das gravações — por isso o acesso ao banco fica só com quem já vê tudo.
+
 ## 14. Como visualizar resultados
 
 `/admin/results` — selecione a pesquisa e (opcionalmente) um setor. Mostra índice geral, participação,
@@ -302,6 +310,9 @@ gerado, e o arquivo é conferido (decifrado e comparado) antes de o backup ser d
 
 - A chave é `BACKUP_PASSPHRASE`, no `.env`. **Guarde uma cópia num gerenciador de senhas**: sem
   ela, nenhum backup abre. Pasta e quantidade: `BACKUP_DIR` e `BACKUP_KEEP` (opcionais).
+- **Provar que o backup restaura** (não só que decifra): `npm run db:verify-backup -- <arquivo.sql.gz.enc> <URL de um banco descartável já migrado>`
+  — roda o dump num banco de teste e compara a contagem de cada tabela. Backups anteriores a
+  08/10/2026 12:40 não restauram por completo (colunas JSON e horários); use os mais novos.
 - **Backup diário automático** (tarefa agendada do Windows, roda mesmo se o computador estava
   desligado no horário, assim que ligar): `powershell -ExecutionPolicy Bypass -File scripts\agendar-backup.ps1`.
   O log fica em `Documentos\spot-clima-backups\backup.log`.

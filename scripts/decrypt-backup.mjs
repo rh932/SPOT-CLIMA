@@ -20,7 +20,10 @@ if (fs.existsSync(dest)) {
   console.error(`A saída já existe e não será sobrescrita: ${dest}`);
   process.exit(1);
 }
-if (path.resolve(dest).startsWith(path.resolve(process.cwd()) + path.sep)) {
+// path.relative, e não startsWith: no Windows "C:\Users" e "c:\users" são a
+// mesma pasta, e o relative do Windows já ignora maiúsculas.
+const relativo = path.relative(path.resolve(process.cwd()), path.resolve(dest));
+if (!relativo.startsWith('..') && !path.isAbsolute(relativo)) {
   console.error('Grave a saída fora da pasta do projeto (ela tem dados pessoais em texto puro).');
   process.exit(1);
 }

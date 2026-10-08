@@ -475,6 +475,22 @@ export const surveyAccessCodes = pgTable('survey_access_codes', {
   surveyIdIdx: index('survey_access_codes_survey_id_idx').on(table.surveyId),
 }));
 
+/**
+ * Bilhetes de resposta já usados (uso único).
+ *
+ * O código do papel NÃO é gasto junto com a resposta: se fosse, as duas
+ * linhas nasceriam na mesma transação (mesmo xmin no Postgres) e quem tem
+ * acesso ao banco e sabe quem recebeu cada papel ligaria código → resposta.
+ * Em vez disso o código é trocado, ao começar a pesquisa, por um bilhete
+ * assinado que não carrega nada do código (src/lib/surveyTicket.ts); no envio
+ * só o HMAC do bilhete entra aqui, na transação da resposta. Nenhum registro
+ * liga bilhete a código. Sem data: nem o dia do uso fica gravado.
+ */
+export const surveyTicketUses = pgTable('survey_ticket_uses', {
+  ticketHash: text('ticket_hash').primaryKey(),
+  surveyId: text('survey_id').notNull().references(() => surveys.id, { onDelete: 'cascade' }),
+});
+
 export const questions = pgTable('questions', {
   id: id(),
   surveyId: text('survey_id').notNull().references(() => surveys.id, { onDelete: 'cascade' }),
@@ -497,6 +513,11 @@ export const questions = pgTable('questions', {
 }, (table) => ({
   surveyIdIdx: index('questions_survey_id_idx').on(table.surveyId),
   dimensionIdIdx: index('questions_dimension_id_idx').on(table.dimensionId),
+  // No máximo UMA pergunta de eNPS ativa por pesquisa: com duas, os resultados
+  // teriam de escolher uma (e a escolha podia cair numa sem respostas).
+  enpsUnicaAtiva: uniqueIndex('questions_enps_ativa_por_pesquisa_idx')
+    .on(table.surveyId)
+    .where(sql`${table.isEnps} AND ${table.active}`),
 }));
 
 export const questionOptions = pgTable('question_options', {

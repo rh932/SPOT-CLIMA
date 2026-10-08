@@ -11,7 +11,7 @@ import { formatAccessCode, isAccessCodeFormat, parseAccessCodeHash } from '@/lib
 
 // 'submitting' saiu: o envio agora acontece DENTRO da tela de revisão, com o
 // botão carregando o estado, em vez de trocar a tela inteira por uma frase.
-type Stage = 'loading' | 'no-survey' | 'select' | 'intro' | 'sector' | 'unit' | 'questions' | 'review' | 'done' | 'error';
+type Stage = 'loading' | 'no-survey' | 'select' | 'intro' | 'codigo' | 'sector' | 'unit' | 'questions' | 'review' | 'done' | 'error';
 
 interface OpenSurvey {
   id: string;
@@ -37,6 +37,28 @@ function getAnsweredIds(): Set<string> {
     return new Set(raw ? (JSON.parse(raw) as string[]) : []);
   } catch {
     return new Set();
+  }
+}
+
+// Bilhete de resposta (pesquisa com código de participação): o código do papel
+// é trocado por ele ao começar. Fica só nesta aba (sessionStorage) para quem
+// recarregar a página no meio não perder o código já gasto.
+const TICKET_KEY = 'spot_clima_ticket_';
+
+function readTicket(surveyId: string): string | null {
+  try {
+    return sessionStorage.getItem(TICKET_KEY + surveyId);
+  } catch {
+    return null;
+  }
+}
+
+function saveTicket(surveyId: string, ticket: string | null) {
+  try {
+    if (ticket) sessionStorage.setItem(TICKET_KEY + surveyId, ticket);
+    else sessionStorage.removeItem(TICKET_KEY + surveyId);
+  } catch {
+    // sessionStorage indisponível — o bilhete fica só na memória da página.
   }
 }
 
@@ -77,7 +99,12 @@ export default function SurveyPage() {
    * chega ao servidor e sai da barra de endereço assim que é lido.
    */
   const [accessCode, setAccessCode] = useState('');
-  const [codigoRecusado, setCodigoRecusado] = useState(false);
+  /** Por que o código não passou (formato, já usado, muitos erros) — null se ok. */
+  const [codigoErro, setCodigoErro] = useState<string | null>(null);
+  const [conferindoCodigo, setConferindoCodigo] = useState(false);
+  const [ticket, setTicket] = useState<string | null>(null);
+  /** Para onde ir depois do código: o setor no começo, a revisão se o bilhete caiu no envio. */
+  const [depoisDoCodigo, setDepoisDoCodigo] = useState<'sector' | 'review'>('sector');
 
   useEffect(() => {
     const doLink = parseAccessCodeHash(window.location.hash);
@@ -114,6 +141,9 @@ export default function SurveyPage() {
       setPageIndex(0);
       setAnswers({});
       setAttemptedNext(false);
+      setTicket(d.survey.requireAccessCode ? readTicket(d.survey.id) : null);
+      setDepoisDoCodigo('sector');
+      setCodigoErro(null);
       setStage('intro');
     } catch {
       setStage('error');
@@ -279,7 +309,11 @@ export default function SurveyPage() {
             )}
           </>
         }
-        action={<CoverButton onClick={() => setStage('sector')}>Começar Pesquisa</CoverButton>}
+        action={
+          <CoverButton onClick={() => setStage(data.survey.requireAccessCode && !ticket ? 'codigo' : 'sector')}>
+            Começar Pesquisa
+          </CoverButton>
+        }
         footer={
           openSurveys.length > 1 ? (
             <button className="mx-auto text-xs text-spot-gray-500 hover:text-spot-gray-600" onClick={backToSelection}>
@@ -288,6 +322,106 @@ export default function SurveyPage() {
           ) : undefined
         }
       />
+    );
+  }
+
+  if (stage === 'codigo') {
+    /**
+     * Troca o código do papel por um bilhete, ANTES das respostas.
+     *
+     * Antes o código ia junto com as respostas, e o banco gravava as duas
+     * coisas na mesma transação — quem soubesse quem recebeu cada papel podia
+     * chegar à resposta. Agora o código é gasto aqui, num passo separado.
+     */
+    const surveyId = data.survey.id;
+    const conferir = async () => {
+      if (conferindoCodigo) return;
+      if (!isAccessCodeFormat(accessCode)) {
+        setCodigoErro('Confira o código: são 8 letras e números, como no papel que você recebeu.');
+        document.getElementById('codigo-participacao')?.focus();
+        return;
+      }
+      setConferindoCodigo(true);
+      setCodigoErro(null);
+      try {
+        const res = await fetch('/api/public/survey-tickets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ surveyId, accessCode: formatAccessCode(accessCode) }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok || typeof body.ticket !== 'string') {
+          setCodigoErro(body.error ?? 'Não foi possível conferir o código agora. Tente de novo.');
+          return;
+        }
+        saveTicket(surveyId, body.ticket);
+        setTicket(body.ticket);
+        setAccessCode('');
+        setStage(depoisDoCodigo);
+      } catch {
+        setCodigoErro('Não foi possível conferir o código agora — pode ter sido a conexão. Tente de novo.');
+      } finally {
+        setConferindoCodigo(false);
+      }
+    };
+
+    return (
+      <CenteredMessage key="codigo" wide>
+        <h2 className="font-display text-2xl font-semibold mb-1">Código de participação</h2>
+        <p className="text-spot-gray-500 text-sm mb-6">
+          {depoisDoCodigo === 'review'
+            ? 'Precisamos do código de novo para enviar. As suas respostas continuam guardadas.'
+            : 'Digite o código do papel que você recebeu. Ele vale uma resposta e não fica ligado a você nem às suas respostas.'}
+        </p>
+        <form
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            conferir();
+          }}
+        >
+          <label className="label" htmlFor="codigo-participacao">Código</label>
+          <input
+            id="codigo-participacao"
+            required
+            autoFocus
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            maxLength={9}
+            placeholder="Ex.: ABCD-EFGH"
+            aria-invalid={codigoErro ? true : undefined}
+            aria-describedby="codigo-dica"
+            className={`input text-center text-lg tracking-[0.2em] uppercase ${codigoErro ? 'border-spot-danger' : ''}`}
+            value={accessCode}
+            onChange={(e) => {
+              setAccessCode(e.target.value);
+              setCodigoErro(null);
+            }}
+          />
+          <p
+            id="codigo-dica"
+            role={codigoErro ? 'alert' : undefined}
+            className={`text-xs mt-1 mb-6 ${codigoErro ? 'text-spot-danger' : 'text-spot-gray-500'}`}
+          >
+            {codigoErro ?? 'São 8 letras e números, como ABCD-EFGH. Quem leu o QR do papel já recebe o código preenchido.'}
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={conferindoCodigo}
+              onClick={() => setStage(depoisDoCodigo === 'review' ? 'questions' : 'intro')}
+            >
+              Voltar
+            </button>
+            <button type="submit" className="btn-primary flex-1" disabled={conferindoCodigo} aria-busy={conferindoCodigo || undefined}>
+              {conferindoCodigo && <Spinner />}
+              {conferindoCodigo ? 'Conferindo...' : 'Continuar'}
+            </button>
+          </div>
+        </form>
+      </CenteredMessage>
     );
   }
 
@@ -442,24 +576,36 @@ export default function SurveyPage() {
      * outra. Agora o botão carrega o próprio estado e o contexto fica.
      */
     const exigeCodigo = Boolean(data.survey.requireAccessCode);
-    const codigoOk = !exigeCodigo || isAccessCodeFormat(accessCode);
+    const surveyId = data.survey.id;
+    const pedirCodigoDeNovo = (motivo: string | null) => {
+      saveTicket(surveyId, null);
+      setTicket(null);
+      setCodigoErro(motivo);
+      setDepoisDoCodigo('review');
+      setStage('codigo');
+    };
+    const concluir = () => {
+      saveTicket(surveyId, null);
+      setTicket(null);
+      markAnswered(surveyId);
+      setAnsweredIds(getAnsweredIds());
+      setStage('done');
+    };
     const submit = async () => {
       if (enviando) return;
-      if (!codigoOk) {
-        setCodigoRecusado(true);
-        document.getElementById('codigo-participacao')?.focus();
+      if (exigeCodigo && !ticket) {
+        pedirCodigoDeNovo(null);
         return;
       }
       setEnviando(true);
       setSubmitError(null);
-      setCodigoRecusado(false);
       try {
         const payload = {
-          surveyId: data.survey!.id,
+          surveyId,
           sectorId,
           unitId,
           answers: Object.entries(answers).map(([questionId, v]) => ({ questionId, ...v })),
-          ...(exigeCodigo ? { accessCode: formatAccessCode(accessCode) } : {}),
+          ...(exigeCodigo && ticket ? { ticket } : {}),
         };
         const res = await fetch('/api/public/responses', {
           method: 'POST',
@@ -468,13 +614,20 @@ export default function SurveyPage() {
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          if (body.accessCode === 'invalid') setCodigoRecusado(true);
+          // Resposta já gravada com este bilhete (a conexão caiu depois do
+          // envio e a pessoa tentou de novo): é sucesso, não erro.
+          if (res.status === 409 && body.alreadySent) {
+            concluir();
+            return;
+          }
+          // Bilhete vencido ou recusado: pede outro código sem perder as respostas.
+          if (body.accessCode === 'invalid') {
+            pedirCodigoDeNovo(body.error ?? null);
+            return;
+          }
           throw new Error(body.error ?? 'Falha ao enviar.');
         }
-        setAccessCode('');
-        markAnswered(data.survey!.id);
-        setAnsweredIds(getAnsweredIds());
-        setStage('done');
+        concluir();
       } catch (e) {
         setSubmitError(
           e instanceof Error && e.message
@@ -493,30 +646,6 @@ export default function SurveyPage() {
           Você está prestes a enviar sua pesquisa. Suas respostas serão registradas de forma anônima e não poderão
           ser alteradas depois do envio. Você respondeu {answeredCount} de {data.questions.length} perguntas.
         </p>
-        {exigeCodigo && (
-          <div className="mb-5">
-            <label className="label" htmlFor="codigo-participacao">Código de participação</label>
-            <input
-              id="codigo-participacao"
-              required
-              autoComplete="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              maxLength={9}
-              placeholder="Ex.: ABCD-EFGH"
-              aria-invalid={codigoRecusado || undefined}
-              aria-describedby="codigo-dica"
-              className={`input text-center text-lg tracking-[0.2em] uppercase ${codigoRecusado ? 'border-spot-danger' : ''}`}
-              value={accessCode}
-              onChange={(e) => { setAccessCode(e.target.value); setCodigoRecusado(false); }}
-            />
-            <p id="codigo-dica" className={`text-xs mt-1 ${codigoRecusado ? 'text-spot-danger' : 'text-spot-gray-500'}`}>
-              {codigoRecusado
-                ? 'Confira o código: são 8 letras e números, como no papel que você recebeu.'
-                : 'Está no papel que você recebeu. Ele vale uma resposta e não é ligado a você.'}
-            </p>
-          </div>
-        )}
         {submitError && (
           <p role="alert" className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5 mb-4">
             {submitError} As suas respostas continuam aqui — pode tentar de novo.

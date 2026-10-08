@@ -12,6 +12,7 @@ interface MfaStatus {
 
 type Etapa =
   | { tipo: 'parado' }
+  | { tipo: 'senha' }
   | { tipo: 'qr'; qrDataUrl: string; secret: string }
   | { tipo: 'codigos'; codes: string[] }
   | { tipo: 'desligar' }
@@ -53,9 +54,10 @@ export function MfaSettingsCard() {
     }
   };
 
-  const iniciar = async () => {
-    const r = await chamar<{ qrDataUrl: string; secret: string }>({ action: 'setup' });
-    if (r) { setCode(''); setEtapa({ tipo: 'qr', ...r }); }
+  const iniciar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const r = await chamar<{ qrDataUrl: string; secret: string }>({ action: 'setup', password });
+    if (r) { setCode(''); setPassword(''); setEtapa({ tipo: 'qr', ...r }); }
   };
 
   const confirmar = async (e: React.FormEvent) => {
@@ -109,6 +111,28 @@ export function MfaSettingsCard() {
         <ErrorState message={erroCarga} onRetry={carregar} />
       ) : !status ? (
         <SkeletonText lines={2} />
+      ) : etapa.tipo === 'senha' ? (
+        <form onSubmit={iniciar} className="flex flex-col gap-4">
+          <p className="text-sm text-spot-gray-600">Para começar, confirme a sua senha.</p>
+          <div>
+            <label className="label" htmlFor="mfa-senha-ligar">Senha</label>
+            <input
+              id="mfa-senha-ligar"
+              type="password"
+              required
+              autoFocus
+              autoComplete="current-password"
+              className="input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {mensagemErro}
+          <div className="flex gap-2 flex-wrap">
+            <ActionButton type="submit" className="btn-primary" pending={pendente} pendingLabel="Gerando QR code...">Continuar</ActionButton>
+            <button type="button" className="btn-ghost" onClick={cancelar}>Cancelar</button>
+          </div>
+        </form>
       ) : etapa.tipo === 'qr' ? (
         <form onSubmit={confirmar} className="flex flex-col gap-4">
           <ol className="text-sm text-spot-gray-600 list-decimal pl-5 flex flex-col gap-1">
@@ -198,11 +222,10 @@ export function MfaSettingsCard() {
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-spot-gray-600">Desligada. Recomendado para quem é RH ou Super Admin: essas contas veem todas as avaliações.</p>
-          {mensagemErro}
           <div>
-            <ActionButton className="btn-primary" pending={pendente} pendingLabel="Gerando QR code..." onClick={iniciar}>
+            <button type="button" className="btn-primary" onClick={() => { setErro(null); setPassword(''); setEtapa({ tipo: 'senha' }); }}>
               Ligar verificação em duas etapas
-            </ActionButton>
+            </button>
           </div>
         </div>
       )}

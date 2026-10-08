@@ -10,11 +10,8 @@ import { hasCompleteScope, isInScope } from '@/lib/scope';
 import { trainingSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
-
-/** Violação de índice único do Postgres (SQLSTATE 23505). */
-function isUniqueViolation(err: unknown): boolean {
-  return typeof err === 'object' && err !== null && (err as { code?: string }).code === '23505';
-}
+// Lê o SQLSTATE também dentro do embrulho DrizzleQueryError (Drizzle 0.44+).
+import { isUniqueViolation } from '@/lib/dbErrors';
 
 /**
  * Histórico de treinamentos.

@@ -5,6 +5,7 @@ import { sendPushToAdmins, type PushResult } from './push';
 import { notificationPayload, type NotificationType } from './pushPayload';
 import { activityEmployeeId, activityMessage, activityTargets, type ActivityEvent } from './notificationEvents';
 import type { NotifiableAdmin } from './notificationTargets';
+import { errorForLog } from './dbErrors';
 
 /**
  * Entrega de avisos: grava no sino e toca o celular. É o único caminho — a
@@ -138,6 +139,6 @@ export async function notifyActivity(event: ActivityEvent, actorAdminId: string 
       actorAdminId,
     })));
   } catch (err) {
-    console.error('Falha ao enviar aviso de movimentação:', err);
+    console.error('Falha ao enviar aviso de movimentação:', errorForLog(err));
   }
 }

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import { requireAdmin, requireRole, handleApiError } from '@/lib/apiAuth';
 import { templateQuestionBaseSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
@@ -18,8 +18,26 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     const parsed = templateQuestionBaseSchema.partial().safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
 
-    // eNPS: escala fixa de 0 a 10 e sem opções (src/lib/enps.ts).
+    const current = await db.query.templateQuestions.findFirst({ where: eq(schema.templateQuestions.id, params.id) });
+    if (!current) return NextResponse.json({ error: 'Pergunta não encontrada.' }, { status: 404 });
+
+    // eNPS: escala fixa de 0 a 10 e sem opções (src/lib/enps.ts), uma por modelo —
+    // duas fariam a pesquisa criada a partir dele bater no índice de eNPS única.
     const data = parsed.data.isEnps ? { ...enpsQuestionFields(parsed.data), options: [] } : parsed.data;
+    const isEnps = parsed.data.isEnps ?? current.isEnps;
+    const ficaAtiva = parsed.data.active ?? current.active;
+    if (isEnps && ficaAtiva && (!current.isEnps || !current.active)) {
+      const outra = await db.query.templateQuestions.findFirst({
+        where: and(
+          eq(schema.templateQuestions.templateId, current.templateId),
+          eq(schema.templateQuestions.isEnps, true),
+          eq(schema.templateQuestions.active, true),
+          ne(schema.templateQuestions.id, current.id),
+        ),
+        columns: { id: true },
+      });
+      if (outra) return NextResponse.json({ error: 'Este modelo já tem uma pergunta de eNPS.' }, { status: 409 });
+    }
     const { options, ...rest } = data;
     const [row] = await db.update(schema.templateQuestions).set(rest).where(eq(schema.templateQuestions.id, params.id)).returning();
     if (!row) return NextResponse.json({ error: 'Pergunta não encontrada.' }, { status: 404 });

@@ -63,6 +63,7 @@ describe('autorização em toda rota', () => {
       'src/app/api/auth/mfa/verify/route.ts',
       'src/app/api/cron/feedback-reminders/route.ts',
       'src/app/api/public/responses/route.ts',
+      'src/app/api/public/survey-tickets/route.ts',
       'src/app/api/public/surveys/[id]/route.ts',
       'src/app/api/public/surveys/route.ts',
     ]);
@@ -116,11 +117,28 @@ describe('anonimato no esquema e na rota pública', () => {
     expect(bloco).not.toMatch(/\bcode: text/);
   });
 
+  it('survey_ticket_uses guarda só o HMAC do bilhete e a pesquisa (nada de horário, código ou resposta)', () => {
+    const schema = read('src/db/schema.ts');
+    const inicio = schema.indexOf("pgTable('survey_ticket_uses'");
+    expect(inicio).toBeGreaterThan(-1);
+    const bloco = schema.slice(inicio, schema.indexOf('export const', inicio));
+    const colunas = Array.from(bloco.matchAll(/^\s{2}(\w+): (?:text|timestamp|integer|boolean|jsonb|id)\(/gm)).map((m) => m[1]);
+    expect(colunas.sort()).toEqual(['surveyId', 'ticketHash']);
+  });
+
   it('o envio anônimo não grava auditoria, IP nem horário exato', () => {
     const rota = read('src/app/api/public/responses/route.ts');
     expect(rota).not.toMatch(/logAudit|hashIp|auditLogs/);
     expect(rota).toMatch(/createdAt: new Date\(saoPauloDay\(\)\)/);
-    // O uso do código de participação também fica só com o dia.
+    // O código do papel nunca é tocado na transação da resposta: só o bilhete.
+    expect(rota).not.toMatch(/surveyAccessCodes|hashAccessCode/);
+    expect(rota).toMatch(/surveyTicketUses/);
+  });
+
+  it('a troca do código por bilhete não grava auditoria, IP nem horário exato', () => {
+    const rota = read('src/app/api/public/survey-tickets/route.ts');
+    expect(rota).not.toMatch(/logAudit|hashIp|auditLogs|surveyResponses|surveyTicketUses/);
+    // O uso do código de participação fica só com o dia.
     expect(rota).toMatch(/usedOn: new Date\(saoPauloDay\(\)\)/);
   });
 

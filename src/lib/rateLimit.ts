@@ -2,6 +2,7 @@ import { createHmac } from 'crypto';
 import { sql, lt } from 'drizzle-orm';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
+import { errorForLog } from './dbErrors';
 
 /**
  * Limite de tentativas.
@@ -111,9 +112,26 @@ export async function consumeRateLimit(
   } catch (err) {
     if (!avisouQueda) {
       avisouQueda = true;
-      console.error('Limite de tentativas: banco indisponível, usando contador em memória.', err);
+      console.error('Limite de tentativas: banco indisponível, usando contador em memória.', errorForLog(err));
     }
     return rateLimit(key, limit, windowMs);
+  }
+}
+
+/**
+ * Já passou do teto? Só lê, não conta. Para limites que contam apenas o ERRO
+ * (código de participação errado): consultar antes de testar, e só gastar uma
+ * tentativa quando der errado — senão um palpite certo passava mesmo acima do
+ * teto, e ninguém do restaurante (mesmo IP) é punido por acertar.
+ */
+export async function isRateLimited(scope: string, identity: string, limit: number): Promise<boolean> {
+  const key = rateLimitKey(scope, identity);
+  try {
+    const row = await db.query.rateLimits.findFirst({ where: sql`${schema.rateLimits.key} = ${key}` });
+    return Boolean(row && row.resetAt.getTime() > Date.now() && row.count >= limit);
+  } catch {
+    const mem = buckets.get(key);
+    return Boolean(mem && mem.resetAt > Date.now() && mem.count >= limit);
   }
 }
 

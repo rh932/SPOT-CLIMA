@@ -49,7 +49,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: INVALIDO }, { status: 401 });
   }
 
-  const jaEntrou = await db.query.auditLogs.findFirst({
+  // Conta com duas etapas ligada já foi ativada, mesmo que o registro de
+  // entrada tenha saído da auditoria: o primeiro acesso cria senha e entra
+  // sem pedir o código do app — não pode virar um atalho para pular a 2ª etapa.
+  const jaEntrou = admin.mfaEnabledAt ?? await db.query.auditLogs.findFirst({
     where: and(eq(schema.auditLogs.adminId, admin.id), eq(schema.auditLogs.action, 'login.success')),
     columns: { id: true },
   });

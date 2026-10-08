@@ -43,8 +43,8 @@ export async function GET() {
     const admins = rows.map(({ passwordHash, ...a }) => ({
       ...a,
       // Código que o RH manda para a pessoa criar a própria senha (src/lib/firstAccess.ts).
-      // Só existe enquanto a conta nunca entrou.
-      firstAccessCode: a.active && !acesso.has(a.id) ? formatCode(firstAccessCode(a.id, passwordHash)) : null,
+      // Só existe enquanto a conta nunca entrou (duas etapas ligada = já entrou).
+      firstAccessCode: a.active && !acesso.has(a.id) && !a.mfaEnabledAt ? formatCode(firstAccessCode(a.id, passwordHash)) : null,
       firstLoginAt: acesso.get(a.id)?.first ?? null,
       lastLoginAt: acesso.get(a.id)?.last ?? null,
       scopedUnits: a.scopedUnits.map((su) => su.unit),

@@ -4,6 +4,7 @@ import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { fingerprintMatches } from './sessionFingerprint';
+import { errorForLog } from './dbErrors';
 import type { GestorScope, TreinadorScope } from './scope';
 import {
   hasPermission, permissionsFor, GESTOR_PORTAL_ROLES, hasUnrestrictedScope,
@@ -148,7 +149,7 @@ export function handleApiError(err: unknown): NextResponse {
   if (err instanceof ApiError) {
     return NextResponse.json({ error: err.message }, { status: err.status });
   }
-  console.error(err);
+  console.error('[api]', errorForLog(err));
   return NextResponse.json({ error: 'Erro interno do servidor.' }, { status: 500 });
 }
 

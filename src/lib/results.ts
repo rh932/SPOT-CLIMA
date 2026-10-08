@@ -173,6 +173,8 @@ export interface ResultsInput {
     dimensionName: string | null;
     /** Pergunta de eNPS (escala 0–10) — ver src/lib/enps.ts. */
     isEnps?: boolean;
+    /** Pergunta removida (soft-delete) fica fora do eNPS. */
+    active?: boolean;
   }[];
   responses: {
     id: string;
@@ -520,7 +522,7 @@ function computeEnpsResult(
   threshold: number,
   ctx: { hiddenSectors: string[]; hiddenUnits: string[]; sectorNames: Map<string, string>; unitNames: Map<string, string> },
 ): EnpsResult | null {
-  const [enpsQuestion] = input.questions.filter((q) => q.isEnps).sort((a, b) => a.id.localeCompare(b.id));
+  const [enpsQuestion] = input.questions.filter((q) => q.isEnps && q.active !== false).sort((a, b) => a.id.localeCompare(b.id));
   if (!enpsQuestion) return null;
 
   const answers = input.answers.filter(
@@ -618,6 +620,7 @@ async function loadResultsInput(surveyId: string): Promise<ResultsInput | null> 
       dimensionId: q.dimensionId,
       dimensionName: q.dimension?.name ?? null,
       isEnps: q.isEnps,
+      active: q.active,
     })),
     responses: responses.map((r) => ({
       id: r.id,

@@ -8,7 +8,7 @@ import {
 } from '@/lib/mfa';
 import { fingerprintMatches } from '@/lib/sessionFingerprint';
 import { mfaCodeSchema } from '@/lib/validation';
-import { consumeRateLimit, clearRateLimit } from '@/lib/rateLimit';
+import { consumeRateLimit, clearRateLimit, isRateLimited } from '@/lib/rateLimit';
 import { logAudit } from '@/lib/audit';
 import { clientIp } from '@/lib/clientIp';
 import { ADMIN_ROLES, GESTOR_PORTAL_ROLES, type Role } from '@/lib/permissions';
@@ -16,7 +16,12 @@ import { ADMIN_ROLES, GESTOR_PORTAL_ROLES, type Role } from '@/lib/permissions';
 const EXPIROU = 'A verificação expirou. Entre com a senha de novo.';
 const INVALIDO = 'Código inválido ou já usado.';
 const MUITAS = 'Muitas tentativas. Entre com a senha de novo daqui a alguns minutos.';
+const MUITAS_DIA =
+  'Muitos códigos errados nas últimas 24 horas. Tente de novo amanhã ou peça ao Super Admin para zerar a sua verificação em duas etapas.';
 const JANELA = 15 * 60 * 1000;
+/** Erros por conta em 24 h. Não zera com o acerto: 5 a cada 15 min ainda davam ~480 palpites por dia. */
+const TETO_DIA = 20;
+const DIA = 24 * 60 * 60 * 1000;
 const PORTAL_ROLES: Record<'admin' | 'gestor', Role[]> = { admin: ADMIN_ROLES, gestor: GESTOR_PORTAL_ROLES };
 
 /**
@@ -39,14 +44,17 @@ export async function POST(req: NextRequest) {
 
   // 6 dígitos são 1 milhão de combinações: 5 tentativas por conta a cada 15
   // minutos deixam a adivinhação inviável. O teto por IP segura varredura.
-  const [porConta, porIp] = await Promise.all([
+  // Por dia conta só o ERRO (quem entra várias vezes no dia não é barrado) e
+  // não zera com o acerto: senão cada login do dono abria mais 5 palpites.
+  const [porConta, porIp, diaEstourado] = await Promise.all([
     consumeRateLimit('mfa-conta', challenge.adminId, 5, JANELA),
     consumeRateLimit('mfa-ip', ip, 50, JANELA),
+    isRateLimited('mfa-conta-dia', challenge.adminId, TETO_DIA),
   ]);
-  if (!porConta.allowed || !porIp.allowed) {
+  if (!porConta.allowed || !porIp.allowed || diaEstourado) {
     await clearChallengeCookie();
     await logAudit({ adminId: challenge.adminId, action: 'login.mfa_rate_limited', req });
-    return NextResponse.json({ error: MUITAS }, { status: 429 });
+    return NextResponse.json({ error: diaEstourado ? MUITAS_DIA : MUITAS }, { status: 429 });
   }
 
   const conta = await db.query.admins.findFirst({ where: eq(schema.admins.id, challenge.adminId) });
@@ -65,6 +73,7 @@ export async function POST(req: NextRequest) {
     allowRecovery: true,
   });
   if (!result.ok) {
+    await consumeRateLimit('mfa-conta-dia', conta.id, TETO_DIA, DIA);
     await logAudit({ adminId: conta.id, action: 'login.mfa_failed', req });
     return NextResponse.json({ error: INVALIDO }, { status: 401 });
   }
