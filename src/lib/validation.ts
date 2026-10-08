@@ -193,6 +193,17 @@ export const surveySubmissionSchema = z.object({
   sectorId: idSchema,
   unitId: idSchema,
   answers: z.array(answerSubmissionSchema).min(1).max(300),
+  /** Código de participação de uso único — só exigido quando a pesquisa pede (surveys.requireAccessCode). */
+  accessCode: z.string().trim().max(20).optional(),
+});
+
+/** Geração de códigos de participação: um lote por vez, com teto para não travar a impressão. */
+export const accessCodesGenerateSchema = z.object({
+  quantity: z.number().int().min(1).max(500),
+});
+
+export const accessCodesToggleSchema = z.object({
+  requireAccessCode: z.boolean(),
 });
 
 export const actionPlanSchema = z.object({

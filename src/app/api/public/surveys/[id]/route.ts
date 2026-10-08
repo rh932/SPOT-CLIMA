@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   });
 
   return NextResponse.json({
-    survey: { id: survey.id, name: survey.name, description: survey.description },
+    survey: { id: survey.id, name: survey.name, description: survey.description, requireAccessCode: survey.requireAccessCode },
     questions: questions.map((q) => ({
       id: q.id,
       text: q.text,

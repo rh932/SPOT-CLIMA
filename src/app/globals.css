@@ -315,3 +315,30 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Impressão dos códigos de participação (AccessCodesPanel): só os papéis vão
+ * para a folha, em grade, sem o resto do painel.
+ */
+@media print {
+  body.imprimindo-codigos * {
+    visibility: hidden;
+  }
+  body.imprimindo-codigos .print-slips,
+  body.imprimindo-codigos .print-slips * {
+    visibility: visible;
+  }
+  body.imprimindo-codigos .print-slips {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: #fff;
+    color: #000;
+  }
+  body.imprimindo-codigos .print-slip {
+    break-inside: avoid;
+    border-color: #999;
+  }
+}

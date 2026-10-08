@@ -168,6 +168,15 @@ export default function SurveysPage() {
                     Editar perguntas
                   </Link>
                 )}
+                {s.status === 'OPEN' && (
+                  <Link
+                    href={`/admin/surveys/${s.id}/edit#codigos`}
+                    className="btn-ghost text-sm py-2 px-4"
+                    aria-label={`Códigos de participação de "${s.name}"`}
+                  >
+                    Códigos de participação
+                  </Link>
+                )}
                 {(s.status === 'DRAFT' || s.status === 'SCHEDULED') && (
                   <ActionButton
                     className="btn-primary text-sm py-2 px-4"

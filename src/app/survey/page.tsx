@@ -7,6 +7,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { QuestionField, type AnswerValue, type QuestionData } from '@/components/survey/QuestionField';
 import { LiveStatus, Skeleton, Spinner } from '@/components/async';
 import { scrollToFirstError } from '@/lib/scrollToError';
+import { formatAccessCode, isAccessCodeFormat, parseAccessCodeHash } from '@/lib/accessCodeFormat';
 
 // 'submitting' saiu: o envio agora acontece DENTRO da tela de revisão, com o
 // botão carregando o estado, em vez de trocar a tela inteira por uma frase.
@@ -19,7 +20,7 @@ interface OpenSurvey {
 }
 
 interface SurveyDetail {
-  survey: { id: string; name: string; description: string | null };
+  survey: { id: string; name: string; description: string | null; requireAccessCode?: boolean };
   questions: (QuestionData & { dimension: { id: string; name: string; order: number } | null })[];
   sectors: { id: string; name: string }[];
   units: { id: string; name: string }[];
@@ -70,8 +71,20 @@ export default function SurveyPage() {
    */
   const [abrindoId, setAbrindoId] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  /**
+   * Código de participação (quando a pesquisa exige). Vem digitado do papel
+   * ou do QR dele, que abre "/survey#codigo=XXXX-XXXX" — o fragmento nunca
+   * chega ao servidor e sai da barra de endereço assim que é lido.
+   */
+  const [accessCode, setAccessCode] = useState('');
+  const [codigoRecusado, setCodigoRecusado] = useState(false);
 
   useEffect(() => {
+    const doLink = parseAccessCodeHash(window.location.hash);
+    if (doLink) {
+      setAccessCode(doLink);
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
     setAnsweredIds(getAnsweredIds());
     fetch('/api/public/surveys')
       .then((r) => {
@@ -258,6 +271,12 @@ export default function SurveyPage() {
             Suas respostas serão analisadas de forma consolidada e nenhuma resposta individual será associada ao seu
             nome. Não coletamos nome, e-mail, matrícula ou qualquer outro dado que possa te identificar — apenas o
             setor e a unidade em que você trabalha.
+            {data.survey.requireAccessCode && (
+              <span className="block mt-3">
+                <strong className="text-spot-gray-900">Tenha em mãos o código de participação</strong> que você recebeu
+                no papel. Ele vale uma resposta e não fica ligado a você nem às suas respostas.
+              </span>
+            )}
           </>
         }
         action={<CoverButton onClick={() => setStage('sector')}>Começar Pesquisa</CoverButton>}
@@ -422,16 +441,25 @@ export default function SurveyPage() {
      * some o botão, e numa falha a pessoa voltava para uma tela que parecia
      * outra. Agora o botão carrega o próprio estado e o contexto fica.
      */
+    const exigeCodigo = Boolean(data.survey.requireAccessCode);
+    const codigoOk = !exigeCodigo || isAccessCodeFormat(accessCode);
     const submit = async () => {
       if (enviando) return;
+      if (!codigoOk) {
+        setCodigoRecusado(true);
+        document.getElementById('codigo-participacao')?.focus();
+        return;
+      }
       setEnviando(true);
       setSubmitError(null);
+      setCodigoRecusado(false);
       try {
         const payload = {
           surveyId: data.survey!.id,
           sectorId,
           unitId,
           answers: Object.entries(answers).map(([questionId, v]) => ({ questionId, ...v })),
+          ...(exigeCodigo ? { accessCode: formatAccessCode(accessCode) } : {}),
         };
         const res = await fetch('/api/public/responses', {
           method: 'POST',
@@ -440,8 +468,10 @@ export default function SurveyPage() {
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
+          if (body.accessCode === 'invalid') setCodigoRecusado(true);
           throw new Error(body.error ?? 'Falha ao enviar.');
         }
+        setAccessCode('');
         markAnswered(data.survey!.id);
         setAnsweredIds(getAnsweredIds());
         setStage('done');
@@ -463,6 +493,30 @@ export default function SurveyPage() {
           Você está prestes a enviar sua pesquisa. Suas respostas serão registradas de forma anônima e não poderão
           ser alteradas depois do envio. Você respondeu {answeredCount} de {data.questions.length} perguntas.
         </p>
+        {exigeCodigo && (
+          <div className="mb-5">
+            <label className="label" htmlFor="codigo-participacao">Código de participação</label>
+            <input
+              id="codigo-participacao"
+              required
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              maxLength={9}
+              placeholder="Ex.: ABCD-EFGH"
+              aria-invalid={codigoRecusado || undefined}
+              aria-describedby="codigo-dica"
+              className={`input text-center text-lg tracking-[0.2em] uppercase ${codigoRecusado ? 'border-spot-danger' : ''}`}
+              value={accessCode}
+              onChange={(e) => { setAccessCode(e.target.value); setCodigoRecusado(false); }}
+            />
+            <p id="codigo-dica" className={`text-xs mt-1 ${codigoRecusado ? 'text-spot-danger' : 'text-spot-gray-500'}`}>
+              {codigoRecusado
+                ? 'Confira o código: são 8 letras e números, como no papel que você recebeu.'
+                : 'Está no papel que você recebeu. Ele vale uma resposta e não é ligado a você.'}
+            </p>
+          </div>
+        )}
         {submitError && (
           <p role="alert" className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5 mb-4">
             {submitError} As suas respostas continuam aqui — pode tentar de novo.

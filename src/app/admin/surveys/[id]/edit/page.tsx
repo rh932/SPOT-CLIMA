@@ -9,6 +9,7 @@ import { ActionButton, ErrorState, LiveStatus, SkeletonForm, useAsyncAction, use
 import { QuestionModal, type Dimension, type QuestionSubmitPayload } from '@/components/admin/QuestionModal';
 import { QuestionListEditor, type QuestionListItem } from '@/components/admin/QuestionListEditor';
 import { ImportQuestionsPanel } from '@/components/admin/ImportQuestionsPanel';
+import { AccessCodesPanel } from '@/components/admin/AccessCodesPanel';
 
 interface Survey { id: string; name: string; status: string; }
 
@@ -154,6 +155,11 @@ export default function EditSurveyQuestionsPage() {
           integridade dos resultados já coletados.
         </p>
       )}
+      {/* Aberta ou encerrada: as perguntas não mudam mais, e o que o RH vem
+          fazer aqui é gerar/imprimir códigos — por isso o painel sobe. */}
+      {!canEdit && survey.status !== 'ARCHIVED' && (
+        <AccessCodesPanel surveyId={survey.id} encerrada={survey.status === 'CLOSED'} />
+      )}
       {error && <p className="text-sm text-spot-danger">{error}</p>}
       {templateSaved && <p className="text-sm text-spot-success">{templateSaved}</p>}
 
@@ -182,6 +188,9 @@ export default function EditSurveyQuestionsPage() {
           onDelete={deactivate}
         />
       )}
+
+      {/* Em rascunho o foco são as perguntas: os códigos ficam no fim. */}
+      {canEdit && <AccessCodesPanel surveyId={survey.id} encerrada={false} />}
 
       {editing && (
         <QuestionModal

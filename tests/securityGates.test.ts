@@ -106,10 +106,22 @@ describe('anonimato no esquema e na rota pública', () => {
     expect(bloco).not.toMatch(/timestamp\(|adminId|employeeId|email|ip/i);
   });
 
+  it('survey_access_codes não aponta para a resposta (e a resposta não aponta para o código)', () => {
+    const schema = read('src/db/schema.ts');
+    const inicio = schema.indexOf("pgTable('survey_access_codes'");
+    const bloco = schema.slice(inicio, schema.indexOf('export const', inicio));
+    expect(bloco).not.toMatch(/response|answer|sectorId|unitId|ip/i);
+    // O código em si nunca é gravado: só o HMAC.
+    expect(bloco).toMatch(/codeHash/);
+    expect(bloco).not.toMatch(/\bcode: text/);
+  });
+
   it('o envio anônimo não grava auditoria, IP nem horário exato', () => {
     const rota = read('src/app/api/public/responses/route.ts');
     expect(rota).not.toMatch(/logAudit|hashIp|auditLogs/);
     expect(rota).toMatch(/createdAt: new Date\(saoPauloDay\(\)\)/);
+    // O uso do código de participação também fica só com o dia.
+    expect(rota).toMatch(/usedOn: new Date\(saoPauloDay\(\)\)/);
   });
 
   it('getSurveyResults não carrega o created_at das respostas', () => {
