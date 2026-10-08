@@ -12,6 +12,25 @@ import { WordCloud } from '@/components/charts/WordCloud';
 import { EnpsPanel } from '@/components/admin/EnpsPanel';
 import type { SurveyResultsSummary, CommentAnalysis } from '@/lib/results';
 import { ErrorState, LiveStatus, SkeletonStats, SkeletonTable } from '@/components/async';
+import Link from 'next/link';
+
+/**
+ * Link para o Plano de Ação com o formulário já preenchido a partir de uma
+ * recomendação (pesquisa, dimensão, problema e a 1ª sugestão como ação).
+ * Abaixo de 50% a prioridade já sugere "Crítica".
+ */
+function linkPlanoDeAcao(results: SurveyResultsSummary, r: SurveyResultsSummary['recommendations'][number]): string {
+  const dim = results.byDimension.find((d) => d.dimension === r.dimension);
+  const p = new URLSearchParams({
+    novo: '1',
+    pesquisa: results.surveyId,
+    problema: `${r.dimension} com índice de ${r.index}% na pesquisa "${results.surveyName}".`,
+    acao: r.suggestions[0] ?? '',
+    prioridade: r.index < 50 ? 'CRITICAL' : 'HIGH',
+  });
+  if (dim) p.set('dimensao', dim.dimensionId);
+  return `/admin/action-plans?${p.toString()}`;
+}
 
 interface SurveyOption { id: string; name: string; status: string; }
 
@@ -329,9 +348,18 @@ function ResultsInner() {
               <div className="flex flex-col">
                 {results.recommendations.map((r) => (
                   <div key={r.dimension} className="py-4 border-b border-spot-gray-200 last:border-b-0">
-                    <p className="font-display text-lg font-semibold">
-                      {r.dimension} <span className="text-spot-gray-500 tabular">{r.index}%</span>
-                    </p>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="font-display text-lg font-semibold">
+                        {r.dimension} <span className="text-spot-gray-500 tabular">{r.index}%</span>
+                      </p>
+                      <Link
+                        href={linkPlanoDeAcao(results, r)}
+                        className="btn-ghost text-xs py-1.5 px-3"
+                        aria-label={`Criar plano de ação para ${r.dimension}`}
+                      >
+                        Criar plano de ação
+                      </Link>
+                    </div>
                     <ul className="text-sm text-spot-gray-700 mt-1.5 flex flex-col gap-1">
                       {r.suggestions.map((sugestao, i) => (
                         <li key={i} className="flex gap-2.5">

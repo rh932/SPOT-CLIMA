@@ -37,6 +37,12 @@ const STATUS_LABEL: Record<string, string> = {
 export default function ActionPlansPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<ActionPlan | null>(null);
+  const [rascunho, setRascunho] = useState<Rascunho | null>(null);
+  // Vindo de "Criar plano de ação" nos resultados: abre o formulário já preenchido.
+  useEffect(() => {
+    const r = lerRascunhoDaUrl();
+    if (r) { setRascunho(r); setShowForm(true); }
+  }, []);
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [view, setView] = useState<'list' | 'matrix'>('list');
 
@@ -244,15 +250,17 @@ export default function ActionPlansPage() {
       )}
       </AsyncSection>
 
-      {showForm && (
+      {showForm && data && (
         <ActionPlanForm
+          rascunho={rascunho}
           dimensions={dimensions}
           sectors={sectors}
           units={units}
           surveys={surveys}
-          onClose={() => setShowForm(false)}
+          onClose={() => { setShowForm(false); setRascunho(null); }}
           onSaved={async () => {
             setShowForm(false);
+            setRascunho(null);
             mostrar('Plano de ação criado.');
             await reload();
           }}
@@ -325,18 +333,46 @@ function PriorityMatrix({ plans }: { plans: ActionPlan[] }) {
   );
 }
 
+/** Rascunho vindo de "Criar plano de ação" nos resultados (ver lerRascunhoDaUrl). */
+interface Rascunho {
+  problem?: string;
+  action?: string;
+  priority?: string;
+  dimensionId?: string;
+  surveyId?: string;
+}
+
+/**
+ * Lê o rascunho do link dos resultados (?novo=1&pesquisa=..&dimensao=..) e
+ * tira os parâmetros da barra de endereço — recarregar a página não abre o
+ * formulário de novo.
+ */
+function lerRascunhoDaUrl(): Rascunho | null {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('novo') !== '1') return null;
+  window.history.replaceState(null, '', window.location.pathname);
+  const prioridade = p.get('prioridade') ?? '';
+  return {
+    problem: p.get('problema')?.slice(0, 500) ?? undefined,
+    action: p.get('acao')?.slice(0, 1000) ?? undefined,
+    priority: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(prioridade) ? prioridade : undefined,
+    dimensionId: p.get('dimensao') ?? undefined,
+    surveyId: p.get('pesquisa') ?? undefined,
+  };
+}
+
 function ActionPlanForm({
-  plan, dimensions, sectors, units, surveys, onClose, onSaved,
-}: { plan?: ActionPlan; dimensions: Dimension[]; sectors: Sector[]; units: Unit[]; surveys: Survey[]; onClose: () => void; onSaved: () => void }) {
-  const [problem, setProblem] = useState(plan?.problem ?? '');
-  const [action, setAction] = useState(plan?.action ?? '');
+  plan, rascunho, dimensions, sectors, units, surveys, onClose, onSaved,
+}: { plan?: ActionPlan; rascunho?: Rascunho | null; dimensions: Dimension[]; sectors: Sector[]; units: Unit[]; surveys: Survey[]; onClose: () => void; onSaved: () => void }) {
+  const [problem, setProblem] = useState(plan?.problem ?? rascunho?.problem ?? '');
+  const [action, setAction] = useState(plan?.action ?? rascunho?.action ?? '');
   const [owner, setOwner] = useState(plan?.owner ?? '');
-  const [priority, setPriority] = useState(plan?.priority ?? 'MEDIUM');
+  const [priority, setPriority] = useState(plan?.priority ?? rascunho?.priority ?? 'MEDIUM');
   const [dueDate, setDueDate] = useState(plan?.dueDate ? plan.dueDate.slice(0, 10) : '');
-  const [dimensionId, setDimensionId] = useState(plan?.dimensionId ?? '');
+  const [dimensionId, setDimensionId] = useState(plan?.dimensionId ?? rascunho?.dimensionId ?? '');
   const [sectorId, setSectorId] = useState(plan?.sectorId ?? '');
   const [unitId, setUnitId] = useState(plan?.unitId ?? '');
-  const [surveyId, setSurveyId] = useState(plan?.surveyId ?? '');
+  const [surveyId, setSurveyId] = useState(plan?.surveyId ?? rascunho?.surveyId ?? '');
   const [notes, setNotes] = useState(plan?.notes ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
