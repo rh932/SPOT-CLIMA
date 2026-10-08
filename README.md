@@ -151,6 +151,9 @@ Crítico, 0-49% Muito crítico. Ver `src/lib/calculations.ts` (testado em `tests
 - Zod valida todo input de API (`src/lib/validation.ts`).
 - Rate limiting em memória no login (10 tentativas / 5 min por IP) e no envio de respostas.
 - Headers de segurança (`X-Frame-Options`, `CSP`, etc.) em `next.config.js`.
+- **Verificação em duas etapas** (código do app autenticador), opcional por conta, em
+  Configurações. Vale nos dois portais. Perdeu o celular e os códigos de recuperação: o Super Admin
+  desliga em Usuários; para o próprio Super Admin, `npm run db:reset-mfa -- <email>`.
 - Logs de auditoria (`audit_logs`) para toda ação administrativa — nunca com conteúdo de resposta.
 - Nenhuma chave secreta no frontend; tudo via variáveis de ambiente (`.env`, nunca commitado).
 - Drizzle usa queries parametrizadas (sem SQL Injection); React escapa saída por padrão (sem XSS).
@@ -230,24 +233,35 @@ npm run test:watch # testes em modo watch
 ## 13. Como criar e publicar uma pesquisa
 
 1. `/admin/surveys` → **Nova pesquisa** (nome, população elegível, limite de anonimato).
-2. Abra **Editar perguntas** → **Importar banco padrão** (73 perguntas prontas) ou monte do zero.
+2. Abra **Editar perguntas** → **Importar banco padrão** (74 perguntas prontas, com a de eNPS) ou monte do zero.
 3. Ajuste perguntas (texto, tipo, dimensão, obrigatoriedade, ordem) livremente enquanto o status for
    Rascunho.
 4. Clique **Publicar** — a partir daí a pesquisa fica visível em `/survey` para os colaboradores.
 5. Quando encerrar a coleta, clique **Encerrar** — o sistema calcula e congela um resumo executivo
    (`survey_snapshots`).
 
+**Códigos de participação (opcional, recomendado):** em **Códigos de participação** (na lista de
+pesquisas ou na tela da pesquisa), gere um papel por pessoa, imprima e distribua; depois clique
+**Exigir código**. Cada código vale uma resposta, o QR do papel já abre a pesquisa com o código, e
+nada liga o código à resposta. Os códigos só aparecem na tela na hora de gerar — imprima ali.
+
 ## 14. Como visualizar resultados
 
 `/admin/results` — selecione a pesquisa e (opcionalmente) um setor. Mostra índice geral, participação,
-gráficos por dimensão/setor, radar, heatmap, top pontos fortes/críticos, recomendações automáticas e
-comentários. `/admin/comparisons` compara a evolução entre múltiplos ciclos.
+eNPS (quando a pesquisa tem a pergunta), gráficos por dimensão/setor, radar, heatmap, top pontos
+fortes/críticos, recomendações automáticas (cada uma com **Criar plano de ação**, que abre o plano já
+preenchido) e comentários. `/admin/comparisons` compara a evolução (índice e eNPS) entre ciclos.
+
+`/admin/indicadores` — Indicadores da Experiência: efetivação mês a mês, por loja e setor, e a
+pontualidade de cada gestor (atrasadas agora, vencendo em 7 dias, % no prazo).
 
 ## 15. Como exportar relatório
 
 `/admin/reports` → escolha a pesquisa → **PDF**, **Excel** ou **CSV**. O PDF é gerado renderizando a
 própria página de impressão (`/admin/reports/[id]/print`) com Chromium headless — o que você vê na
-tela é exatamente o que vai para o PDF.
+tela é exatamente o que vai para o PDF. Na Vercel o Chromium vem do `@sparticuz/chromium`; se mesmo
+assim o servidor não conseguir, a tela oferece **Abrir e salvar PDF**, que abre a página já na
+janela de impressão do navegador.
 
 ## 16. Como criar um plano de ação
 
@@ -274,13 +288,25 @@ Duas camadas recomendadas:
 
 ```bash
 npm run db:backup
-# gera backups/spot-clima-YYYYMMDD-HHMMSS.sql (pasta ignorada pelo git)
+# gera Documentos/spot-clima-backups/spot-clima-YYYYMMDD-HHMMSS.sql.gz.enc
+# (FORA da pasta do projeto, comprimido e cifrado com AES-256-GCM; mantém os 30 mais recentes)
+
 # restaurar (banco já migrado; trunque antes se não estiver vazio):
-psql "$DATABASE_URL" -f backups/spot-clima-YYYYMMDD-HHMMSS.sql
+npm run db:decrypt-backup -- <arquivo.sql.gz.enc> C:\temp\restaurar.sql
+psql "$DATABASE_URL" -f C:\temp\restaurar.sql    # e apague o .sql em seguida
 ```
 
 O script é somente leitura, usa o `DATABASE_URL` do `.env` e não exige `pg_dump`
-(útil no Windows/PowerShell). Se preferir o dump nativo do PostgreSQL:
+(útil no Windows/PowerShell). O SQL nunca é gravado em texto puro: entra no gzip e na cifra enquanto é
+gerado, e o arquivo é conferido (decifrado e comparado) antes de o backup ser dado como feito.
+
+- A chave é `BACKUP_PASSPHRASE`, no `.env`. **Guarde uma cópia num gerenciador de senhas**: sem
+  ela, nenhum backup abre. Pasta e quantidade: `BACKUP_DIR` e `BACKUP_KEEP` (opcionais).
+- **Backup diário automático** (tarefa agendada do Windows, roda mesmo se o computador estava
+  desligado no horário, assim que ligar): `powershell -ExecutionPolicy Bypass -File scripts\agendar-backup.ps1`.
+  O log fica em `Documentos\spot-clima-backups\backup.log`.
+
+Se preferir o dump nativo do PostgreSQL:
 
 ```bash
 pg_dump "$DATABASE_URL" -F c -f backup-spot-clima-$(date +%Y%m%d).dump
