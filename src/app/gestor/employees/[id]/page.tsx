@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/apiClient';
 import { usePainelModal } from '@/components/forms/usePainelModal';
@@ -89,7 +89,8 @@ const KIND_STYLE: Record<TimelineEvent['kind'], { dot: string; label: string }> 
   TREINAMENTO: { dot: 'bg-spot-gray-600', label: 'Treinamento' },
 };
 
-export default function EmployeeFilePage({ params }: { params: { id: string } }) {
+export default function EmployeeFilePage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

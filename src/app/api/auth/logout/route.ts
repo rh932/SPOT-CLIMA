@@ -12,7 +12,7 @@ import { logAudit } from '@/lib/audit';
 export async function POST(req: NextRequest) {
   const portal = req.nextUrl.searchParams.get('portal') === 'gestor' ? 'gestor' : 'admin';
   const session = await getSession(portal);
-  clearSessionCookie(portal);
+  await clearSessionCookie(portal);
   if (session) await logAudit({ adminId: session.adminId, action: 'logout', metadata: { portal }, req });
   return NextResponse.json({ ok: true });
 }

@@ -18,7 +18,8 @@ import { notifyActivity } from '@/lib/notify';
  * colaborador, sem recorte de escopo. A regra de recálculo do prazo é a mesma
  * dos dois lados — ver `changeEmployeeColor()`.
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'evaluations.edit');
@@ -58,7 +59,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 }
 
 /** Histórico de mudanças de classificação, da mais recente para a mais antiga. */
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'evaluations.view');

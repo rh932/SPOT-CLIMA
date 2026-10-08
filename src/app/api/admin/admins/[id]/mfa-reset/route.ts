@@ -12,7 +12,8 @@ import { logAudit } from '@/lib/audit';
  * celular e os códigos de recuperação. A pessoa entra só com a senha e liga de
  * novo. A própria conta se desliga pela tela "Minha conta" (exige código).
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requireRole(session, ['SUPER_ADMIN']);

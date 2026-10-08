@@ -9,7 +9,8 @@ import { templateQuestionSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
 import { enpsQuestionFields } from '@/lib/enps';
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'surveys.manage');
@@ -24,7 +25,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requireRole(session, ['SUPER_ADMIN']);

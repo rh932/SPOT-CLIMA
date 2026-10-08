@@ -11,7 +11,8 @@ import { statusFromEvaluations } from '@/lib/termination';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'employees.view');
@@ -33,7 +34,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'employees.edit');
@@ -124,7 +126,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
  * acontece — e aí as tabelas filhas caem por cascade (FK onDelete cascade),
  * sem deixar registro órfão.
  */
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'employees.delete');

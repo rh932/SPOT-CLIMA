@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       portal: parsed.data.portal,
       pv: passwordFingerprint(conta.passwordHash),
     });
-    setChallengeCookie(challenge);
+    await setChallengeCookie(challenge);
     await clearRateLimit('login-conta-ip', `${email}|${ip}`);
     await logAudit({ adminId: conta.id, action: 'login.mfa_challenge', req });
     return NextResponse.json({ mfaRequired: true });

@@ -9,7 +9,8 @@ import { PrintButton } from './PrintButton';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PrintReportPage({ params }: { params: { id: string } }) {
+export default async function PrintReportPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   // Esta página lê o banco direto, sem passar por /api. O middleware só
   // confere a assinatura e o papel gravados no token; quem foi desativado ou
   // rebaixado depois do login precisa ser barrado aqui, relendo o banco.

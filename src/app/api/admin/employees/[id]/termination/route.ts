@@ -19,7 +19,8 @@ import { notifyActivity } from '@/lib/notify';
  * como "Aguardando 1º ciclo" e continuava gerando lembrete para o gestor.
  * Também serve para corrigir motivo e data de um desligamento já registrado.
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'employees.edit');
@@ -78,7 +79,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
  * importação —, vale a que as avaliações dão; e se a última concluiu
  * "Demitir", não há o que desfazer aqui: o desligamento veio da avaliação.
  */
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'employees.edit');

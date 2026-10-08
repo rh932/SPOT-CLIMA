@@ -10,7 +10,8 @@ import { eq, and, asc } from 'drizzle-orm';
  * específica (por id) com suas perguntas e os setores/unidades ativos —
  * só se ela estiver OPEN. Não requer autenticação.
  */
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const survey = await db.query.surveys.findFirst({
     where: and(eq(schema.surveys.id, params.id), eq(schema.surveys.status, 'OPEN')),
   });

@@ -26,7 +26,7 @@ const PORTAL_ROLES: Record<'admin' | 'gestor', Role[]> = { admin: ADMIN_ROLES, g
  */
 export async function POST(req: NextRequest) {
   const ip = clientIp(req.headers);
-  const token = readChallengeCookie();
+  const token = await readChallengeCookie();
   const challenge = token ? await verifyChallengeToken(token) : null;
   if (!challenge) {
     return NextResponse.json({ error: EXPIROU }, { status: 401 });
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     consumeRateLimit('mfa-ip', ip, 50, JANELA),
   ]);
   if (!porConta.allowed || !porIp.allowed) {
-    clearChallengeCookie();
+    await clearChallengeCookie();
     await logAudit({ adminId: challenge.adminId, action: 'login.mfa_rate_limited', req });
     return NextResponse.json({ error: MUITAS }, { status: 429 });
   }
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     || !fingerprintMatches(challenge.pv, conta.passwordHash)
     || !PORTAL_ROLES[challenge.portal].includes(conta.role as Role)
   ) {
-    clearChallengeCookie();
+    await clearChallengeCookie();
     return NextResponse.json({ error: EXPIROU }, { status: 401 });
   }
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     conta.passwordHash,
   );
   await setSessionCookie(challenge.portal, sessionToken);
-  clearChallengeCookie();
+  await clearChallengeCookie();
   await clearRateLimit('mfa-conta', conta.id);
   await logAudit({ adminId: conta.id, action: 'login.success', metadata: { segundaEtapa: result.method }, req });
 

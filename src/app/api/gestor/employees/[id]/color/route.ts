@@ -18,7 +18,8 @@ import { notifyActivity } from '@/lib/notify';
  * Toda mudança exige motivo e vira linha em `employee_color_changes`, que é o
  * que responde depois "por que a cadência desta pessoa mudou?".
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireGestor();
     requirePermission(session, 'employees.color.edit');

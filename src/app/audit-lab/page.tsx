@@ -76,29 +76,33 @@ function CamposPesquisaBancada() {
   );
 }
 
-const TELAS: Record<string, () => JSX.Element> = {
+// Next 15: `params` da rota é uma Promise lida com use(). Uma Promise fixa,
+// criada uma vez — criada no render, ela suspenderia a tela para sempre.
+const FICHA_PARAMS = Promise.resolve({ id: 'func-0' });
+
+const TELAS: Record<string, () => React.JSX.Element> = {
   campos: CamposPesquisaBancada,
-  gestor: GestorDashboardPage as () => JSX.Element,
-  treinamento: TreinamentoPage as () => JSX.Element,
-  employees: AdminEmployeesPage as () => JSX.Element,
-  usuarios: AdminUsersPage as () => JSX.Element,
-  login: GestorLoginPage as () => JSX.Element,
-  surveys: AdminSurveysPage as () => JSX.Element,
-  avaliar: EvaluatePage as () => JSX.Element,
-  setores: AdminSectorsPage as () => JSX.Element,
-  planos: AdminActionPlansPage as () => JSX.Element,
-  modelos: AdminTemplatesPage as () => JSX.Element,
+  gestor: GestorDashboardPage as () => React.JSX.Element,
+  treinamento: TreinamentoPage as () => React.JSX.Element,
+  employees: AdminEmployeesPage as () => React.JSX.Element,
+  usuarios: AdminUsersPage as () => React.JSX.Element,
+  login: GestorLoginPage as () => React.JSX.Element,
+  surveys: AdminSurveysPage as () => React.JSX.Element,
+  avaliar: EvaluatePage as () => React.JSX.Element,
+  setores: AdminSectorsPage as () => React.JSX.Element,
+  planos: AdminActionPlansPage as () => React.JSX.Element,
+  modelos: AdminTemplatesPage as () => React.JSX.Element,
   // A ficha e a unica tela do mapa que recebe params da rota; sem eles ela
   // quebrava em params.id antes de desenhar qualquer coisa.
-  ficha: () => <GestorEmployeePage params={{ id: 'func-0' }} />,
-  visao: AdminOverviewPage as () => JSX.Element,
-  resultados: AdminResultsPage as () => JSX.Element,
-  comentarios: AdminCommentsPage as () => JSX.Element,
+  ficha: () => <GestorEmployeePage params={FICHA_PARAMS} />,
+  visao: AdminOverviewPage as () => React.JSX.Element,
+  resultados: AdminResultsPage as () => React.JSX.Element,
+  comentarios: AdminCommentsPage as () => React.JSX.Element,
   perguntas: PerguntasBancada,
 };
 
 /** `?chrome=admin|gestor` monta a tela dentro do menu real do portal. */
-const CHROMES: Record<string, (p: { children: React.ReactNode }) => JSX.Element> = {
+const CHROMES: Record<string, (p: { children: React.ReactNode }) => React.JSX.Element> = {
   admin: AdminChrome,
   gestor: GestorChrome,
 };

@@ -227,7 +227,7 @@ describe('handlers: acesso vertical e horizontal', () => {
     const { GET } = await import('../src/app/api/admin/surveys/[id]/results/route');
     account('GESTOR');
     state.cookies.set('spot_admin_session', await tokenFor('GESTOR'));
-    const res = await GET(req('/api/admin/surveys/s1/results'), { params: { id: 's1' } });
+    const res = await GET(req('/api/admin/surveys/s1/results'), { params: Promise.resolve({ id: 's1' }) });
     expect(res.status).toBe(403);
   });
 
@@ -236,7 +236,7 @@ describe('handlers: acesso vertical e horizontal', () => {
     account('RH');
     state.cookies.set('spot_admin_session', await tokenFor('RH'));
     state.survey = { id: 's1', name: 'Clima', status: 'OPEN', eligiblePopulation: 10, anonymityThreshold: 5 };
-    const res = await GET(req('/api/admin/surveys/s1/results'), { params: { id: 's1' } });
+    const res = await GET(req('/api/admin/surveys/s1/results'), { params: Promise.resolve({ id: 's1' }) });
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body.results.locked).toBe('SURVEY_OPEN');
@@ -262,7 +262,7 @@ describe('handlers: acesso vertical e horizontal', () => {
     account('GESTOR');
     state.cookies.set('spot_gestor_session', await tokenFor('GESTOR'));
     state.employee = { id: 'e9', unitId: 'OUTRA', sectorId: 's1', shift: 'DIA', sector: {}, unit: {} };
-    const res = await GET(req('/api/gestor/employees/e9'), { params: { id: 'e9' } });
+    const res = await GET(req('/api/gestor/employees/e9'), { params: Promise.resolve({ id: 'e9' }) });
     expect(res.status).toBe(403);
   });
 
@@ -271,7 +271,7 @@ describe('handlers: acesso vertical e horizontal', () => {
     account('GESTOR');
     state.cookies.set('spot_gestor_session', await tokenFor('GESTOR'));
     state.employee = { id: 'e9', unitId: 'u1', sectorId: 's1', shift: 'NOITE', sector: {}, unit: {} };
-    const res = await GET(req('/api/gestor/employees/e9'), { params: { id: 'e9' } });
+    const res = await GET(req('/api/gestor/employees/e9'), { params: Promise.resolve({ id: 'e9' }) });
     expect(res.status).toBe(403);
   });
 
@@ -279,7 +279,7 @@ describe('handlers: acesso vertical e horizontal', () => {
     const { POST } = await import('../src/app/api/gestor/employees/[id]/evaluate/route');
     account('TREINADOR');
     state.cookies.set('spot_gestor_session', await tokenFor('TREINADOR'));
-    const res = await POST(req('/api/gestor/employees/e1/evaluate', { method: 'POST' }), { params: { id: 'e1' } });
+    const res = await POST(req('/api/gestor/employees/e1/evaluate', { method: 'POST' }), { params: Promise.resolve({ id: 'e1' }) });
     expect(res.status).toBe(403);
   });
 
@@ -300,7 +300,7 @@ describe('handlers: acesso vertical e horizontal', () => {
       relationshipRating: 'BOM', relationshipSubAnswers: sub(2), learningRating: 'BOM', learningSubAnswers: sub(2),
       favorableAspects: 'ok ok', unfavorableAspects: 'ok ok', classification: 'OTIMAS_PERSPECTIVAS', conclusion: 'EFETIVAR',
     };
-    const res = await POST(new NextRequest(r.url, { method: 'POST', headers: r.headers, body: JSON.stringify(body) }), { params: { id: 'e1' } });
+    const res = await POST(new NextRequest(r.url, { method: 'POST', headers: r.headers, body: JSON.stringify(body) }), { params: Promise.resolve({ id: 'e1' }) });
     expect(res.status).toBe(400);
     expect((await res.json()).error).toMatch(/entre a admissão e hoje/);
   });
@@ -310,7 +310,7 @@ describe('handlers: acesso vertical e horizontal', () => {
     account('GESTOR');
     state.cookies.set('spot_gestor_session', await tokenFor('GESTOR'));
     state.employee = { id: 'e1', unitId: 'u1', sectorId: 's1', shift: 'DIA', sector: {}, unit: {} };
-    const res = await DELETE(req('/api/gestor/employees/e1', { method: 'DELETE' }), { params: { id: 'e1' } });
+    const res = await DELETE(req('/api/gestor/employees/e1', { method: 'DELETE' }), { params: Promise.resolve({ id: 'e1' }) });
     expect(res.status).toBe(403);
   });
 
@@ -323,7 +323,7 @@ describe('handlers: acesso vertical e horizontal', () => {
       unitId: 'u1', sectorId: 's1', status: 'HIRED', currentColor: 'VERMELHO', period1DueDate: 'x',
       nextFeedbackDueDate: 'y', createdById: 'rh', sector: { id: 's1', name: 'Salão', usesColorCycle: true, inTraining: true }, unit: { id: 'u1', name: 'Loja' },
     };
-    const res = await GET(req('/api/gestor/employees/e1'), { params: { id: 'e1' } });
+    const res = await GET(req('/api/gestor/employees/e1'), { params: Promise.resolve({ id: 'e1' }) });
     const body = await res.json();
     expect(res.status).toBe(200);
     for (const campo of ['status', 'currentColor', 'period1DueDate', 'nextFeedbackDueDate', 'createdById']) {
@@ -340,7 +340,7 @@ describe('handlers: acesso vertical e horizontal', () => {
       unitId: 'u1', sectorId: 's1', status: 'HIRED', sector: { id: 's1', name: 'Cozinha', usesColorCycle: false, inTraining: false },
       unit: { id: 'u1', name: 'Loja' },
     };
-    const res = await GET(req('/api/gestor/employees/e2'), { params: { id: 'e2' } });
+    const res = await GET(req('/api/gestor/employees/e2'), { params: Promise.resolve({ id: 'e2' }) });
     expect(res.status).toBe(403);
   });
 });

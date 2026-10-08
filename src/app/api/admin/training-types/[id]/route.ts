@@ -8,7 +8,8 @@ import { requireAdmin, requirePermission, handleApiError } from '@/lib/apiAuth';
 import { trainingTypeSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'trainings.manage');
@@ -33,7 +34,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
  * verdade com ?hard=true e quando nenhum treinamento usa o tipo — treinamento
  * feito é histórico do colaborador, não pode sumir junto.
  */
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'trainings.manage');

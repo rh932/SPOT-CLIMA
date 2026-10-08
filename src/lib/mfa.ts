@@ -90,8 +90,8 @@ export async function verifyChallengeToken(token: string): Promise<MfaChallenge 
   }
 }
 
-export function setChallengeCookie(token: string) {
-  cookies().set(MFA_CHALLENGE_COOKIE, token, {
+export async function setChallengeCookie(token: string) {
+  (await cookies()).set(MFA_CHALLENGE_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
@@ -100,8 +100,8 @@ export function setChallengeCookie(token: string) {
   });
 }
 
-export function clearChallengeCookie() {
-  cookies().set(MFA_CHALLENGE_COOKIE, '', {
+export async function clearChallengeCookie() {
+  (await cookies()).set(MFA_CHALLENGE_COOKIE, '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
@@ -110,8 +110,8 @@ export function clearChallengeCookie() {
   });
 }
 
-export function readChallengeCookie(): string | null {
-  return cookies().get(MFA_CHALLENGE_COOKIE)?.value ?? null;
+export async function readChallengeCookie(): Promise<string | null> {
+  return (await cookies()).get(MFA_CHALLENGE_COOKIE)?.value ?? null;
 }
 
 // ------------------------------------------------------------------

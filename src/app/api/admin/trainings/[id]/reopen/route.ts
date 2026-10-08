@@ -12,7 +12,8 @@ import { notifyActivity } from '@/lib/notify';
  * Mesma operação da rota do gestor, sem recorte de escopo: o RH enxerga a
  * operação inteira.
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'trainings.reopen');

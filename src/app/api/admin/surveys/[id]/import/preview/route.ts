@@ -8,7 +8,8 @@ import { requireAdmin, requireRole, handleApiError, ApiError } from '@/lib/apiAu
 import { parseQuestionsWorkbook } from '@/lib/importQuestions';
 import { readSpreadsheetUpload } from '@/lib/upload';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requireRole(session, ['SUPER_ADMIN']);

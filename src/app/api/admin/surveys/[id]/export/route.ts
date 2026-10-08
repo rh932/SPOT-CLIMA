@@ -7,7 +7,8 @@ import { buildCsv, buildXlsx } from '@/lib/exportReport';
 import { renderUrlToPdf } from '@/lib/pdf';
 import { logAudit } from '@/lib/audit';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'reports.view');

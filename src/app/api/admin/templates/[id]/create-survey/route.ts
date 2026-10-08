@@ -12,7 +12,8 @@ import { DEFAULT_ANONYMITY_THRESHOLD } from '@/lib/anonymity';
 // Modelo -> nova pesquisa. Aberto a qualquer admin (uso normal da biblioteca,
 // não é curadoria). Copia as perguntas para linhas novas — editar o modelo
 // depois nunca afeta esta pesquisa (mesmo padrão de surveys/[id]/duplicate).
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'surveys.manage');

@@ -11,7 +11,8 @@ import { secondOpinionFor } from '@/lib/secondOpinion';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireGestor();
     requirePermission(session, 'employees.view');
@@ -125,7 +126,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
  * 409 com a contagem; só com `?confirm=true` a exclusão acontece (as tabelas
  * filhas caem por cascade).
  */
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireGestor();
     requirePermission(session, 'employees.delete');

@@ -8,7 +8,8 @@ import { requireAdmin, requireRole, handleApiError } from '@/lib/apiAuth';
 import { templateCategorySchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requireRole(session, ['SUPER_ADMIN']);
@@ -26,7 +27,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requireRole(session, ['SUPER_ADMIN']);

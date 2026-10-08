@@ -14,7 +14,8 @@ import { notifyActivity } from '@/lib/notify';
  * treinamento não desfaz o próprio encerramento, senão "definitivo" não
  * significa nada. E ele só reabre dentro do escopo dele.
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireGestor();
     requirePermission(session, 'trainings.reopen');

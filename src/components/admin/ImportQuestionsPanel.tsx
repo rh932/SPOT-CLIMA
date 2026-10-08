@@ -118,7 +118,9 @@ export function ImportQuestionsPanel({
     <div className="card flex flex-col gap-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="font-semibold">Importar perguntas via Excel</p>
-        <a href="/api/admin/templates/import-template" className="btn-ghost text-xs py-1.5 px-3">
+        {/* Download de arquivo da API: <a> de propósito — <Link> tentaria navegar dentro do app. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/api/admin/templates/import-template" download className="btn-ghost text-xs py-1.5 px-3">
           Baixar modelo Excel
         </a>
       </div>

@@ -13,7 +13,8 @@ import { logAudit } from '@/lib/audit';
  * pesquisa em rascunho. Não duplica se a pesquisa já tiver perguntas — o
  * admin precisa esvaziar antes, para evitar bagunçar a ordem.
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'surveys.manage');

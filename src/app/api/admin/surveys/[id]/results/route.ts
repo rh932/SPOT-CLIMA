@@ -9,7 +9,8 @@ import { requireAdmin, requirePermission, handleApiError, ApiError } from '@/lib
  * mínimo, grupos ocultos) são aplicadas dentro de getSurveyResults — esta rota
  * nunca vê números que não podem sair.
  */
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requirePermission(session, 'reports.view');

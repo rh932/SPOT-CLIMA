@@ -66,7 +66,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
 }
 
 export async function setSessionCookie(portal: Portal, token: string) {
-  cookies().set(SESSION_COOKIES[portal], token, {
+  (await cookies()).set(SESSION_COOKIES[portal], token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -75,8 +75,8 @@ export async function setSessionCookie(portal: Portal, token: string) {
   });
 }
 
-export function clearSessionCookie(portal: Portal) {
-  cookies().set(SESSION_COOKIES[portal], '', {
+export async function clearSessionCookie(portal: Portal) {
+  (await cookies()).set(SESSION_COOKIES[portal], '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -86,7 +86,7 @@ export function clearSessionCookie(portal: Portal) {
 }
 
 export async function getSession(portal: Portal): Promise<SessionPayload | null> {
-  const token = cookies().get(SESSION_COOKIES[portal])?.value;
+  const token = (await cookies()).get(SESSION_COOKIES[portal])?.value;
   if (!token) return null;
   return verifySessionToken(token);
 }

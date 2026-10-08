@@ -9,7 +9,8 @@ import { questionTemplateSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
 
 // Pesquisa -> novo modelo (só perguntas ativas). Curadoria da biblioteca: SUPER_ADMIN.
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await requireAdmin();
     requireRole(session, ['SUPER_ADMIN']);
