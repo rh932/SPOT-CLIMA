@@ -60,9 +60,27 @@ function resolveChromiumExecutable(): string | undefined {
  * página HTML de impressão (`/admin/reports/[id]/print`), garantindo que o
  * PDF é idêntico ao que o RH vê na tela.
  */
+/** Rodando em função serverless (Vercel/AWS), onde não existe Chromium instalado. */
+function isServerless(): boolean {
+  return Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+}
+
+/**
+ * Como abrir o Chromium: na Vercel, o @sparticuz/chromium (binário próprio
+ * para serverless, mesma versão 130 do playwright-core 1.48); na máquina, o
+ * Chromium do cache do Playwright ou o de PLAYWRIGHT_CHROMIUM_PATH.
+ */
+async function launchOptions(): Promise<{ executablePath?: string; args: string[] }> {
+  if (isServerless()) {
+    const { default: serverless } = await import('@sparticuz/chromium');
+    return { executablePath: await serverless.executablePath(), args: serverless.args };
+  }
+  return { executablePath: resolveChromiumExecutable(), args: ['--no-sandbox'] };
+}
+
 export async function renderUrlToPdf(url: string, cookieHeader?: string): Promise<Buffer> {
-  const executablePath = resolveChromiumExecutable();
-  const browser = await chromium.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+  const { executablePath, args } = await launchOptions();
+  const browser = await chromium.launch({ executablePath, headless: true, args });
   try {
     const context = await browser.newContext();
     if (cookieHeader) {

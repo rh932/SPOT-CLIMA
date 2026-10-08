@@ -55,8 +55,15 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // playwright-core (usado só na exportação de PDF) tem requires dinâmicos que
   // não devem ser processados pelo bundler do Next — mantém como pacote externo no servidor.
+  // @sparticuz/chromium é o Chromium para serverless (Vercel): o binário vem
+  // compactado em bin/ e é aberto em tempo de execução — o rastreador de
+  // arquivos não enxerga essa leitura, por isso a pasta entra à força na rota
+  // que gera o PDF.
   experimental: {
-    serverComponentsExternalPackages: ['playwright-core'],
+    serverComponentsExternalPackages: ['playwright-core', '@sparticuz/chromium'],
+    outputFileTracingIncludes: {
+      '/api/admin/surveys/[id]/export': ['./node_modules/@sparticuz/chromium/bin/**'],
+    },
   },
   async headers() {
     return [

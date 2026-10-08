@@ -15,6 +15,8 @@ export default function ReportsPage() {
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Pesquisa cujo PDF o servidor não conseguiu gerar: oferece a impressão do navegador.
+  const [pdfPeloNavegador, setPdfPeloNavegador] = useState<string | null>(null);
   const { mostrar } = useToast();
 
   const { data, loading, error, reload, reloading } = useAsyncData(
@@ -36,8 +38,15 @@ export default function ReportsPage() {
     setBusyKey(key);
     setErrorKey(null);
     setErrorMsg(null);
+    setPdfPeloNavegador(null);
     try {
       const res = await fetch(`/api/admin/surveys/${survey.id}/export?format=${format}`);
+      // 503 = o servidor não tem como abrir o Chromium agora. O mesmo relatório
+      // sai pela impressão do navegador, sem mensagem de erro.
+      if (format === 'pdf' && res.status === 503) {
+        setPdfPeloNavegador(survey.id);
+        return;
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? `Não foi possível gerar o arquivo (erro ${res.status}).`);
@@ -100,6 +109,14 @@ export default function ReportsPage() {
                   ))}
                 </div>
               </div>
+              {pdfPeloNavegador === s.id && (
+                <div role="status" className="text-sm bg-spot-white border-l-[3px] border-spot-warning px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
+                  <span>O PDF sai pela impressão do navegador: abra o relatório e escolha &quot;Salvar como PDF&quot;.</span>
+                  <Link href={`/admin/reports/${s.id}/print?imprimir=1`} target="_blank" className="btn-primary text-sm py-2 px-4">
+                    Abrir e salvar PDF
+                  </Link>
+                </div>
+              )}
               {errorKey?.startsWith(`${s.id}:`) && errorMsg && (
                 <p role="alert" className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5">
                   {errorMsg}
