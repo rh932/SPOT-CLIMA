@@ -80,7 +80,7 @@ export function QuestionListEditor({
                   <span className="sr-only">Pergunta {posicao} de {sorted.length}</span>
                 </span>
                 {q.dimension && <span className="badge bg-spot-gray-100 text-spot-gray-600">{q.dimension.name}</span>}
-                <span className="badge bg-spot-gray-100 text-spot-gray-600">{TYPE_LABEL[q.type] ?? q.type}</span>
+                <span className="badge bg-spot-gray-100 text-spot-gray-600">{q.isEnps ? 'eNPS (0 a 10)' : TYPE_LABEL[q.type] ?? q.type}</span>
                 {q.required && <span className="badge bg-spot-yellow/30 text-spot-yellowDark">Obrigatória</span>}
               </div>
               <p className="text-sm text-spot-gray-800">{q.text}</p>

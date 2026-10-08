@@ -10,7 +10,7 @@ import {
 
 interface SurveyOption { id: string; name: string; status: string; createdAt: string; }
 interface ComparisonResponse {
-  overallSeries: { surveyId: string; surveyName: string; index: number }[];
+  overallSeries: { surveyId: string; surveyName: string; index: number; enps: number | null }[];
   byDimension: { dimension: string; series: { surveyId: string; surveyName: string; index: number | null }[]; delta: number | null; trend: 'up' | 'down' | 'stable' | null }[];
 }
 
@@ -148,6 +148,25 @@ export default function ComparisonsPage() {
                 <p className="font-semibold mb-3">Evolução do índice de clima geral</p>
                 <EvolutionLineChart data={comparison.overallSeries} lines={[{ key: 'index', label: 'Índice de Clima' }]} />
               </div>
+
+              {comparison.overallSeries.some((s) => s.enps !== null) && (
+                <div className="card">
+                  <p className="font-semibold mb-1">eNPS por ciclo</p>
+                  <p className="text-xs text-spot-gray-500 mb-3">
+                    % promotores − % detratores (−100 a +100). &quot;—&quot; quando o ciclo não teve a pergunta ou ficou abaixo do limite de anonimato.
+                  </p>
+                  <dl className="flex flex-wrap gap-3">
+                    {comparison.overallSeries.map((s) => (
+                      <div key={s.surveyId} className="bg-spot-gray-50 px-4 py-3 min-w-[9rem]">
+                        <dt className="text-xs text-spot-gray-500">{s.surveyName}</dt>
+                        <dd className="font-display text-2xl font-semibold tabular-nums">
+                          {s.enps === null ? '—' : s.enps > 0 ? `+${s.enps}` : s.enps}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
 
               <div className="card">
                 <p className="font-semibold mb-3">Evolução por dimensão</p>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePainelModal } from '@/components/forms/usePainelModal';
+import { ENPS_DEFAULT_TEXT } from '@/lib/enps';
 
 export interface Dimension { id: string; name: string; }
 export interface QuestionOption { id?: string; label: string; order?: number; }
@@ -14,6 +15,7 @@ export interface EditableQuestion {
   options: QuestionOption[];
   scaleMin?: number | null;
   scaleMax?: number | null;
+  isEnps?: boolean;
 }
 
 export interface QuestionSubmitPayload {
@@ -24,7 +26,11 @@ export interface QuestionSubmitPayload {
   options: { label: string; order: number }[];
   scaleMin?: number | null;
   scaleMax?: number | null;
+  isEnps?: boolean;
 }
+
+/** Valor do select para a pergunta de eNPS — vira SCALE 0–10 com a marca isEnps. */
+const ENPS_OPTION = '__ENPS';
 
 export const TYPE_LABEL: Record<string, string> = {
   LIKERT: 'Escala Likert (1-5)',
@@ -55,7 +61,7 @@ export function QuestionModal({
   onSubmit: (payload: QuestionSubmitPayload) => Promise<void>;
 }) {
   const [text, setText] = useState(question?.text ?? '');
-  const [type, setType] = useState(question?.type ?? 'LIKERT');
+  const [type, setType] = useState(question?.isEnps ? ENPS_OPTION : question?.type ?? 'LIKERT');
   const [dimensionId, setDimensionId] = useState(question?.dimensionId ?? '');
   const [required, setRequired] = useState(question?.required ?? true);
   const [options, setOptions] = useState<string>(question?.options.map((o) => o.label).join('\n') ?? '');
@@ -67,23 +73,33 @@ export function QuestionModal({
 
   const needsOptions = type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE';
   const needsScale = type === 'SCALE';
+  const isEnps = type === ENPS_OPTION;
+
+  const mudarTipo = (novo: string) => {
+    setType(novo);
+    // Enunciado padrão do eNPS: é o texto que permite comparar com outras empresas.
+    if (novo === ENPS_OPTION && !text.trim()) setText(ENPS_DEFAULT_TEXT);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
     try {
-      const payload: QuestionSubmitPayload = {
-        text,
-        type,
-        dimensionId: dimensionId || null,
-        required,
-        options: needsOptions
-          ? options.split('\n').map((l) => l.trim()).filter(Boolean).map((label, order) => ({ label, order }))
-          : [],
-        scaleMin: needsScale ? Number(scaleMin) : null,
-        scaleMax: needsScale ? Number(scaleMax) : null,
-      };
+      const payload: QuestionSubmitPayload = isEnps
+        ? { text, type: 'SCALE', dimensionId: dimensionId || null, required, options: [], scaleMin: 0, scaleMax: 10, isEnps: true }
+        : {
+          text,
+          type,
+          dimensionId: dimensionId || null,
+          required,
+          options: needsOptions
+            ? options.split('\n').map((l) => l.trim()).filter(Boolean).map((label, order) => ({ label, order }))
+            : [],
+          scaleMin: needsScale ? Number(scaleMin) : null,
+          scaleMax: needsScale ? Number(scaleMax) : null,
+          isEnps: false,
+        };
       await onSubmit(payload);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao salvar pergunta.');
@@ -116,10 +132,11 @@ export function QuestionModal({
           <div>
             <label className="block">
               <span className="label">Tipo</span>
-              <select className="input" value={type} onChange={(e) => setType(e.target.value)}>
+              <select className="input" value={type} onChange={(e) => mudarTipo(e.target.value)}>
                 {Object.entries(TYPE_LABEL).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
                 ))}
+                <option value={ENPS_OPTION}>eNPS (0 a 10, recomendaria trabalhar aqui?)</option>
               </select>
             </label>
           </div>
@@ -158,6 +175,11 @@ export function QuestionModal({
               </label>
             </div>
           </div>
+        )}
+        {isEnps && (
+          <p className="text-xs text-spot-gray-500 -mt-1">
+            Escala de 0 a 10. Nos resultados vira o eNPS: % de quem deu 9–10 menos % de quem deu 0–6. Uma por pesquisa.
+          </p>
         )}
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={required} onChange={(e) => setRequired(e.target.checked)} className="accent-spot-black" />

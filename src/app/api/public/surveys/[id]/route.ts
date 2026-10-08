@@ -45,6 +45,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       options: q.options.map((o) => ({ id: o.id, label: o.label })),
       scaleMin: q.scaleMin,
       scaleMax: q.scaleMax,
+      isEnps: q.isEnps,
     })),
     sectors: sectors.map((s) => ({ id: s.id, name: s.name })),
     units: units.map((u) => ({ id: u.id, name: u.name })),

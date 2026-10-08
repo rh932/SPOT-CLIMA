@@ -9,7 +9,7 @@ import { DIMENSIONS_SEED } from '@/data/surveyBank';
 import { logAudit } from '@/lib/audit';
 
 /**
- * Importa o banco inicial de perguntas (73 perguntas, 9 dimensões) para uma
+ * Importa o banco inicial de perguntas (74 perguntas, 9 dimensões, com a de eNPS) para uma
  * pesquisa em rascunho. Não duplica se a pesquisa já tiver perguntas — o
  * admin precisa esvaziar antes, para evitar bagunçar a ordem.
  */
@@ -46,6 +46,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             text: q.text,
             type: q.type,
             required: q.required,
+            scaleMin: q.scaleMin ?? null,
+            scaleMax: q.scaleMax ?? null,
+            isEnps: q.isEnps ?? false,
             order,
           })
           .returning();

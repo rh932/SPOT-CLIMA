@@ -50,6 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           active: q.active,
           scaleMin: q.scaleMin,
           scaleMax: q.scaleMax,
+          isEnps: q.isEnps,
         })
         .returning();
       if (q.options.length > 0) {

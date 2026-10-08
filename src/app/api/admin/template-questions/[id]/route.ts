@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm';
 import { requireAdmin, requireRole, handleApiError } from '@/lib/apiAuth';
 import { templateQuestionBaseSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
+import { enpsQuestionFields } from '@/lib/enps';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -16,7 +17,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const parsed = templateQuestionBaseSchema.partial().safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
 
-    const { options, ...rest } = parsed.data;
+    // eNPS: escala fixa de 0 a 10 e sem opções (src/lib/enps.ts).
+    const data = parsed.data.isEnps ? { ...enpsQuestionFields(parsed.data), options: [] } : parsed.data;
+    const { options, ...rest } = data;
     const [row] = await db.update(schema.templateQuestions).set(rest).where(eq(schema.templateQuestions.id, params.id)).returning();
     if (!row) return NextResponse.json({ error: 'Pergunta não encontrada.' }, { status: 404 });
 

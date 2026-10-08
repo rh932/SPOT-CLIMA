@@ -92,9 +92,13 @@ export const questionBaseSchema = z.object({
   options: z.array(questionOptionSchema).optional(),
   scaleMin: z.number().int().optional().nullable(),
   scaleMax: z.number().int().optional().nullable(),
+  /** Pergunta de eNPS: a rota força escala de 0 a 10 (src/lib/enps.ts). */
+  isEnps: z.boolean().optional(),
 });
 
-function scaleRefinement(data: { type: string; scaleMin?: number | null; scaleMax?: number | null }): boolean {
+function scaleRefinement(data: { type: string; scaleMin?: number | null; scaleMax?: number | null; isEnps?: boolean }): boolean {
+  // eNPS tem a escala fixa (0 a 10), aplicada pela rota — o que veio do formulário não importa.
+  if (data.isEnps) return true;
   return data.type !== 'SCALE' || (data.scaleMin != null && data.scaleMax != null && data.scaleMin < data.scaleMax);
 }
 const scaleRefinementOptions: { message: string; path: string[] } = {
@@ -115,6 +119,7 @@ export const templateQuestionBaseSchema = z.object({
   options: z.array(questionOptionSchema).optional(),
   scaleMin: z.number().int().optional().nullable(),
   scaleMax: z.number().int().optional().nullable(),
+  isEnps: z.boolean().optional(),
 });
 
 export const templateQuestionSchema = templateQuestionBaseSchema.refine(scaleRefinement, scaleRefinementOptions);

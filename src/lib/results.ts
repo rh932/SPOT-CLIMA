@@ -16,6 +16,7 @@ import { suppressCrossTab, type CrossCell } from './disclosure';
 import { buildRecommendations } from './recommendations';
 import { countByTheme, classifySentiment } from './themes';
 import { buildWordFrequencies } from './wordcloud';
+import { classifyEnps, computeEnps, type EnpsBreakdown } from './enps';
 
 /**
  * Por que um resultado não traz números:
@@ -134,6 +135,22 @@ export interface SurveyResultsSummary {
   /** Perguntas Likert deixadas fora de todo número por terem menos pessoas que o limite. */
   excludedQuestions: number;
   anonymityThreshold: number;
+  /** eNPS, quando a pesquisa tem a pergunta e ela passou do limite de anonimato. */
+  enps: EnpsResult | null;
+}
+
+export interface EnpsGroup {
+  id: string;
+  name: string;
+  visible: boolean;
+  score: number | null;
+  respondents: number | null;
+}
+
+export interface EnpsResult extends EnpsBreakdown {
+  classification: ReturnType<typeof classifyEnps>;
+  bySector: EnpsGroup[];
+  byUnit: EnpsGroup[];
 }
 
 const HIDDEN_REASON = 'Resultados ocultados para preservar o anonimato devido ao baixo número de respostas.';
@@ -154,6 +171,8 @@ export interface ResultsInput {
     type: string;
     dimensionId: string | null;
     dimensionName: string | null;
+    /** Pergunta de eNPS (escala 0–10) — ver src/lib/enps.ts. */
+    isEnps?: boolean;
   }[];
   responses: {
     id: string;
@@ -242,6 +261,7 @@ export function computeSurveyResults(input: ResultsInput): SurveyResultsSummary 
     insights: [],
     excludedQuestions: 0,
     anonymityThreshold: threshold,
+    enps: null,
   };
   const locked = (lock: ResultsLock): SurveyResultsSummary => ({
     ...base,
@@ -458,6 +478,13 @@ export function computeSurveyResults(input: ResultsInput): SurveyResultsSummary 
   const topStrengths = [...questionResults].sort((a, b) => b.favorable - a.favorable).slice(0, 10);
   const topCritical = [...questionResults].sort((a, b) => a.favorable - b.favorable).slice(0, 10);
 
+  const enps = computeEnpsResult(input, responseById, threshold, {
+    hiddenSectors,
+    hiddenUnits,
+    sectorNames: new Map(bySector.map((s) => [s.sectorId, s.sector])),
+    unitNames: new Map(byUnit.map((u) => [u.unitId, u.unit])),
+  });
+
   return {
     ...base,
     climateIndex: round1(overallIndex),
@@ -474,6 +501,77 @@ export function computeSurveyResults(input: ResultsInput): SurveyResultsSummary 
     recommendations: buildRecommendations(byDimension.map((d) => ({ name: d.dimension, index: d.index }))),
     insights: buildInsights(byDimension, bySector, overallIndex),
     excludedQuestions,
+    enps,
+  };
+}
+
+/**
+ * eNPS com as mesmas travas dos outros números:
+ * - menos pessoas que o limite responderam a pergunta → nada;
+ * - setor/unidade passam pelo controle de divulgação com quem respondeu o
+ *   eNPS, e herdam o que já está oculto no geral (como uma coluna do mapa de calor).
+ * As rotas de pergunta aceitam uma só pergunta de eNPS por pesquisa; se
+ * mesmo assim houver duas (dados antigos), vale a de menor id — duas notas da
+ * mesma pessoa não podem virar duas pessoas.
+ */
+function computeEnpsResult(
+  input: ResultsInput,
+  responseById: Map<string, ResultsInput['responses'][number]>,
+  threshold: number,
+  ctx: { hiddenSectors: string[]; hiddenUnits: string[]; sectorNames: Map<string, string>; unitNames: Map<string, string> },
+): EnpsResult | null {
+  const [enpsQuestion] = input.questions.filter((q) => q.isEnps).sort((a, b) => a.id.localeCompare(b.id));
+  if (!enpsQuestion) return null;
+
+  const answers = input.answers.filter(
+    (a) => a.questionId === enpsQuestion.id && a.numericValue !== null && responseById.has(a.responseId),
+  );
+  if (new Set(answers.map((a) => a.responseId)).size < threshold) return null;
+
+  const overall = computeEnps(answers.map((a) => a.numericValue!));
+
+  const cells = new Map<string, { unit: string | null; sector: string; ids: Set<string> }>();
+  for (const a of answers) {
+    const r = responseById.get(a.responseId)!;
+    const key = `${r.unitId ?? ''}\u0000${r.sectorId}`;
+    const entry = cells.get(key) ?? { unit: r.unitId, sector: r.sectorId, ids: new Set<string>() };
+    entry.ids.add(a.responseId);
+    cells.set(key, entry);
+  }
+  const column = suppressCrossTab(
+    Array.from(cells.values()).map((c) => ({ unit: c.unit, sector: c.sector, count: c.ids.size })),
+    threshold,
+    { forceHiddenSectors: ctx.hiddenSectors, forceHiddenUnits: ctx.hiddenUnits },
+  );
+
+  const group = (pick: (r: ResultsInput['responses'][number]) => string | null, visibleSet: Set<string>, names: Map<string, string>) => {
+    const values = new Map<string, number[]>();
+    for (const a of answers) {
+      const key = pick(responseById.get(a.responseId)!);
+      if (key === null) continue;
+      const arr = values.get(key) ?? [];
+      arr.push(a.numericValue!);
+      values.set(key, arr);
+    }
+    return Array.from(values.entries())
+      .map(([id, vals]): EnpsGroup => {
+        const visible = visibleSet.has(id);
+        return {
+          id,
+          name: names.get(id) ?? '—',
+          visible,
+          score: visible ? computeEnps(vals).score : null,
+          respondents: visible ? vals.length : null,
+        };
+      })
+      .sort((a, b) => (b.score ?? -101) - (a.score ?? -101) || a.name.localeCompare(b.name));
+  };
+
+  return {
+    ...overall,
+    classification: classifyEnps(overall.score),
+    bySector: group((r) => r.sectorId, column.visibleSectors, ctx.sectorNames),
+    byUnit: group((r) => r.unitId, column.visibleUnits, ctx.unitNames),
   };
 }
 
@@ -519,6 +617,7 @@ async function loadResultsInput(surveyId: string): Promise<ResultsInput | null> 
       type: q.type,
       dimensionId: q.dimensionId,
       dimensionName: q.dimension?.name ?? null,
+      isEnps: q.isEnps,
     })),
     responses: responses.map((r) => ({
       id: r.id,

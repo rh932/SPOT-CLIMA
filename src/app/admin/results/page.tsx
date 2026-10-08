@@ -9,6 +9,7 @@ import { CabecalhoPagina } from '@/components/ui/CabecalhoPagina';
 import { IndexBarChart, FavorabilityDonut, DimensionRadar } from '@/components/charts/Charts';
 import { Heatmap } from '@/components/charts/Heatmap';
 import { WordCloud } from '@/components/charts/WordCloud';
+import { EnpsPanel } from '@/components/admin/EnpsPanel';
 import type { SurveyResultsSummary, CommentAnalysis } from '@/lib/results';
 import { ErrorState, LiveStatus, SkeletonStats, SkeletonTable } from '@/components/async';
 
@@ -190,6 +191,8 @@ function ResultsInner() {
             <StatCard label="Favorável" value={`${results.favorability.favorable}%`} sub={`Neutro ${results.favorability.neutral}% · Desfav. ${results.favorability.unfavorable}%`} />
             <StatCard label="Desvio padrão" value={String(results.standardDeviation)} sub="Dispersão das respostas Likert" />
           </ReguaIndicadores>
+
+          {results.enps && <EnpsPanel enps={results.enps} />}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Secao indice="01" titulo="Resultado por dimensão">

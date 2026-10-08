@@ -211,6 +211,9 @@ async function main() {
             text: q.text,
             type: q.type,
             required: q.required,
+            scaleMin: q.scaleMin ?? null,
+            scaleMax: q.scaleMax ?? null,
+            isEnps: q.isEnps ?? false,
             order: templateOrder,
           })
           .returning();
@@ -362,6 +365,9 @@ async function insertQuestions(
           text: q.text,
           type: q.type,
           required: q.required,
+          scaleMin: q.scaleMin ?? null,
+          scaleMax: q.scaleMax ?? null,
+          isEnps: q.isEnps ?? false,
           order,
         })
         .returning();
@@ -394,6 +400,13 @@ async function createFakeResponse(
       const bias = SECTOR_DIMENSION_BIAS[sectorName]?.[dimKey] ?? 0.7;
       // Nem todo mundo responde perguntas opcionais, mas Likert é sempre obrigatória no banco padrão.
       answers.push({ responseId: response.id, questionId: question.id, numericValue: biasedLikert(bias) });
+    } else if (question.type === 'SCALE' && question.scaleMin != null && question.scaleMax != null) {
+      // eNPS e outras escalas: a nota acompanha a favorabilidade do setor, com ruído.
+      const bias = SECTOR_DIMENSION_BIAS[sectorName]?.experiencia ?? 0.7;
+      const span = question.scaleMax - question.scaleMin;
+      const centered = question.scaleMin + span * (bias + (rand() - 0.5) * 0.5);
+      const value = Math.round(Math.min(question.scaleMax, Math.max(question.scaleMin, centered)));
+      answers.push({ responseId: response.id, questionId: question.id, numericValue: value });
     } else if (question.type === 'SINGLE_CHOICE') {
       if (!question.required && rand() < 0.35) continue; // opcional, parte pula
       const options = await optionsFor(question.id);

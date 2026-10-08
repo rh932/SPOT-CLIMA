@@ -3,10 +3,11 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import { requireAdmin, requirePermission, handleApiError, ApiError } from '@/lib/apiAuth';
 import { questionBaseSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
+import { enpsQuestionFields } from '@/lib/enps';
 
 /**
  * Pergunta só muda com a pesquisa em rascunho ou agendada — a mesma regra das
@@ -40,15 +41,31 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }).safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
 
+    // eNPS fixa a escala em 0–10 (src/lib/enps.ts) e só existe uma por pesquisa.
+    const isEnps = parsed.data.isEnps ?? current.isEnps;
+    const data = isEnps ? { ...enpsQuestionFields({ ...parsed.data, isEnps: true }), options: [] } : parsed.data;
+    if (isEnps && !current.isEnps) {
+      const outra = await db.query.questions.findFirst({
+        where: and(
+          eq(schema.questions.surveyId, current.surveyId),
+          eq(schema.questions.isEnps, true),
+          eq(schema.questions.active, true),
+          ne(schema.questions.id, current.id),
+        ),
+        columns: { id: true },
+      });
+      if (outra) throw new ApiError(409, 'Esta pesquisa já tem uma pergunta de eNPS.');
+    }
+
     // `.partial()` pula a regra da escala: confere aqui, sobre o resultado final.
-    const type = parsed.data.type ?? current.type;
-    const scaleMin = parsed.data.scaleMin !== undefined ? parsed.data.scaleMin : current.scaleMin;
-    const scaleMax = parsed.data.scaleMax !== undefined ? parsed.data.scaleMax : current.scaleMax;
+    const type = data.type ?? current.type;
+    const scaleMin = data.scaleMin !== undefined ? data.scaleMin : current.scaleMin;
+    const scaleMax = data.scaleMax !== undefined ? data.scaleMax : current.scaleMax;
     if (type === 'SCALE' && (scaleMin == null || scaleMax == null || scaleMin >= scaleMax)) {
       throw new ApiError(400, 'Perguntas do tipo Escala precisam de um mínimo e máximo válidos (mínimo menor que máximo).');
     }
 
-    const { options, ...rest } = parsed.data;
+    const { options, ...rest } = data;
     const row = await db.transaction(async (tx) => {
       const [updated] = await tx.update(schema.questions).set(rest).where(eq(schema.questions.id, params.id)).returning();
       if (options) {

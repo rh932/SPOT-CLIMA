@@ -42,7 +42,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Ordena por data de criação implícita (ordem enviada pelo usuário é respeitada).
-    const overallSeries = valid.map((r) => ({ surveyId: r.surveyId, surveyName: r.surveyName, index: r.climateIndex }));
+    // eNPS entra só onde a pesquisa teve a pergunta e passou do limite de anonimato.
+    const overallSeries = valid.map((r) => ({
+      surveyId: r.surveyId,
+      surveyName: r.surveyName,
+      index: r.climateIndex,
+      enps: r.enps?.score ?? null,
+    }));
 
     const dimensionNames = Array.from(new Set(valid.flatMap((r) => r.byDimension.map((d) => d.dimension))));
     const byDimension = dimensionNames.map((name) => {

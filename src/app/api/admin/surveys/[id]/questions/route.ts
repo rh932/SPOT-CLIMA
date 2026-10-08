@@ -7,6 +7,7 @@ import { eq, asc } from 'drizzle-orm';
 import { requireAdmin, requirePermission, requireAnyPermission, handleApiError, ApiError } from '@/lib/apiAuth';
 import { questionSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
+import { enpsQuestionFields } from '@/lib/enps';
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -36,28 +37,33 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const body = await req.json().catch(() => null);
     const parsed = questionSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: 'Dados inválidos.', details: parsed.error.flatten() }, { status: 400 });
+    const data = enpsQuestionFields(parsed.data);
 
     const existing = await db.query.questions.findMany({ where: eq(schema.questions.surveyId, params.id) });
-    const order = parsed.data.order ?? existing.length + 1;
+    if (data.isEnps && existing.some((q) => q.active && q.isEnps)) {
+      throw new ApiError(409, 'Esta pesquisa já tem uma pergunta de eNPS.');
+    }
+    const order = data.order ?? existing.length + 1;
 
     const [row] = await db
       .insert(schema.questions)
       .values({
         surveyId: params.id,
-        dimensionId: parsed.data.dimensionId ?? null,
-        text: parsed.data.text,
-        type: parsed.data.type,
-        required: parsed.data.required ?? true,
+        dimensionId: data.dimensionId ?? null,
+        text: data.text,
+        type: data.type,
+        required: data.required ?? true,
         order,
-        active: parsed.data.active ?? true,
-        scaleMin: parsed.data.scaleMin ?? null,
-        scaleMax: parsed.data.scaleMax ?? null,
+        active: data.active ?? true,
+        scaleMin: data.scaleMin ?? null,
+        scaleMax: data.scaleMax ?? null,
+        isEnps: data.isEnps ?? false,
       })
       .returning();
 
-    if (parsed.data.options && parsed.data.options.length > 0) {
+    if (!data.isEnps && data.options && data.options.length > 0) {
       await db.insert(schema.questionOptions).values(
-        parsed.data.options.map((o, idx) => ({ questionId: row.id, label: o.label, order: o.order ?? idx }))
+        data.options.map((o, idx) => ({ questionId: row.id, label: o.label, order: o.order ?? idx }))
       );
     }
 

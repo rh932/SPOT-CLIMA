@@ -13,6 +13,8 @@ export interface QuestionData {
   options: { id: string; label: string }[];
   scaleMin?: number | null;
   scaleMax?: number | null;
+  /** Pergunta de eNPS (0 a 10): ganha a legenda das pontas. */
+  isEnps?: boolean;
 }
 
 const LIKERT_OPTIONS = [
@@ -94,7 +96,8 @@ export function QuestionField({
 
       {question.type === 'SCALE' && question.scaleMin != null && question.scaleMax != null && (
         <ChoiceGroup legenda={enunciado} invalido={showError} idDescricao={descrito}>
-          <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+          {/* 0 a 10 são 11 notas: com 10 colunas a última caía sozinha na linha de baixo. */}
+          <div className={`grid gap-2 ${question.scaleMax - question.scaleMin + 1 === 11 ? 'grid-cols-6 sm:grid-cols-11' : 'grid-cols-5 sm:grid-cols-10'}`}>
             {Array.from(
               { length: question.scaleMax - question.scaleMin + 1 },
               (_, i) => (question.scaleMin as number) + i
@@ -118,6 +121,12 @@ export function QuestionField({
               </ChoiceOption>
             ))}
           </div>
+          {question.isEnps && (
+            <p aria-hidden className="flex justify-between text-xs text-spot-gray-500 mt-2">
+              <span>0 = nada provável</span>
+              <span>10 = muito provável</span>
+            </p>
+          )}
         </ChoiceGroup>
       )}
 

@@ -4,13 +4,16 @@
  * Consolidado a partir das 78 afirmações fornecidas pelo RH (ver item 63 do
  * briefing): perguntas que mediam praticamente a mesma coisa foram unificadas,
  * priorizando a versão mais clara/objetiva. Nenhuma dimensão foi removida.
- * Resultado: 73 perguntas (dentro da faixa de 60-75 solicitada).
+ * Resultado: 73 perguntas (dentro da faixa de 60-75 solicitada), mais a de
+ * eNPS (0 a 10) acrescentada em 10/2026 — 74 no total.
  *
  * Este arquivo é apenas o BANCO INICIAL usado pelo seed / "duplicar pesquisa".
  * Depois de criada, cada pesquisa tem suas próprias perguntas editáveis pelo
  * admin (adicionar, remover, reordenar, mudar dimensão/obrigatoriedade) — ver
  * item 8 do briefing.
  */
+
+import { ENPS_DEFAULT_TEXT } from '../lib/enps';
 
 export type QuestionType = 'LIKERT' | 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'SHORT_TEXT' | 'LONG_TEXT' | 'SCALE' | 'YES_NO';
 
@@ -19,6 +22,10 @@ export interface QuestionSeed {
   type: QuestionType;
   required: boolean;
   options?: string[];
+  scaleMin?: number;
+  scaleMax?: number;
+  /** Pergunta de eNPS (src/lib/enps.ts): escala 0–10 que vira o eNPS nos resultados. */
+  isEnps?: boolean;
 }
 
 export interface DimensionSeed {
@@ -262,6 +269,8 @@ export const DIMENSIONS_SEED: DimensionSeed[] = [
       likert('Sinto-me alinhado com os valores da empresa.'),
       likert('Tenho uma percepção positiva sobre trabalhar no Spot.'),
       likert('Recomendaria o Spot como um bom lugar para trabalhar.'),
+      // eNPS: o mesmo tema em 0–10, a escala que permite comparar com o mercado.
+      { text: ENPS_DEFAULT_TEXT, type: 'SCALE', required: true, scaleMin: 0, scaleMax: 10, isEnps: true },
       likert('Pretendo continuar trabalhando na empresa.'),
       likert('Estou satisfeito com meu trabalho atual.'),
       {

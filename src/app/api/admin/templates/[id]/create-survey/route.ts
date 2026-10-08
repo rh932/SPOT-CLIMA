@@ -59,6 +59,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             active: tq.active,
             scaleMin: tq.scaleMin,
             scaleMax: tq.scaleMax,
+            isEnps: tq.isEnps,
           })
           .returning();
         if (tq.options.length > 0) {
