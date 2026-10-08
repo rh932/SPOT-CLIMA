@@ -226,7 +226,9 @@ export const actionPlanSchema = z.object({
 });
 
 export const systemSettingSchema = z.object({
-  key: z.string().regex(/^[a-z0-9_.-]{1,64}$/i, 'Chave inválida.'),
+  key: z.string().regex(/^[a-z0-9_.-]{1,64}$/i, 'Chave inválida.')
+    // "cron." é do sistema (src/lib/cronStatus.ts): a tela não pode forjar o status da rotina.
+    .refine((k) => !k.toLowerCase().startsWith('cron.'), 'Chave reservada.'),
   // Valor livre (JSON), mas com teto: nada lê esta tabela hoje, e sem limite
   // ela virava depósito de qualquer coisa.
   value: z.unknown().refine((v) => v !== undefined && JSON.stringify(v).length <= 10_000, 'Valor grande demais.'),

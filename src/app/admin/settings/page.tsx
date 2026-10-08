@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiFetch } from '@/lib/apiClient';
 import { ActionButton, ErrorState, LiveStatus, SkeletonForm, useToast } from '@/components/async';
 import { MfaSettingsCard } from '@/components/admin/MfaSettingsCard';
+import { CronStatusCard } from '@/components/admin/CronStatusCard';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, unknown>>({});
@@ -153,6 +154,8 @@ export default function SettingsPage() {
           </div>
 
           <MfaSettingsCard />
+
+          <CronStatusCard />
 
           {/* Os usuários ganharam uma aba própria, com busca, filtros e o controle de primeiro acesso. */}
           <Link href="/admin/users" className="card flex items-center justify-between gap-3 hover:bg-spot-gray-50 transition">

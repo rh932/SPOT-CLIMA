@@ -4,6 +4,7 @@ import { timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { buildReminderRows } from '@/lib/reminders';
 import { deliverNotifications } from '@/lib/notify';
+import { recordCronFailure, recordCronSuccess } from '@/lib/cronStatus';
 
 /**
  * Rotina diária dos avisos de avaliação pendente.
@@ -45,11 +46,17 @@ export async function GET(req: NextRequest) {
     // do botão "Lembrar gestores agora" do RH.
     const { avaliados, naJanela, rows } = await buildReminderRows('rotina');
     // Quando ninguém está num dia de aviso, a rotina termina sem tocar em admins.
-    if (naJanela === 0) return NextResponse.json({ ok: true, avaliados, avisos: 0 });
+    if (naJanela === 0) {
+      await recordCronSuccess({ avaliados, naJanela, avisos: 0 });
+      return NextResponse.json({ ok: true, avaliados, avisos: 0 });
+    }
     const entrega = await deliverNotifications(rows);
+    await recordCronSuccess({ avaliados, naJanela, avisos: entrega.avisos });
     return NextResponse.json({ ok: true, avaliados, naJanela, ...entrega });
   } catch (err) {
     console.error('[cron feedback-reminders]', err);
+    // Grava a falha e avisa os Super Admins (src/lib/cronStatus.ts).
+    await recordCronFailure(err);
     return NextResponse.json({ error: 'Erro ao gerar os avisos.' }, { status: 500 });
   }
 }

@@ -24,7 +24,8 @@ export interface PushPayload {
   tag: string;
 }
 
-export type NotificationType = 'FEEDBACK_REMINDER' | 'EVALUATION_REMINDER' | ActivityType;
+/** SYSTEM_ALERT: falha da rotina diária, só para o Super Admin (ver src/lib/cronStatus.ts). */
+export type NotificationType = 'FEEDBACK_REMINDER' | 'EVALUATION_REMINDER' | 'SYSTEM_ALERT' | ActivityType;
 export type Portal = 'admin' | 'gestor';
 
 const TITULOS: Record<ActivityType, string> = {
@@ -43,6 +44,7 @@ export function notificationTitle(type: NotificationType, offsetDays: number | n
   const atrasado = offsetDays !== null && offsetDays < 0;
   if (type === 'FEEDBACK_REMINDER') return `SPOT CLIMA — ${atrasado ? 'feedback atrasado' : 'feedback a vencer'}`;
   if (type === 'EVALUATION_REMINDER') return `SPOT CLIMA — ${atrasado ? 'avaliação atrasada' : 'avaliação a vencer'}`;
+  if (type === 'SYSTEM_ALERT') return 'SPOT CLIMA — alerta do sistema';
   return `SPOT CLIMA — ${TITULOS[type]}`;
 }
 
@@ -53,6 +55,7 @@ export function notificationTitle(type: NotificationType, offsetDays: number | n
  */
 export function notificationUrl(type: NotificationType, employeeId: string | null, portal: Portal): string {
   const base = portal === 'gestor' ? '/gestor' : '/admin';
+  if (type === 'SYSTEM_ALERT') return portal === 'admin' ? '/admin/settings#rotina' : base;
   if (employeeId) return `${base}/employees/${employeeId}`;
   if (type === 'TRAINING_TYPE_CREATED') return portal === 'gestor' ? '/gestor/treinamento' : '/admin/trainings';
   if (type === 'EMPLOYEE_REMOVED' && portal === 'admin') return '/admin/employees';

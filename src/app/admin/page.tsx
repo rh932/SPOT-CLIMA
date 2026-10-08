@@ -8,6 +8,7 @@ import { CabecalhoPagina } from '@/components/ui/CabecalhoPagina';
 import { ReguaIndicadores, Secao } from '@/components/ui/Secao';
 import { ErrorState, LiveStatus, RefreshingBar, Skeleton, SkeletonStats, SkeletonTable } from '@/components/async';
 import type { SurveyResultsSummary } from '@/lib/results';
+import { SystemNotices } from '@/components/admin/SystemNotices';
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: 'Rascunho', SCHEDULED: 'Agendada', OPEN: 'Aberta', CLOSED: 'Encerrada', ARCHIVED: 'Arquivada',
@@ -106,6 +107,7 @@ export default function AdminOverviewPage() {
 
   return (
     <div className="flex flex-col gap-10">
+      <SystemNotices />
       <CabecalhoPagina
         titulo="Visão Geral"
         subtitulo="Clima organizacional da pesquisa em foco."

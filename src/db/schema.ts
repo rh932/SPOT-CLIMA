@@ -69,6 +69,8 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'EMPLOYEE_UPDATED',
   'EMPLOYEE_REMOVED',
   'COLOR_CHANGED',
+  // Falha da rotina diária de avisos — só para o Super Admin (src/lib/cronStatus.ts).
+  'SYSTEM_ALERT',
 ]);
 /** De qual painel a pessoa ativou o aviso no celular — decide para onde o toque leva. */
 export const pushPortalEnum = pgEnum('push_portal', ['admin', 'gestor']);
