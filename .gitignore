@@ -1,0 +1,39 @@
+node_modules
+.next
+out
+
+# Qualquer arquivo de ambiente fica de fora — exceto o modelo sem credencial.
+.env
+.env.*
+!.env.example
+
+*.log
+logs.txt
+logs.json
+/tests-results
+/coverage
+.DS_Store
+
+.vercel
+
+# Dumps gerados por npm run db:backup (podem conter dados reais).
+/backups
+
+# Builds paralelos (NEXT_DIST_DIR), ex.: auditoria
+.next-*
+
+# Laudos e mapa de segurança (ficam só na máquina, como no .vercelignore).
+*.pdf
+/docs
+/SECURITY.md
+
+# Planilhas do DP com dados reais.
+*.xlsx
+*.xls
+*.csv
+
+tsconfig.tsbuildinfo
+
+# Configuração local do Claude Code.
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

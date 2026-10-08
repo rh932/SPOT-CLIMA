@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "spot-clima",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "spot-clima-build-auditoria",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "start", "-p", "3099"],
+      "env": { "NEXT_DIST_DIR": ".next-audit" },
+      "port": 3099
+    }
+  ]
+}

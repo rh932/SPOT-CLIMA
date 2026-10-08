@@ -1,0 +1,146 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789049679285,
+      "tag": "0000_charming_wallop",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789061303959,
+      "tag": "0001_bent_lucky_pierre",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789129814653,
+      "tag": "0002_dapper_black_crow",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789137466972,
+      "tag": "0003_nosy_leech",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789577461938,
+      "tag": "0004_luxuriant_jetstream",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789577830229,
+      "tag": "0005_supreme_anita_blake",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790096825846,
+      "tag": "0006_flimsy_titania",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790097900596,
+      "tag": "0007_glossy_morlun",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790117231996,
+      "tag": "0008_mixed_sumo",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790176436345,
+      "tag": "0009_bright_leopardon",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790179771671,
+      "tag": "0010_misty_wolf_cub",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790194300723,
+      "tag": "0011_foamy_sugar_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790196384305,
+      "tag": "0012_silly_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790251781743,
+      "tag": "0013_freezing_speed_demon",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790255810675,
+      "tag": "0014_dry_ironclad",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790607043508,
+      "tag": "0015_aspiring_may_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790713958533,
+      "tag": "0016_experiencia_importacao",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790854846557,
+      "tag": "0017_seguranca",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791203933840,
+      "tag": "0018_setor_uso",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791318884385,
+      "tag": "0019_setor_treinamento",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+# O deploy é `npx vercel --prod` direto desta pasta (não há git). Tudo que não
+# estiver listado aqui SOBE para a Vercel e fica visível na aba "Source" de
+# cada deployment para quem tem acesso ao projeto.
+
+# Dumps do banco: dados pessoais de funcionários, avaliações e respostas.
+/backups
+*.sql.gz
+*.dump
+
+# Credenciais locais. As variáveis de produção ficam no painel da Vercel.
+.env
+.env.*
+!.env.example
+
+# Laudos e mapa de segurança: descrevem as defesas e o que ainda está aberto.
+# Não são usados no build; ficam só na máquina.
+/SECURITY.md
+/docs
+*.pdf
+
+# Planilhas de importação (dados reais do DP) e arquivos de trabalho.
+*.xlsx
+*.xls
+*.csv
+
+# Ferramentas locais e artefatos de build.
+.claude
+.next
+.next-*
+tsconfig.tsbuildinfo
+coverage
