@@ -3,21 +3,23 @@
 @tailwind utilities;
 
 /*
- * Linguagem visual "Boletim" — ver design-system/spot-clima/MASTER.md.
+ * Linguagem visual "Painel Spot" — ver design-system/spot-clima/MASTER.md.
  *
- * A tela de login tem vocabulário próprio (moldura preta, carimbo amarelo,
- * caixa-alta pesada) e continua como está. O painel NÃO copia aquilo: ele se
- * lê como um boletim interno impresso — papel creme, filete fino, índice em
- * monoespaçada, número grande em serifa. Duas portas, duas vozes, a mesma marca.
+ * Em 15/10/2026 o painel trocou o "Boletim" (papel e filete, sem caixa) por um
+ * painel de blocos, a partir de dois modelos do Figma (ATS Resume Analyzer e
+ * Energy Management): barra lateral escura com ícones, indicadores em cartões
+ * com ícone, blocos arredondados com sombra rasa, tabelas com cabeçalho
+ * tingido e status em pílula suave. Marca, cores e fontes continuam as do Spot:
+ * amarelo é ação, preto é tinta forte, Fraunces nos números e títulos.
  *
- * As três regras que sustentam o resto:
- *   1. Nada flutua. Sombra só em coisa que realmente paira sobre a página
- *      (modal, painel, menu suspenso). Card com sombra é o delator nº 1 de
- *      painel gerado por template.
- *   2. Filete no lugar de caixa. Uma régua de 1px separa melhor que uma borda
- *      fechada, e deixa o conteúdo respirar no papel em vez de virar caixinha.
- *   3. Hierarquia vem da tipografia, não de fundo colorido. Por isso o status
- *      virou ponto + rótulo em mono, e não pílula pastel.
+ * A tela de login e a capa da pesquisa seguem como estavam.
+ *
+ * Regras que sustentam o resto:
+ *   1. Bloco é `.card`: borda fina, raio grande, sombra rasa. A sombra não
+ *      reage ao mouse — só o que é clicável reage.
+ *   2. Um bloco dentro de outro bloco não leva moldura (`.card-plain`).
+ *   3. Status é pílula suave com ponto e rótulo escrito: cor sozinha nunca
+ *      carrega significado.
  */
 
 /*
@@ -133,57 +135,68 @@
 
 @layer components {
   /* ─── Superfície ──────────────────────────────────────────────────────
-     O bloco não paira sobre a página: ele é uma área do papel delimitada
-     por filete. Sem sombra, sem hover que levanta — um card que não é
-     clicável não tem por que reagir ao mouse.
+     Bloco do painel: borda fina, raio grande e sombra rasa. A sombra é de
+     repouso — nada levanta no hover, porque um bloco que não é clicável não
+     tem por que reagir ao mouse.
      min-w-0 é essencial: sem isso, um card que é item flex/grid (a maioria
      é) nunca encolhe abaixo da largura mínima do seu conteúdo — e cards com
      tabelas largas (mapa de calor, etc.) empurram a página inteira para o
      lado no mobile em vez de rolar só internamente via overflow-x-auto. */
   .card {
-    @apply bg-spot-white rounded-xl2 border border-spot-gray-200 p-5 sm:p-6 min-w-0;
+    @apply bg-spot-white rounded-xl2 border border-spot-gray-200 shadow-card p-5 sm:p-6 min-w-0 print:shadow-none;
   }
   /* Variante sem moldura, para quando o bloco já está dentro de outro. */
   .card-plain {
-    @apply bg-transparent border-0 p-0 min-w-0;
+    @apply bg-transparent border-0 shadow-none rounded-none p-0 min-w-0;
   }
 
   /* ─── Seção ───────────────────────────────────────────────────────────
-     Cabeçalho de boletim: índice em mono, título em serifa caixa-baixa e
-     um filete que atravessa a largura. Usar via <Secao>, em src/components/ui. */
+     Cabeçalho do bloco: marca de índice em amarelo suave, título em serifa e
+     apoio à direita. Usar via <Secao>, em src/components/ui. */
   .secao-regua {
-    @apply flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-spot-gray-300 pb-2.5 mb-5;
+    @apply flex flex-wrap items-center gap-x-3 gap-y-1 mb-5;
   }
   .secao-indice {
-    @apply font-mono text-[11px] uppercase tracking-[0.18em] text-spot-gray-500 shrink-0;
+    @apply inline-flex h-7 min-w-7 items-center justify-center rounded-btn bg-spot-yellow/20 px-1.5 font-mono text-[11px] font-medium tracking-wider text-spot-gray-900 shrink-0;
   }
   .secao-titulo {
-    @apply font-display text-xl sm:text-2xl font-semibold leading-tight text-spot-gray-900;
+    @apply font-display text-xl font-semibold leading-tight text-spot-gray-900;
   }
   .secao-apoio {
     @apply text-sm text-spot-gray-500 sm:ml-auto;
   }
 
   /* ─── Indicadores ─────────────────────────────────────────────────────
-     Quatro cards iguais lado a lado é a assinatura do painel genérico. Aqui
-     os números dividem uma régua só, separados por filete: no celular a
-     régua vira empilhada e o filete passa a ser horizontal. */
+     Cada número é um cartão com ícone, valor grande em serifa e apoio. A grade
+     se ajusta sozinha: duas colunas no tablet, quatro no desktop largo. */
   .stat-regua {
-    @apply grid border-y border-spot-gray-300 divide-y divide-spot-gray-200
-           sm:grid-flow-col sm:auto-cols-fr sm:divide-y-0 sm:divide-x;
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4;
   }
   .stat {
-    @apply py-4 sm:px-5 sm:first:pl-0 sm:last:pr-0 min-w-0;
+    @apply relative flex flex-col bg-spot-white rounded-xl2 border border-spot-gray-200 shadow-card p-5 min-w-0 print:shadow-none;
+  }
+  .stat-icone {
+    @apply flex h-10 w-10 items-center justify-center rounded-btn bg-spot-yellow/20 text-spot-gray-900 shrink-0;
   }
   .stat-rotulo {
-    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500;
+    @apply text-xs font-medium text-spot-gray-600;
   }
   .stat-valor {
-    @apply font-display text-[2.5rem] sm:text-5xl font-semibold leading-none tracking-tight text-spot-gray-900 mt-2 tabular;
+    @apply font-display text-4xl font-semibold leading-none tracking-tight text-spot-gray-900 mt-3 tabular;
   }
   .stat-apoio {
     @apply text-xs text-spot-gray-500 mt-2;
   }
+  /* Indicador de destaque: superfície escura com filete amarelo no topo. É a
+     única peça de fundo escuro dentro da página — por isso só um por tela. */
+  .stat-destaque {
+    @apply border-transparent bg-spot-sidebar text-spot-sidebarText overflow-hidden;
+    background-image: radial-gradient(120% 90% at 100% 0%, rgb(var(--spot-yellow) / 0.22), transparent 60%);
+  }
+  .stat-destaque .stat-rotulo { @apply text-spot-sidebarText/75; }
+  .stat-destaque .stat-valor { @apply text-spot-sidebarText; }
+  .stat-destaque .stat-apoio { @apply text-spot-sidebarText/75; }
+  .stat-destaque .stat-icone { @apply bg-spot-yellow text-spot-onYellow; }
 
   /* ─── Ações ───────────────────────────────────────────────────────────
      min-h-11 (44px) em todos os botões: é o alvo mínimo confortável para o
@@ -244,28 +257,26 @@
        nasce com 16px e só encolhe onde há mouse. */
     @apply w-full min-h-11 rounded-btn border border-spot-gray-300 bg-spot-white px-3.5 py-2.5 text-base sm:text-sm transition-colors placeholder:text-spot-gray-500 hover:border-spot-gray-500 focus:outline-none focus:ring-2 focus:ring-spot-yellow focus:border-spot-yellow;
   }
-  /* O rótulo é do mesmo tecido dos índices de seção: mono, micro, caixa-alta.
-     Amarra o formulário ao resto do boletim sem precisar de cor. */
   .label {
-    @apply block font-mono text-[11px] uppercase tracking-[0.14em] text-spot-gray-600 mb-2;
+    @apply block text-xs font-medium text-spot-gray-700 mb-1.5;
   }
 
   /* ─── Estado e classificação ──────────────────────────────────────────
-     A pílula pastel (bg-emerald-100 text-emerald-800) saiu: cinco fundos
-     coloridos competindo na mesma tela é o que fazia o painel parecer um
-     gerador de relatório. Ficou rótulo em mono + ponto na cor da escala —
-     a MESMA escala do mapa de calor, então o sistema inteiro fala uma cor só.
-     O rótulo continua escrito por extenso: cor sozinha nunca carrega
+     Pílula suave: fundo tingido com a cor da escala, ponto e rótulo escrito.
+     É a MESMA escala do mapa de calor, então o sistema inteiro fala uma cor
+     só. O texto é sempre `gray-800` (nunca a cor da escala) para manter o
+     contraste, e o rótulo continua por extenso: cor sozinha não carrega
      significado (≈8% dos homens tem daltonia vermelho-verde). */
   .badge {
-    @apply inline-flex items-center gap-1.5 rounded-btn px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.1em];
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap;
   }
   .badge-excellent,
   .badge-good,
   .badge-attention,
   .badge-critical,
   .badge-very-critical {
-    @apply bg-transparent px-0 text-spot-gray-800;
+    @apply text-spot-gray-900;
+    background-color: color-mix(in srgb, var(--badge-ponto) 18%, transparent);
   }
   .badge-excellent::before,
   .badge-good::before,
@@ -283,16 +294,19 @@
   .badge-very-critical { --badge-ponto: #d64545; }
 
   /* ─── Tabela ──────────────────────────────────────────────────────────
-     Sem zebra e sem cabeçalho cinza: filete fino entre as linhas e cabeçalho
-     em mono micro. Lê-se como uma planilha bem impressa. */
+     Cabeçalho tingido, linha com respiro e realce ao passar o mouse. O realce
+     é reforço: a leitura não depende dele. Sem zebra. */
   .tabela {
     @apply w-full text-sm;
   }
   .tabela thead th {
-    @apply font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-spot-gray-600 text-left pb-2.5 border-b border-spot-gray-300;
+    @apply bg-spot-gray-100 text-xs font-medium text-spot-gray-600 text-left px-4 py-3 first:rounded-l-btn last:rounded-r-btn whitespace-nowrap;
   }
   .tabela tbody td {
-    @apply py-3 align-top border-b border-spot-gray-200;
+    @apply px-4 py-3.5 align-top border-b border-spot-gray-200;
+  }
+  .tabela tbody tr {
+    @apply transition-colors hover:bg-spot-gray-50;
   }
   .tabela tbody tr:last-child td {
     @apply border-b-0;

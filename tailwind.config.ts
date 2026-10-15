@@ -70,12 +70,13 @@ const config: Config = {
         mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       boxShadow: {
-        card: '0 1px 2px rgba(0,0,0,0.06), 0 1px 6px rgba(0,0,0,0.04)',
+        // Sombra de repouso dos blocos do painel: rasa, sem reação ao mouse.
+        card: '0 1px 2px rgba(20,20,15,0.05), 0 4px 14px -6px rgba(20,20,15,0.08)',
       },
-      // Raio pequeno em tudo — a linguagem "Boletim" (ver MASTER.md).
+      // Raio da linguagem "Painel Spot" (ver MASTER.md): bloco grande, controle médio.
       borderRadius: {
-        xl2: '0.375rem',
-        btn: '0.25rem',
+        xl2: '0.875rem',
+        btn: '0.5rem',
       },
       keyframes: {
         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },

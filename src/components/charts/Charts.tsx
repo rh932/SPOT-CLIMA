@@ -33,7 +33,8 @@ function usePaleta() {
     ...p,
     tick: (fontSize: number) => ({ fontSize, fill: p.eixo }),
     tooltip: {
-      contentStyle: { background: p.fundo, border: `1px solid ${p.grade}`, borderRadius: 6, color: p.texto },
+      contentStyle: { background: p.fundo, border: `1px solid ${p.grade}`, borderRadius: 10, color: p.texto, boxShadow: '0 8px 24px -8px rgba(0,0,0,0.25)', fontSize: 13 },
+      cursor: { fill: p.grade, fillOpacity: 0.45 },
       labelStyle: { color: p.texto },
       itemStyle: { color: p.texto },
     },
@@ -46,11 +47,11 @@ export function IndexBarChart({ data, dataKey = 'index', nameKey = 'name' }: { d
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={p.grade} />
-        <XAxis type="number" domain={[0, 100]} tick={p.tick(12)} />
-        <YAxis type="category" dataKey={nameKey} width={150} tick={p.tick(12)} />
+        <CartesianGrid strokeDasharray="4 4" horizontal={false} stroke={p.grade} />
+        <XAxis type="number" domain={[0, 100]} tick={p.tick(12)} axisLine={false} tickLine={false} />
+        <YAxis type="category" dataKey={nameKey} width={150} tick={p.tick(12)} axisLine={false} tickLine={false} />
         <Tooltip formatter={(v: number) => `${v}%`} {...p.tooltip} />
-        <Bar dataKey={dataKey} fill={p.tinta} radius={[0, 6, 6, 0]}>
+        <Bar dataKey={dataKey} fill={p.tinta} radius={[0, 8, 8, 0]} barSize={18}>
           {data.map((_, i) => (
             <Cell key={i} fill={(data[i][dataKey] as number) >= 75 ? FAVORABLE : (data[i][dataKey] as number) >= 65 ? NEUTRAL : UNFAVORABLE} />
           ))}
@@ -70,7 +71,7 @@ export function FavorabilityDonut({ favorable, neutral, unfavorable }: { favorab
   return (
     <ResponsiveContainer width="100%" height={260}>
       <PieChart>
-        <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={95} paddingAngle={2}>
+        <Pie data={data} dataKey="value" nameKey="name" innerRadius={64} outerRadius={96} paddingAngle={3} cornerRadius={4} stroke="none">
           {data.map((d, i) => (
             <Cell key={i} fill={d.color} />
           ))}
@@ -126,9 +127,9 @@ export function EvolutionLineChart({
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data} margin={{ left: 8, right: 16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke={p.grade} />
-        <XAxis dataKey="surveyName" tick={p.tick(11)} />
-        <YAxis domain={[0, 100]} tick={p.tick(12)} />
+        <CartesianGrid strokeDasharray="4 4" vertical={false} stroke={p.grade} />
+        <XAxis dataKey="surveyName" tick={p.tick(11)} axisLine={false} tickLine={false} />
+        <YAxis domain={[0, 100]} tick={p.tick(12)} axisLine={false} tickLine={false} />
         <Tooltip formatter={(v: number) => `${v}%`} {...p.tooltip} />
         <Legend formatter={p.legenda} />
         {lines.map((l, i) => (

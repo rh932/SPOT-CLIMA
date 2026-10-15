@@ -16,6 +16,19 @@
 > como estava. As telas de login (`LoginCover`) e a capa da pesquisa
 > (`SurveyCover`) estão FORA deste redesenho, por decisão do cliente.
 
+> **Revisado em 2026-10-15: o "Boletim" foi substituído pelo "Painel Spot".** A
+> pedido do usuário, o painel passou a seguir dois modelos do Figma Make (ATS
+> Resume Analyzer e Energy Management): barra lateral escura com ícones SVG e
+> avatar, indicadores em cartões com ícone (um deles em destaque escuro), blocos
+> `.card` arredondados com sombra rasa, gráficos dentro de blocos, tabela com
+> cabeçalho tingido e status em pílula suave. **Onde as seções 2 e 10 abaixo
+> falam em "nada flutua", "filete no lugar de caixa", "sem pílula pastel" e "sem
+> fileira de cards", vale o texto desta nota.** Tokens de cor, tipografia
+> (Fraunces/Plex), modo escuro, contraste e alvo de toque seguem como estão.
+> Mudou: raio (`xl2` 0.875rem, `btn` 0.5rem), `shadow-card`, `.card`, `.stat*`,
+> `.badge*`, `.tabela`, `.label`, `<Secao>` (agora é o próprio bloco) e
+> `<Icone>` em `src/components/ui/Icone.tsx`. A sombra segue sem reagir ao mouse.
+
 ---
 
 ## 1. Padrão de produto

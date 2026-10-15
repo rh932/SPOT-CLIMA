@@ -23,7 +23,7 @@ export function CabecalhoPagina({
   return (
     <div className={`flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${className ?? ''}`}>
       <div className="min-w-0">
-        <h1 className="font-display text-3xl sm:text-4xl font-semibold leading-[1.1] tracking-tight text-spot-gray-900">
+        <h1 className="font-display text-3xl font-semibold leading-[1.15] tracking-tight text-spot-gray-900">
           {titulo}
         </h1>
         {subtitulo && <p className="text-sm text-spot-gray-600 mt-2 max-w-2xl">{subtitulo}</p>}

@@ -1,13 +1,16 @@
 /**
- * Cabeçalho de seção da linguagem "Boletim": índice em monoespaçada, título
- * em serifa caixa-baixa e um filete atravessando a largura.
+ * Bloco de conteúdo da linguagem "Painel Spot": um `.card` com cabeçalho —
+ * marca de índice, título em serifa e apoio à direita.
  *
  * O índice não é enfeite — numerar as seções dá à pessoa uma referência para
- * falar ("o 03 está zerado") e impõe uma ordem de leitura que quatro cards
- * soltos não têm. Onde não fizer sentido numerar, é só omitir.
+ * falar ("o 03 está zerado") e impõe uma ordem de leitura. Onde não fizer
+ * sentido numerar, é só omitir.
  *
- * As classes moram em globals.css (`.secao-*`) porque o mesmo desenho aparece
- * em página de servidor e de cliente, admin e gestor.
+ * As classes moram em globals.css (`.card`, `.secao-*`) porque o mesmo desenho
+ * aparece em página de servidor e de cliente, admin e gestor.
+ *
+ * `plano` tira a moldura do bloco, para quando a seção já está dentro de outro
+ * bloco: um card dentro de um card vira caixa de sapato.
  */
 export function Secao({
   indice,
@@ -17,6 +20,7 @@ export function Secao({
   acao,
   children,
   className,
+  plano,
 }: {
   /** Ex.: "01". Some quando não passado. */
   indice?: string;
@@ -24,39 +28,34 @@ export function Secao({
   /** Linha curta de contexto à direita do título (período, origem do dado). */
   apoio?: React.ReactNode;
   /**
-   * Linha fina logo abaixo do filete — a regra de anonimato, o total de
-   * registros, o que limita a leitura do bloco. Fica sob a régua, e não ao
-   * lado do título, porque costuma ser uma frase inteira.
+   * Linha fina logo abaixo do cabeçalho — a regra de anonimato, o total de
+   * registros, o que limita a leitura do bloco.
    */
   nota?: React.ReactNode;
-  /** Botão ou link alinhado ao fim da régua. */
+  /** Botão ou link alinhado ao fim do cabeçalho. */
   acao?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
+  plano?: boolean;
 }) {
   return (
-    <section className={`min-w-0 ${className ?? ''}`}>
-      <div className="secao-regua">
+    <section className={`${plano ? 'card-plain' : 'card'} ${className ?? ''}`}>
+      <div className={`secao-regua ${nota ? '!mb-2' : ''}`}>
         {indice && <span className="secao-indice">{indice}</span>}
         <h2 className="secao-titulo">{titulo}</h2>
         {apoio && <p className="secao-apoio">{apoio}</p>}
         {acao && <div className={apoio ? 'w-full sm:w-auto' : 'sm:ml-auto'}>{acao}</div>}
       </div>
-      {nota && <p className="text-xs text-spot-gray-500 -mt-3 mb-4 max-w-2xl">{nota}</p>}
+      {nota && <p className="text-xs text-spot-gray-500 mb-4 max-w-2xl">{nota}</p>}
       {children}
     </section>
   );
 }
 
 /**
- * Régua de indicadores: os números dividem uma faixa só, separados por filete.
- *
- * Substitui a fileira de quatro cards iguais — que é a assinatura do painel
- * genérico e, pior, dava a cada número o mesmo peso visual de um card de
- * conteúdo. Aqui o número é o que salta; a moldura sumiu.
- *
- * No celular a régua empilha e o filete vira horizontal, sem virar quatro
- * caixinhas de novo.
+ * Grade de indicadores: cada número é um cartão (`.stat`), em uma, duas ou
+ * quatro colunas conforme a largura. Para mais ou menos de quatro indicadores,
+ * passe `className` com as colunas desejadas.
  */
 export function ReguaIndicadores({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={`stat-regua ${className ?? ''}`}>{children}</div>;

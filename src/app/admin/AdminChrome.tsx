@@ -8,56 +8,53 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { PushPrompt } from '@/components/PushPrompt';
 import { activeNavHref, logoutAndLeave } from '@/lib/nav';
 import { usePainelModal } from '@/components/forms/usePainelModal';
+import { Icone, type NomeIcone } from '@/components/ui/Icone';
 
 /**
- * O menu do admin tem 16 destinos. Numa lista corrida, com um glifo decorativo
- * na frente de cada um, ninguém encontra nada: o olho varre 16 linhas iguais.
- *
- * Duas mudanças resolvem isso sem tirar nenhum destino:
- *   - os itens foram agrupados pelo assunto de quem procura (a pesquisa em si,
+ * O menu do admin tem 16 destinos. Numa lista corrida ninguém encontra nada: o
+ * olho varre 16 linhas iguais. Dois recursos resolvem isso sem tirar destino:
+ *   - os itens são agrupados pelo assunto de quem procura (a pesquisa em si,
  *     as pessoas, o cadastro que sustenta os dois, o sistema);
- *   - os ícones saíram. Eram glifos Unicode escolhidos um a um ("◧", "▥", "▤"
- *     duas vezes) que não diziam nada e já precisavam de aria-hidden para não
- *     poluir o leitor de tela. Sem eles, o rótulo — que é a informação — passa
- *     a começar todo no mesmo lugar.
+ *   - cada item tem um ícone de traço (SVG), que dá ao olho um ponto de
+ *     reconhecimento antes de ler o rótulo.
  */
-const GRUPOS = [
+const GRUPOS: { titulo: string; itens: { href: string; label: string; icone: NomeIcone }[] }[] = [
   {
     titulo: 'Pesquisa',
     itens: [
-      { href: '/admin', label: 'Visão Geral' },
-      { href: '/admin/surveys', label: 'Pesquisas' },
-      { href: '/admin/templates', label: 'Modelos' },
-      { href: '/admin/results', label: 'Resultados' },
-      { href: '/admin/comments', label: 'Comentários' },
-      { href: '/admin/comparisons', label: 'Comparativos' },
-      { href: '/admin/reports', label: 'Relatórios' },
+      { href: '/admin', label: 'Visão Geral', icone: 'inicio' },
+      { href: '/admin/surveys', label: 'Pesquisas', icone: 'pesquisa' },
+      { href: '/admin/templates', label: 'Modelos', icone: 'modelo' },
+      { href: '/admin/results', label: 'Resultados', icone: 'resultado' },
+      { href: '/admin/comments', label: 'Comentários', icone: 'comentario' },
+      { href: '/admin/comparisons', label: 'Comparativos', icone: 'comparar' },
+      { href: '/admin/reports', label: 'Relatórios', icone: 'relatorio' },
     ],
   },
   {
     titulo: 'Pessoas',
     itens: [
-      { href: '/admin/employees', label: 'Avaliação de Experiência' },
-      { href: '/admin/evaluations', label: 'Histórico de Avaliações' },
-      { href: '/admin/indicadores', label: 'Indicadores da Experiência' },
-      { href: '/admin/trainings', label: 'Treinamentos' },
-      { href: '/admin/trainings/report', label: 'Relatório de Treinamentos' },
-      { href: '/admin/action-plans', label: 'Plano de Ação' },
+      { href: '/admin/employees', label: 'Avaliação de Experiência', icone: 'pessoa' },
+      { href: '/admin/evaluations', label: 'Histórico de Avaliações', icone: 'historico' },
+      { href: '/admin/indicadores', label: 'Indicadores da Experiência', icone: 'indicador' },
+      { href: '/admin/trainings', label: 'Treinamentos', icone: 'treino' },
+      { href: '/admin/trainings/report', label: 'Relatório de Treinamentos', icone: 'relatorio' },
+      { href: '/admin/action-plans', label: 'Plano de Ação', icone: 'plano' },
     ],
   },
   {
     titulo: 'Cadastro',
     itens: [
-      { href: '/admin/sectors', label: 'Setores' },
-      { href: '/admin/units', label: 'Unidades' },
-      { href: '/admin/dimensions', label: 'Dimensões' },
+      { href: '/admin/sectors', label: 'Setores', icone: 'setor' },
+      { href: '/admin/units', label: 'Unidades', icone: 'unidade' },
+      { href: '/admin/dimensions', label: 'Dimensões', icone: 'dimensao' },
     ],
   },
   {
     titulo: 'Sistema',
     itens: [
-      { href: '/admin/users', label: 'Usuários' },
-      { href: '/admin/settings', label: 'Configurações' },
+      { href: '/admin/users', label: 'Usuários', icone: 'usuarios' },
+      { href: '/admin/settings', label: 'Configurações', icone: 'config' },
     ],
   },
 ];
@@ -65,18 +62,19 @@ const GRUPOS = [
 const TODOS_OS_HREFS = GRUPOS.flatMap((g) => g.itens.map((i) => i.href));
 
 /**
- * Item do menu. O ativo é marcado por uma barra amarela na lateral e pelo peso
- * do texto — e não por uma pílula amarela preenchida, que virava o objeto mais
- * chamativo da tela inteira e competia com o conteúdo.
+ * Item do menu. O ativo vira uma pílula com fundo suave e o ícone em amarelo —
+ * o amarelo marca posição, como no resto do sistema. Alvo de toque de 44px.
  */
 function ItemMenu({
   href,
   label,
+  icone,
   ativo,
   onClick,
 }: {
   href: string;
   label: string;
+  icone: NomeIcone;
   ativo: boolean;
   onClick?: () => void;
 }) {
@@ -85,22 +83,39 @@ function ItemMenu({
       href={href}
       onClick={onClick}
       aria-current={ativo ? 'page' : undefined}
-      className={`flex items-center min-h-11 border-l-2 pl-4 pr-3 text-sm transition-colors ${
+      className={`group relative mx-3 flex items-center gap-3 min-h-11 rounded-btn px-3 text-sm transition-colors ${
         ativo
-          ? 'border-spot-accent bg-white/[0.07] text-white font-semibold'
-          : 'border-transparent text-spot-sidebarText/75 font-normal hover:bg-white/5 hover:text-white'
+          ? 'bg-white/10 text-white font-semibold'
+          : 'text-spot-sidebarText/75 font-normal hover:bg-white/5 hover:text-white'
       }`}
     >
-      {label}
+      {ativo && <span aria-hidden className="absolute -left-3 top-2.5 bottom-2.5 w-1 rounded-r-full bg-spot-accent" />}
+      <Icone nome={icone} className={`h-[18px] w-[18px] ${ativo ? 'text-spot-accent' : 'text-spot-sidebarText/60 group-hover:text-spot-sidebarText'}`} />
+      <span className="min-w-0 truncate">{label}</span>
     </Link>
   );
 }
 
 function TituloGrupo({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40 px-4 pt-5 pb-2 first:pt-1">
+    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-spot-sidebarText/55 px-6 pt-5 pb-1.5 first:pt-1">
       {children}
     </p>
+  );
+}
+
+/** Avatar de iniciais: no lugar de foto, que o sistema não guarda. */
+function Avatar({ nome }: { nome: string | null }) {
+  const iniciais = (nome ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]!.toUpperCase())
+    .join('');
+  return (
+    <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-spot-yellow text-spot-onYellow text-sm font-semibold">
+      {iniciais || '·'}
+    </span>
   );
 }
 
@@ -137,37 +152,39 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh flex bg-spot-cream">
       <a href="#conteudo" className="pular-conteudo print:hidden">Pular para o conteúdo</a>
       {/* Sidebar - desktop */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-spot-sidebar text-spot-sidebarText print:hidden">
-        <div className="px-4 py-6 flex items-center gap-3 border-b border-white/10">
+      <aside className="hidden lg:flex w-72 shrink-0 flex-col bg-spot-sidebar text-spot-sidebarText print:hidden sticky top-0 h-dvh">
+        <div className="px-6 py-6 flex items-center gap-3 border-b border-white/10">
           <SpotBrand size="sm" layout="row" />
-          {/* spot-gray-400 aqui é proposital: sobre o fundo escuro da barra ele dá
-              7.13:1, enquanto o gray-500 usado no resto do app cairia para
-              3.89:1. A troca de contraste do restante das telas não vale aqui. */}
           <p className="text-[11px] text-spot-sidebarText/65 leading-tight">Restaurante Spot</p>
         </div>
-        <nav className="flex-1 py-3 flex flex-col overflow-y-auto">
+        <nav className="flex-1 py-3 flex flex-col overflow-y-auto" aria-label="Seções do painel">
           {GRUPOS.map((grupo) => (
             <div key={grupo.titulo}>
               <TituloGrupo>{grupo.titulo}</TituloGrupo>
-              {grupo.itens.map((item) => (
-                <ItemMenu key={item.href} href={item.href} label={item.label} ativo={item.href === activeHref} />
-              ))}
+              <div className="flex flex-col gap-0.5">
+                {grupo.itens.map((item) => (
+                  <ItemMenu key={item.href} {...item} ativo={item.href === activeHref} />
+                ))}
+              </div>
             </div>
           ))}
         </nav>
-        <div className="px-4 py-4 border-t border-white/10">
-          <p className="font-mono text-[11px] text-spot-sidebarText/65 truncate mb-1">{adminName}</p>
+        <div className="m-3 rounded-xl2 bg-white/5 p-3">
           <div className="flex items-center gap-3">
-            {/* Era 20x16px — o menor alvo do app inteiro, e é o que encerra a
-                sessão. O texto continua pequeno; a ÁREA é que cresceu. */}
-            <button
-              onClick={logout}
-              className="inline-flex items-center min-h-11 px-2 -ml-2 text-xs text-spot-sidebarText/75 hover:text-white transition-colors"
-            >
-              Sair da conta
-            </button>
+            <Avatar nome={adminName} />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-spot-sidebarText truncate">{adminName ?? 'Conta'}</p>
+              <p className="text-xs text-spot-sidebarText/65">Painel do RH</p>
+            </div>
             <NotificationBell portal="admin" placement="above" />
           </div>
+          <button
+            onClick={logout}
+            className="mt-2 flex w-full items-center gap-2 min-h-11 rounded-btn px-2 text-sm text-spot-sidebarText/75 hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <Icone nome="sair" className="h-[18px] w-[18px]" />
+            Sair da conta
+          </button>
         </div>
       </aside>
 
@@ -185,11 +202,7 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
             aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
             className="h-11 w-11 -mr-2 flex items-center justify-center"
           >
-            {/* SVG e não os glifos ✕/☰: cada fonte do sistema desenha esses
-                caracteres de um jeito (no Android o ☰ saía fino e deslocado). */}
-            <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-              {menuOpen ? <path d="M5 5l10 10M15 5L5 15" /> : <path d="M3 6h14M3 10h14M3 14h14" />}
-            </svg>
+            <Icone nome={menuOpen ? 'fechar' : 'menu'} className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -213,21 +226,23 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
             {GRUPOS.map((grupo) => (
               <div key={grupo.titulo}>
                 <TituloGrupo>{grupo.titulo}</TituloGrupo>
-                {grupo.itens.map((item) => (
-                  <ItemMenu
-                    key={item.href}
-                    href={item.href}
-                    label={item.label}
-                    ativo={item.href === activeHref}
-                    onClick={() => setMenuOpen(false)}
-                  />
-                ))}
+                <div className="flex flex-col gap-0.5">
+                  {grupo.itens.map((item) => (
+                    <ItemMenu
+                      key={item.href}
+                      {...item}
+                      ativo={item.href === activeHref}
+                      onClick={() => setMenuOpen(false)}
+                    />
+                  ))}
+                </div>
               </div>
             ))}
             <button
               onClick={logout}
-              className="text-left flex items-center min-h-11 border-l-2 border-transparent pl-4 text-sm text-spot-sidebarText/75 mt-3 border-t border-t-white/10 pt-3"
+              className="mx-3 mt-3 flex items-center gap-3 min-h-11 rounded-btn px-3 text-left text-sm text-spot-sidebarText/75 hover:bg-white/5 border-t border-t-white/10"
             >
+              <Icone nome="sair" className="h-[18px] w-[18px]" />
               Sair da conta
             </button>
           </div>
@@ -235,7 +250,7 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
       )}
 
       <main id="conteudo" tabIndex={-1} className="flex-1 min-w-0 pt-14 lg:pt-0 print:pt-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10 print:px-0 print:py-0 print:max-w-none">
+        <div className="max-w-[88rem] mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8 print:px-0 print:py-0 print:max-w-none">
           {/* key={pathname} reinicia a animação a cada troca de rota. É só
               opacidade: o "sobe e aparece" que havia aqui atrasava a leitura de
               toda página em ~350ms para não comunicar nada. */}

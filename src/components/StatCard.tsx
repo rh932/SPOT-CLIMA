@@ -1,34 +1,45 @@
+import { Icone, type NomeIcone } from '@/components/ui/Icone';
+
 /**
- * Indicador da régua (ver ReguaIndicadores em src/components/ui/Secao).
+ * Indicador da grade (ver ReguaIndicadores em src/components/ui/Secao): cartão
+ * com rótulo, ícone opcional, valor grande em serifa e a variação logo abaixo.
  *
- * Era um card branco com sombra e animação de entrada. Virou número: rótulo
- * micro em monoespaçada, valor grande em serifa e a variação numa linha
- * discreta. O nome do componente ficou por compatibilidade — quem o usa está
- * em quase toda tela do admin e do gestor.
+ * `destaque` pinta o cartão na superfície escura da barra lateral — use em um
+ * só indicador por tela, o que o RH precisa ver primeiro.
  *
- * A animação de entrada saiu de propósito: quatro números subindo em sequência
- * a cada carregamento é enfeite que atrasa a leitura de quem só quer conferir
- * o índice do dia.
+ * Quem o usa está em quase toda tela do admin e do gestor; por isso o nome e
+ * os parâmetros antigos continuam valendo e `icone`/`destaque` são opcionais.
  */
 export function StatCard({
   label,
   value,
   sub,
   trend,
+  icone,
+  destaque,
 }: {
   label: string;
   value: string;
   sub?: string;
   trend?: { direction: 'up' | 'down' | 'stable'; text: string };
+  icone?: NomeIcone;
+  destaque?: boolean;
 }) {
   return (
-    <div className="stat">
-      <p className="stat-rotulo">{label}</p>
+    <div className={`stat ${destaque ? 'stat-destaque' : ''}`}>
+      <div className="flex items-start justify-between gap-3">
+        <p className="stat-rotulo pt-0.5">{label}</p>
+        {icone && (
+          <span className="stat-icone">
+            <Icone nome={icone} />
+          </span>
+        )}
+      </div>
       <p className="stat-valor">{value}</p>
       {sub && <p className="stat-apoio">{sub}</p>}
       {trend && (
         <p
-          className={`text-xs font-medium mt-1.5 ${
+          className={`inline-flex items-center gap-1 text-xs font-medium mt-2 ${
             trend.direction === 'up'
               ? 'text-spot-success'
               : trend.direction === 'down'
@@ -36,7 +47,8 @@ export function StatCard({
                 : 'text-spot-gray-500'
           }`}
         >
-          {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {trend.text}
+          <Icone nome={trend.direction === 'up' ? 'alta' : trend.direction === 'down' ? 'baixa' : 'estavel'} className="h-3.5 w-3.5" />
+          {trend.text}
         </p>
       )}
     </div>
