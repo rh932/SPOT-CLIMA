@@ -49,7 +49,7 @@ export default function SurveysPage() {
   const { mostrar } = useToast();
   const confirmar = useConfirm();
 
-  const { data, loading, reloading, error: loadError, reload } = useAsyncData(
+  const { data, loading, reloading, error: loadError, forbidden, reload } = useAsyncData(
     (signal) => apiFetch<{ surveys: Survey[] }>('/api/admin/surveys', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar as pesquisas.' },
@@ -131,6 +131,7 @@ export default function SurveysPage() {
       <AsyncSection
         loading={loading}
         error={loadError}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="as pesquisas"

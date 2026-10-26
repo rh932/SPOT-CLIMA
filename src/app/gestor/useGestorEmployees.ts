@@ -111,7 +111,7 @@ export function isUrgent(e: GestorEmployee): boolean {
  * frequentemente desiste.
  */
 export function useGestorEmployees() {
-  const { data, loading, reloading, error, reload } = useAsyncData(
+  const { data, loading, reloading, error, forbidden, reload } = useAsyncData(
     (signal) => apiFetch<{ employees: GestorEmployee[]; canEvaluate: boolean }>('/api/gestor/employees', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar a sua equipe.' },
@@ -125,6 +125,7 @@ export function useGestorEmployees() {
     loading,
     reloading,
     error,
+    forbidden,
     reload,
   };
 }

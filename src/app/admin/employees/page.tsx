@@ -91,7 +91,7 @@ function AdminEmployees() {
    * — o RH lia "Nenhum funcionário em experiência cadastrado ainda" numa base
    * cheia de gente. Agora a falha é um estado próprio, com "Tentar de novo".
    */
-  const { data, loading, reloading, error, reload } = useAsyncData(
+  const { data, loading, reloading, error, forbidden, reload } = useAsyncData(
     async (signal) => {
       const [emp, sec, uni] = await Promise.all([
         apiFetch<{ employees: Employee[] }>('/api/admin/employees', { signal }),
@@ -158,6 +158,7 @@ function AdminEmployees() {
           <AsyncSection
             loading={loading}
             error={error}
+            forbidden={forbidden}
             onRetry={reload}
             retrying={reloading}
             rotulo="os funcionários"
@@ -211,6 +212,7 @@ function AdminEmployees() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="os funcionários"

@@ -10,7 +10,7 @@ import {
 interface Category { id: string; name: string; order: number; active: boolean; }
 
 export default function TemplateCategoriesPage() {
-  const { data, loading, reloading, error, reload, setData } = useAsyncData(
+  const { data, loading, reloading, error, forbidden, reload, setData } = useAsyncData(
     (signal) => apiFetch<{ categories: Category[] }>('/api/admin/template-categories', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar as categorias.' },
@@ -76,6 +76,7 @@ export default function TemplateCategoriesPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="as categorias"

@@ -11,7 +11,7 @@ import { AsyncSection, LiveStatus, RefreshingBar, Skeleton, SkeletonCardList } f
 export default function GestorDashboardPage() {
   const { can, loading: loadingPerms } = useMyPermissions();
   const router = useRouter();
-  const { employees, canEvaluate, loading, reloading, error, reload } = useGestorEmployees();
+  const { employees, canEvaluate, loading, reloading, error, forbidden, reload } = useGestorEmployees();
 
   // Treinador não tem avaliações: a porta de entrada dele é o treinamento.
   const soTreinamento = !loadingPerms && !can('evaluations.view') && can('trainings.view');
@@ -64,6 +64,7 @@ export default function GestorDashboardPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="a sua equipe"

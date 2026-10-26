@@ -1,6 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ApiClientError } from '@/lib/apiClient';
+
+/** O servidor recusou a leitura por falta de permissão (403). */
+export function ehSemAcesso(e: unknown): boolean {
+  return e instanceof ApiClientError && e.status === 403;
+}
 
 /**
  * Carregamento de dados com os quatro desfechos sempre tratados.
@@ -29,6 +35,7 @@ export function useAsyncData<T>(
   const [loading, setLoading] = useState(ativo);
   const [reloading, setReloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
 
   // Guarda a função mais recente sem entrar nas dependências do efeito — senão
   // uma arrow function inline recriada a cada render dispara fetch infinito.
@@ -47,6 +54,7 @@ export function useAsyncData<T>(
 
     if (temDados.current) setReloading(true); else setLoading(true);
     setError(null);
+    setForbidden(false);
     try {
       const resultado = await carregarRef.current(controller.signal);
       if (controller.signal.aborted) return;
@@ -54,6 +62,7 @@ export function useAsyncData<T>(
       temDados.current = true;
     } catch (e) {
       if (controller.signal.aborted || (e as Error)?.name === 'AbortError') return;
+      setForbidden(ehSemAcesso(e));
       setError(e instanceof Error ? e.message : mensagemPadrao);
     } finally {
       if (!controller.signal.aborted) { setLoading(false); setReloading(false); }
@@ -67,7 +76,7 @@ export function useAsyncData<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [executar, ativo, ...deps]);
 
-  return { data, loading, reloading, error, reload: executar, setData };
+  return { data, loading, reloading, error, forbidden, reload: executar, setData };
 }
 
 /**

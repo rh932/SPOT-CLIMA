@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/apiClient';
-import { ActionButton, AsyncSection, EmptyState, SkeletonCardList, useConfirm, useToast } from '@/components/async';
+import { ActionButton, AsyncSection, EmptyState, SkeletonCardList, useConfirm, useToast, ehSemAcesso } from '@/components/async';
 import { useMyPermissions } from '../../useMyPermissions';
 
 interface TrainingRecord {
@@ -42,6 +42,7 @@ export default function HistoricoTreinamentosPage() {
   const [trainings, setTrainings] = useState<TrainingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [reabrindoId, setReabrindoId] = useState<string | null>(null);
   const { can } = useMyPermissions();
@@ -55,8 +56,9 @@ export default function HistoricoTreinamentosPage() {
   const carregar = useCallback(() => {
     setLoading(true);
     setError(null);
+    setForbidden(false);
     load()
-      .catch((e) => setError(e instanceof Error ? e.message : 'Erro ao carregar o histórico.'))
+      .catch((e) => { setForbidden(ehSemAcesso(e)); setError(e instanceof Error ? e.message : 'Erro ao carregar o histórico.'); })
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -102,6 +104,7 @@ export default function HistoricoTreinamentosPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={carregar}
         rotulo="o histórico de treinamentos"
         skeleton={<SkeletonCardList rows={4} />}

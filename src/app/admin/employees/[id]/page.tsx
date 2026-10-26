@@ -12,7 +12,7 @@ import {
   COLOR_OPTIONS, COLOR_LABELS, COLOR_INTERVAL_DAYS, feedbackStatusBadge, type FeedbackColor,
 } from '@/lib/feedbackCycle';
 import { awaitsSecondEvaluation, colorUnlocked } from '@/lib/colorUnlock';
-import { ErrorState, LiveStatus, Skeleton, SkeletonCardList } from '@/components/async';
+import { ErrorState, LiveStatus, Skeleton, SkeletonCardList, ForbiddenState, ehSemAcesso } from '@/components/async';
 
 interface Employee extends DueDateFields {
   id: string;
@@ -54,6 +54,7 @@ export default function EmployeeDetailPage() {
   const [colorChanges, setColorChanges] = useState<ColorChange[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadForbidden, setLoadForbidden] = useState(false);
   const [editandoAdmissao, setEditandoAdmissao] = useState(false);
 
   const load = useCallback(() =>
@@ -67,8 +68,9 @@ export default function EmployeeDetailPage() {
   const carregar = useCallback(() => {
     setLoading(true);
     setError(null);
+    setLoadForbidden(false);
     load()
-      .catch((e) => setError(e instanceof Error ? e.message : 'Erro ao carregar a ficha.'))
+      .catch((e) => { setLoadForbidden(ehSemAcesso(e)); setError(e instanceof Error ? e.message : 'Erro ao carregar a ficha.'); })
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -86,7 +88,7 @@ export default function EmployeeDetailPage() {
       </div>
     );
   }
-  if (error) return <ErrorState message={error} onRetry={carregar} />;
+  if (error) return loadForbidden ? <ForbiddenState /> : <ErrorState message={error} onRetry={carregar} />;
   if (!employee) return null;
 
   // A cor só é liberada depois da 2ª avaliação de experiência (colorUnlock.ts).

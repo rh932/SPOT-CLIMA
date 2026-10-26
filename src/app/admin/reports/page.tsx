@@ -19,7 +19,7 @@ export default function ReportsPage() {
   const [pdfPeloNavegador, setPdfPeloNavegador] = useState<string | null>(null);
   const { mostrar } = useToast();
 
-  const { data, loading, error, reload, reloading } = useAsyncData(
+  const { data, loading, error, forbidden, reload, reloading } = useAsyncData(
     (signal) => apiFetch<{ surveys: Survey[] }>('/api/admin/surveys', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar as pesquisas.' },
@@ -79,6 +79,7 @@ export default function ReportsPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="as pesquisas"

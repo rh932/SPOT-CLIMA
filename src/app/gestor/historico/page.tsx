@@ -43,7 +43,7 @@ const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCa
  * o que foi registrado nela.
  */
 export default function HistoricoPage() {
-  const { employees, loading, reloading, error, reload } = useGestorEmployees();
+  const { employees, loading, reloading, error, forbidden, reload } = useGestorEmployees();
   const [busca, setBusca] = useState('');
 
   // Uma linha por avaliação já feita, da mais recente para a mais antiga.
@@ -87,6 +87,7 @@ export default function HistoricoPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="o histórico"

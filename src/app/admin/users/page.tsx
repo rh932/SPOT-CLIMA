@@ -80,7 +80,7 @@ export default function UsersPage() {
   const [criando, setCriando] = useState(false);
   const [editando, setEditando] = useState<AccessUser | null>(null);
 
-  const { data, loading, reloading, error, reload } = useAsyncData(
+  const { data, loading, reloading, error, forbidden, reload } = useAsyncData(
     async (signal) => {
       const [a, sec, uni, me] = await Promise.all([
         apiFetch<{ admins: AccessUser[] }>('/api/admin/admins', { signal }),
@@ -205,6 +205,7 @@ export default function UsersPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="os usuários"

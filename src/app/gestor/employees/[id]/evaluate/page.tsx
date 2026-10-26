@@ -9,7 +9,7 @@ import {
 } from '@/data/evaluationBank';
 import { EvaluationDimensionCard } from '@/components/gestor/EvaluationDimensionCard';
 import { COLOR_OPTIONS, COLOR_INTERVAL_DAYS, COLOR_LABELS, nextFeedbackDate, type FeedbackColor } from '@/lib/feedbackCycle';
-import { ActionButton, ErrorState, SkeletonForm, LiveStatus, useToast } from '@/components/async';
+import { ActionButton, ErrorState, SkeletonForm, LiveStatus, useToast, ForbiddenState, ehSemAcesso } from '@/components/async';
 import { scrollToFirstError } from '@/lib/scrollToError';
 import { saoPauloIsoDate } from '@/lib/probation';
 import { nextEvaluationPeriod, type PeriodoAvaliacao } from '@/lib/colorUnlock';
@@ -71,6 +71,7 @@ function EvaluateForm() {
   const [historico, setHistorico] = useState<{ period: PeriodoAvaliacao }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadForbidden, setLoadForbidden] = useState(false);
 
   // Hoje em São Paulo: depois das 21h o dia em UTC já é amanhã, e a avaliação
   // feita no último dia do contrato sairia como entregue fora do prazo.
@@ -101,9 +102,10 @@ function EvaluateForm() {
   const carregar = useCallback(() => {
     setLoading(true);
     setLoadError(null);
+    setLoadForbidden(false);
     apiFetch<{ employee: Employee; evaluations: { period: PeriodoAvaliacao }[]; canEvaluate: boolean; secondOpinion: SecondOpinion | null }>(`/api/gestor/employees/${params.id}`)
       .then((d) => { setEmployee(d.employee); setHistorico(d.evaluations ?? []); setCanEvaluate(d.canEvaluate); setSecondOpinion(d.secondOpinion); })
-      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Erro ao carregar.'))
+      .catch((e) => { setLoadForbidden(ehSemAcesso(e)); setLoadError(e instanceof Error ? e.message : 'Erro ao carregar.'); })
       .finally(() => setLoading(false));
   }, [params.id]);
 
@@ -117,7 +119,7 @@ function EvaluateForm() {
       </div>
     );
   }
-  if (loadError) return <ErrorState message={loadError} onRetry={carregar} />;
+  if (loadError) return loadForbidden ? <ForbiddenState /> : <ErrorState message={loadError} onRetry={carregar} />;
   if (!employee) return null;
 
   // O servidor já recusa o POST; aqui é só para o Gestor Líder não encarar um

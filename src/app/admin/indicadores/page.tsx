@@ -23,7 +23,7 @@ const nomeMes = (m: string) => {
 const ROLE: Record<string, string> = { GESTOR: 'Gestor', GESTOR_LIDER: 'Gestor Líder' };
 
 export default function IndicadoresPage() {
-  const { data, loading, reloading, error, reload } = useAsyncData(
+  const { data, loading, reloading, error, forbidden, reload } = useAsyncData(
     (signal) => apiFetch<IndicatorsResult>('/api/admin/indicators', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar os indicadores.' },
@@ -42,6 +42,7 @@ export default function IndicadoresPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="os indicadores"

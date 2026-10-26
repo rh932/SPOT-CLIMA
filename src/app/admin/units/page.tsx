@@ -10,7 +10,7 @@ import {
 interface Unit { id: string; name: string; order: number; active: boolean; }
 
 export default function UnitsPage() {
-  const { data, loading, reloading, error, reload, setData } = useAsyncData(
+  const { data, loading, reloading, error, forbidden, reload, setData } = useAsyncData(
     (signal) => apiFetch<{ units: Unit[] }>('/api/admin/units', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar as unidades.' },
@@ -90,6 +90,7 @@ export default function UnitsPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="as unidades"

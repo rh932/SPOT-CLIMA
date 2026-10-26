@@ -24,7 +24,7 @@ export default function ComparisonsPage() {
   const [comparando, setComparando] = useState(false);
   const [jaComparou, setJaComparou] = useState(false);
 
-  const { data, loading, error: loadError, reload } = useAsyncData(
+  const { data, loading, error: loadError, forbidden, reload } = useAsyncData(
     (signal) => apiFetch<{ surveys: SurveyOption[] }>('/api/admin/surveys', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar as pesquisas.' },
@@ -88,6 +88,7 @@ export default function ComparisonsPage() {
       <AsyncSection
         loading={loading}
         error={loadError}
+        forbidden={forbidden}
         onRetry={reload}
         rotulo="as pesquisas"
         skeleton={<SkeletonCardList rows={2} comBadge={false} />}

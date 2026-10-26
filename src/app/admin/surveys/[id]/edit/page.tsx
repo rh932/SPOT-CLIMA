@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/apiClient';
 import { usePainelModal } from '@/components/forms/usePainelModal';
-import { ActionButton, ErrorState, LiveStatus, SkeletonForm, useAsyncAction, useConfirm, useToast } from '@/components/async';
+import { ActionButton, ErrorState, LiveStatus, SkeletonForm, useAsyncAction, useConfirm, useToast, ForbiddenState, ehSemAcesso } from '@/components/async';
 import { QuestionModal, type Dimension, type QuestionSubmitPayload } from '@/components/admin/QuestionModal';
 import { QuestionListEditor, type QuestionListItem } from '@/components/admin/QuestionListEditor';
 import { ImportQuestionsPanel } from '@/components/admin/ImportQuestionsPanel';
@@ -23,6 +23,7 @@ export default function EditSurveyQuestionsPage() {
   const [showImport, setShowImport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadForbidden, setLoadForbidden] = useState(false);
   const acao = useAsyncAction();
   const { mostrar } = useToast();
   const confirmar = useConfirm();
@@ -43,8 +44,9 @@ export default function EditSurveyQuestionsPage() {
   const carregar = useCallback(() => {
     setLoading(true);
     setLoadError(null);
+    setLoadForbidden(false);
     load()
-      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Erro ao carregar a pesquisa.'))
+      .catch((e) => { setLoadForbidden(ehSemAcesso(e)); setLoadError(e instanceof Error ? e.message : 'Erro ao carregar a pesquisa.'); })
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -119,7 +121,7 @@ export default function EditSurveyQuestionsPage() {
   }
   // Erro ANTES de "não encontrada": uma falha de rede dizia que a pesquisa não
   // existia, e o RH ia procurar um registro que estava lá o tempo todo.
-  if (loadError) return <ErrorState message={loadError} onRetry={carregar} />;
+  if (loadError) return loadForbidden ? <ForbiddenState /> : <ErrorState message={loadError} onRetry={carregar} />;
   if (!survey) return <p className="card text-center py-10 text-spot-gray-500">Pesquisa não encontrada.</p>;
 
   const canEdit = survey.status === 'DRAFT' || survey.status === 'SCHEDULED';

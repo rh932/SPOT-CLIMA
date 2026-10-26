@@ -50,7 +50,7 @@ export default function ActionPlansPage() {
   const { mostrar } = useToast();
   const confirmar = useConfirm();
 
-  const { data, loading, reloading, error: loadError, reload, setData } = useAsyncData(
+  const { data, loading, reloading, error: loadError, forbidden, reload, setData } = useAsyncData(
     async (signal) => {
       const [pl, dim, sec, uni, sur] = await Promise.all([
         apiFetch<{ actionPlans: ActionPlan[] }>('/api/admin/action-plans', { signal }),
@@ -151,6 +151,7 @@ export default function ActionPlansPage() {
       <AsyncSection
         loading={loading}
         error={loadError}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="os planos de ação"

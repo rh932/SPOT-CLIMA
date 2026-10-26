@@ -16,7 +16,7 @@ import { AsyncSection, RefreshingBar, SkeletonCardList } from '@/components/asyn
  * próxima avaliação) e a avaliação fica no Histórico.
  */
 export default function ProximasAvaliacoesPage() {
-  const { employees, loading, reloading, error, reload } = useGestorEmployees();
+  const { employees, loading, reloading, error, forbidden, reload } = useGestorEmployees();
 
   const pendentes = employees
     .filter(isPending)
@@ -36,6 +36,7 @@ export default function ProximasAvaliacoesPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="as próximas avaliações"

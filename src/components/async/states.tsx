@@ -86,6 +86,22 @@ export function ErrorState({
   );
 }
 
+/**
+ * Sem permissão para esta área (403). Não é falha: tentar de novo não muda
+ * nada, então não há botão. Dizer só "não foi possível carregar" fazia a pessoa
+ * repetir o clique achando que era instabilidade.
+ */
+export function ForbiddenState() {
+  return (
+    <div role="alert" className="bg-spot-white border-l-[3px] border-spot-gray-400 pl-4 pr-4 py-5 flex flex-col items-start gap-1">
+      <p className="font-semibold text-spot-gray-900 text-sm">Você não tem acesso a esta área.</p>
+      <p className="text-sm text-spot-gray-700">
+        O menu mostra só as áreas liberadas para o seu acesso. Se precisa desta, fale com o RH.
+      </p>
+    </div>
+  );
+}
+
 /** Estado vazio de verdade — só aparece quando a API respondeu e não veio nada. */
 export function EmptyState({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
@@ -105,6 +121,7 @@ export function EmptyState({ children, action }: { children: ReactNode; action?:
 export function AsyncSection({
   loading,
   error,
+  forbidden = false,
   onRetry,
   retrying,
   empty,
@@ -115,6 +132,8 @@ export function AsyncSection({
 }: {
   loading: boolean;
   error: string | null;
+  /** O servidor respondeu 403: a pessoa não tem acesso (ver `ForbiddenState`). */
+  forbidden?: boolean;
   onRetry?: () => void;
   retrying?: boolean;
   empty?: boolean;
@@ -132,6 +151,7 @@ export function AsyncSection({
       </div>
     );
   }
+  if (forbidden) return <ForbiddenState />;
   if (error) return <ErrorState message={error} onRetry={onRetry} retrying={retrying} />;
   if (empty && emptyState) return <>{emptyState}</>;
   return <>{children}</>;

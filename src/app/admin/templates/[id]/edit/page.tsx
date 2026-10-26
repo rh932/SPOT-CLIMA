@@ -7,7 +7,7 @@ import { apiFetch } from '@/lib/apiClient';
 import { QuestionModal, type Dimension, type QuestionSubmitPayload } from '@/components/admin/QuestionModal';
 import { QuestionListEditor, type QuestionListItem } from '@/components/admin/QuestionListEditor';
 import { ImportQuestionsPanel } from '@/components/admin/ImportQuestionsPanel';
-import { ErrorState, LiveStatus, SkeletonForm, useAsyncAction, useConfirm, useToast } from '@/components/async';
+import { ErrorState, LiveStatus, SkeletonForm, useAsyncAction, useConfirm, useToast, ForbiddenState, ehSemAcesso } from '@/components/async';
 
 interface Template { id: string; name: string; }
 
@@ -21,6 +21,7 @@ export default function EditTemplateQuestionsPage() {
   const [showImport, setShowImport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadForbidden, setLoadForbidden] = useState(false);
   const acao = useAsyncAction();
   const { mostrar } = useToast();
   const confirmar = useConfirm();
@@ -38,8 +39,9 @@ export default function EditTemplateQuestionsPage() {
   const carregar = useCallback(() => {
     setLoading(true);
     setLoadError(null);
+    setLoadForbidden(false);
     load()
-      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Erro ao carregar o modelo.'))
+      .catch((e) => { setLoadForbidden(ehSemAcesso(e)); setLoadError(e instanceof Error ? e.message : 'Erro ao carregar o modelo.'); })
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -98,7 +100,7 @@ export default function EditTemplateQuestionsPage() {
   }
   // Erro antes de "não encontrado": uma falha de rede não pode se passar por
   // registro inexistente.
-  if (loadError) return <ErrorState message={loadError} onRetry={carregar} />;
+  if (loadError) return loadForbidden ? <ForbiddenState /> : <ErrorState message={loadError} onRetry={carregar} />;
   if (!template) return <p className="card text-center py-10 text-spot-gray-500">Modelo não encontrado.</p>;
 
   return (

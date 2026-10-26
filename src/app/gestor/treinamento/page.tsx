@@ -83,7 +83,7 @@ export default function TreinamentoPage() {
   const [aba, setAba] = useState<string | null>(null);
   const { mostrar } = useToast();
 
-  const { data, loading, reloading, error: loadError, reload } = useAsyncData(
+  const { data, loading, reloading, error: loadError, forbidden, reload } = useAsyncData(
     async (signal) => {
       const [emp, tipos] = await Promise.all([
         // `treinamento=1`: só os setores do treinamento (Salão). O servidor
@@ -212,6 +212,7 @@ export default function TreinamentoPage() {
       <AsyncSection
         loading={loading}
         error={loadError}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="os colaboradores"

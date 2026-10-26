@@ -62,7 +62,7 @@ function opcoes(rows: EvaluationRow[], pick: (r: EvaluationRow) => Lookup | null
  * toque abre a ficha do colaborador, onde está tudo o que foi registrado.
  */
 export default function AdminEvaluationsHistoryPage() {
-  const { data, loading, reloading, error, reload } = useAsyncData(
+  const { data, loading, reloading, error, forbidden, reload } = useAsyncData(
     (signal) => apiFetch<{ evaluations: EvaluationRow[] }>('/api/admin/evaluations', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar o histórico de avaliações.' },
@@ -159,6 +159,7 @@ export default function AdminEvaluationsHistoryPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="o histórico de avaliações"

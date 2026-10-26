@@ -5,7 +5,7 @@ import { useGestorEmployees, isUrgent, daysUntilDue, URGENT_DAYS } from '../useG
 import { AsyncSection, RefreshingBar, SkeletonCardList } from '@/components/async';
 
 export default function PendenciasPage() {
-  const { employees, canEvaluate, loading, reloading, error, reload } = useGestorEmployees();
+  const { employees, canEvaluate, loading, reloading, error, forbidden, reload } = useGestorEmployees();
 
   const urgent = employees.filter(isUrgent);
   const atrasadas = urgent.filter((e) => (daysUntilDue(e) ?? 0) < 0);
@@ -28,6 +28,7 @@ export default function PendenciasPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="as pendências"

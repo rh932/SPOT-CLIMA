@@ -29,7 +29,7 @@ export default function TemplatesPage() {
   const { mostrar } = useToast();
   const confirmar = useConfirm();
 
-  const { data, loading, reloading, error: loadError, reload, setData } = useAsyncData(
+  const { data, loading, reloading, error: loadError, forbidden, reload, setData } = useAsyncData(
     async (signal) => {
       const [tpl, cat, me] = await Promise.all([
         apiFetch<{ templates: Template[] }>('/api/admin/templates', { signal }),
@@ -124,6 +124,7 @@ export default function TemplatesPage() {
       <AsyncSection
         loading={loading}
         error={loadError}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="os modelos"

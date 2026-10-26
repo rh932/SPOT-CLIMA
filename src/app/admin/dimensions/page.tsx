@@ -10,7 +10,7 @@ import {
 interface Dimension { id: string; name: string; description: string | null; order: number; active: boolean; }
 
 export default function DimensionsPage() {
-  const { data, loading, reloading, error, reload, setData } = useAsyncData(
+  const { data, loading, reloading, error, forbidden, reload, setData } = useAsyncData(
     (signal) => apiFetch<{ dimensions: Dimension[] }>('/api/admin/dimensions', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar as dimensões.' },
@@ -88,6 +88,7 @@ export default function DimensionsPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="as dimensões"

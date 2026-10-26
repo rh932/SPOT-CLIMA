@@ -17,7 +17,7 @@ import {
 import { SHIFT_LABEL } from '../../useGestorEmployees';
 import { awaitsSecondEvaluation, colorUnlocked } from '@/lib/colorUnlock';
 import { EvaluationCard, type EvaluationRecord } from '@/components/EvaluationCard';
-import { ErrorState, LiveStatus, Skeleton, SkeletonCardList } from '@/components/async';
+import { ErrorState, LiveStatus, Skeleton, SkeletonCardList, ForbiddenState, ehSemAcesso } from '@/components/async';
 
 /**
  * Ficha do colaborador no portal da operação.
@@ -94,6 +94,7 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadForbidden, setLoadForbidden] = useState(false);
   const [mudandoCor, setMudandoCor] = useState(false);
 
   const load = useCallback(
@@ -104,8 +105,9 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
   const carregar = useCallback(() => {
     setLoading(true);
     setError(null);
+    setLoadForbidden(false);
     load()
-      .catch((e) => setError(e instanceof Error ? e.message : 'Erro ao carregar a ficha.'))
+      .catch((e) => { setLoadForbidden(ehSemAcesso(e)); setError(e instanceof Error ? e.message : 'Erro ao carregar a ficha.'); })
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -125,7 +127,7 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
   }
   if (error) return (
     <div className="flex flex-col gap-4">
-      <ErrorState message={error} onRetry={carregar} />
+      {loadForbidden ? <ForbiddenState /> : <ErrorState message={error} onRetry={carregar} />}
       <Link href="/gestor" className="btn-ghost self-start">Voltar ao painel</Link>
     </div>
   );

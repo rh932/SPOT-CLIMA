@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/apiClient';
-import { ActionButton, AsyncSection, EmptyState, RefreshingBar, Skeleton, SkeletonCardList, useConfirm, useToast } from '@/components/async';
+import { ActionButton, AsyncSection, EmptyState, RefreshingBar, Skeleton, SkeletonCardList, useConfirm, useToast, ehSemAcesso } from '@/components/async';
 import { TRAINING_RATING_LABEL, type TrainingRating } from '@/data/trainingBank';
 
 interface Criterion { id: string; label: string; hint: string | null; order: number }
@@ -52,6 +52,7 @@ export default function AdminTrainingsPage() {
   const [trainings, setTrainings] = useState<TrainingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
   const [typeFilter, setTypeFilter] = useState('');
   const [onlyReinforcement, setOnlyReinforcement] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -68,8 +69,9 @@ export default function AdminTrainingsPage() {
   const carregar = useCallback(() => {
     setLoading(true);
     setError(null);
+    setForbidden(false);
     load()
-      .catch((e) => setError(e instanceof Error ? e.message : 'Erro ao carregar os treinamentos.'))
+      .catch((e) => { setForbidden(ehSemAcesso(e)); setError(e instanceof Error ? e.message : 'Erro ao carregar os treinamentos.'); })
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -162,6 +164,7 @@ export default function AdminTrainingsPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={carregar}
         rotulo="os treinamentos"
         skeleton={<SkeletonCardList rows={4} />}

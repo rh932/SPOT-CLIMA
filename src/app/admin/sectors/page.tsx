@@ -33,7 +33,7 @@ function chavesDe(uso: Uso) {
 }
 
 export default function SectorsPage() {
-  const { data, loading, reloading, error, reload, setData } = useAsyncData(
+  const { data, loading, reloading, error, forbidden, reload, setData } = useAsyncData(
     (signal) => apiFetch<{ sectors: Sector[] }>('/api/admin/sectors', { signal }),
     [],
     { mensagemPadrao: 'Erro ao carregar os setores.' },
@@ -179,6 +179,7 @@ export default function SectorsPage() {
       <AsyncSection
         loading={loading}
         error={error}
+        forbidden={forbidden}
         onRetry={reload}
         retrying={reloading}
         rotulo="os setores"
