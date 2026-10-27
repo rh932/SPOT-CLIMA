@@ -1,4 +1,4 @@
-// SPOT CLIMA — Schema do banco de dados (Drizzle ORM / PostgreSQL)
+// Spot Integra — Schema do banco de dados (Drizzle ORM / PostgreSQL)
 //
 // Regra de ouro: `surveyResponses` e `responseAnswers` JAMAIS armazenam
 // qualquer identificador do colaborador (nome, e-mail, matrícula, CPF, IP...).

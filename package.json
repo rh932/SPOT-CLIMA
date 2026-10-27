@@ -2,7 +2,7 @@
   "name": "spot-clima",
   "version": "1.0.0",
   "private": true,
-  "description": "SPOT CLIMA - Sistema de Pesquisa de Clima Organizacional do Restaurante Spot",
+  "description": "Spot Integra - Sistema de Pesquisa de Clima Organizacional do Restaurante Spot",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

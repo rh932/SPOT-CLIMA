@@ -2,7 +2,7 @@ import ExcelJS from 'exceljs';
 
 export async function buildQuestionsImportTemplate(): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'SPOT CLIMA';
+  workbook.creator = 'Spot Integra';
   workbook.created = new Date();
 
   const sheet = workbook.addWorksheet('Perguntas');

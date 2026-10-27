@@ -38,7 +38,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       return new NextResponse(csv, {
         headers: {
           'Content-Type': 'text/csv; charset=utf-8',
-          'Content-Disposition': `attachment; filename="spot-clima-${params.id}.csv"`,
+          'Content-Disposition': `attachment; filename="spot-integra-${params.id}.csv"`,
         },
       });
     }
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       return new NextResponse(buffer, {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'Content-Disposition': `attachment; filename="spot-clima-${params.id}.xlsx"`,
+          'Content-Disposition': `attachment; filename="spot-integra-${params.id}.xlsx"`,
         },
       });
     }
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
         return new NextResponse(pdf, {
           headers: {
             'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="spot-clima-${params.id}.pdf"`,
+            'Content-Disposition': `attachment; filename="spot-integra-${params.id}.pdf"`,
           },
         });
       } catch (err) {

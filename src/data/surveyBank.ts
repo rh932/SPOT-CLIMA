@@ -1,5 +1,5 @@
 /**
- * Banco inicial de perguntas do SPOT CLIMA.
+ * Banco inicial de perguntas do Spot Integra.
  *
  * Consolidado a partir das 78 afirmações fornecidas pelo RH (ver item 63 do
  * briefing): perguntas que mediam praticamente a mesma coisa foram unificadas,

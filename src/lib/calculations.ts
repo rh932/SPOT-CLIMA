@@ -1,5 +1,5 @@
 /**
- * Funções puras de cálculo de indicadores do SPOT CLIMA.
+ * Funções puras de cálculo de indicadores do Spot Integra.
  * Mantidas sem dependências externas para serem 100% testáveis (ver tests/calculations.test.ts).
  */
 

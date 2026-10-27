@@ -2,10 +2,10 @@
 
 /**
  * Assinatura da marca: o logo (que já traz a palavra "Spot" desenhada) com
- * "clima" logo abaixo. Não repetir "SPOT CLIMA" escrito ao lado do logo —
+ * "integra" logo abaixo. Não repetir "Spot Integra" escrito ao lado do logo —
  * seria dizer a mesma coisa duas vezes.
  *
- * Em `row`, o "clima" fica sob o logo num bloco compacto (útil em barras de
+ * Em `row`, o "integra" fica sob o logo num bloco compacto (útil em barras de
  * topo estreitas); em `stack`, tudo centralizado.
  */
 
@@ -41,7 +41,7 @@ export function SpotBrand({
       {/* O logo é laranja sobre fundo transparente: lê bem no claro e no escuro. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/spot-logo.png" alt="Spot" className={logoClass} />
-      <span className={`mt-1 font-semibold uppercase ${WORD_SIZE[size]}`}>clima</span>
+      <span className={`mt-1 font-semibold uppercase ${WORD_SIZE[size]}`}>integra</span>
     </span>
   );
 }

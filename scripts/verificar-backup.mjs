@@ -29,7 +29,7 @@ if (process.env.DATABASE_URL && alvo.trim() === process.env.DATABASE_URL.trim())
 
 function decifrar(caminho, frase) {
   const buf = fs.readFileSync(caminho);
-  if (!buf.subarray(0, MAGIC.length).equals(MAGIC)) throw new Error('Não é um backup cifrado do SPOT CLIMA.');
+  if (!buf.subarray(0, MAGIC.length).equals(MAGIC)) throw new Error('Não é um backup cifrado do Spot Integra.');
   const sal = buf.subarray(8, 24);
   const iv = buf.subarray(24, 36);
   const tag = buf.subarray(buf.length - 16);

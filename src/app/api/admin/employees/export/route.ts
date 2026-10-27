@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     );
 
     const wb = new ExcelJS.Workbook();
-    wb.creator = 'Spot Clima';
+    wb.creator = 'Spot Integra';
     const ws = wb.addWorksheet('Experiência', { views: [{ state: 'frozen', ySplit: 1, xSplit: 1 }] });
     ws.columns = [
       { header: 'Funcionário', key: 'nome', width: 40 },

@@ -42,10 +42,10 @@ const TITULOS: Record<ActivityType, string> = {
 /** Título curto do aviso; o detalhe vai no corpo. */
 export function notificationTitle(type: NotificationType, offsetDays: number | null = null): string {
   const atrasado = offsetDays !== null && offsetDays < 0;
-  if (type === 'FEEDBACK_REMINDER') return `SPOT CLIMA — ${atrasado ? 'feedback atrasado' : 'feedback a vencer'}`;
-  if (type === 'EVALUATION_REMINDER') return `SPOT CLIMA — ${atrasado ? 'avaliação atrasada' : 'avaliação a vencer'}`;
-  if (type === 'SYSTEM_ALERT') return 'SPOT CLIMA — alerta do sistema';
-  return `SPOT CLIMA — ${TITULOS[type]}`;
+  if (type === 'FEEDBACK_REMINDER') return `Spot Integra — ${atrasado ? 'feedback atrasado' : 'feedback a vencer'}`;
+  if (type === 'EVALUATION_REMINDER') return `Spot Integra — ${atrasado ? 'avaliação atrasada' : 'avaliação a vencer'}`;
+  if (type === 'SYSTEM_ALERT') return 'Spot Integra — alerta do sistema';
+  return `Spot Integra — ${TITULOS[type]}`;
 }
 
 /**

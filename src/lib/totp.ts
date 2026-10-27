@@ -97,7 +97,7 @@ export function verifyTotp(
 }
 
 /** URI que o app autenticador lê pelo QR code. */
-export function otpauthUri(secretBase32: string, account: string, issuer = 'SPOT CLIMA'): string {
+export function otpauthUri(secretBase32: string, account: string, issuer = 'Spot Integra'): string {
   const label = encodeURIComponent(`${issuer}:${account}`);
   const params = new URLSearchParams({
     secret: secretBase32,

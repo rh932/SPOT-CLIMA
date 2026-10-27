@@ -1,5 +1,5 @@
 /**
- * Seed de demonstração do SPOT CLIMA.
+ * Seed de demonstração do Spot Integra.
  *
  * Cria: admin de demo, setores, unidades, dimensões, uma pesquisa "fechada" com dados
  * fictícios (para já nascer com histórico) e uma pesquisa "aberta" vazia

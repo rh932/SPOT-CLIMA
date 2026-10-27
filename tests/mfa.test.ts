@@ -68,8 +68,8 @@ describe('TOTP (RFC 6238)', () => {
 
   it('URI do app traz emissor e conta', () => {
     const uri = otpauthUri('ABC', 'rh@spot.com');
-    expect(uri.startsWith('otpauth://totp/SPOT%20CLIMA%3Arh%40spot.com?')).toBe(true);
-    expect(uri).toContain('issuer=SPOT+CLIMA');
+    expect(uri.startsWith('otpauth://totp/Spot%20Integra%3Arh%40spot.com?')).toBe(true);
+    expect(uri).toContain('issuer=Spot+Integra');
   });
 });
 

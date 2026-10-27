@@ -1,6 +1,6 @@
 {
-  "name": "SPOT CLIMA",
-  "short_name": "SPOT CLIMA",
+  "name": "Spot Integra",
+  "short_name": "Spot Integra",
   "description": "Pesquisa de clima e gestao de pessoas do Restaurante Spot",
   "start_url": "/survey",
   "scope": "/",

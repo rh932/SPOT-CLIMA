@@ -44,17 +44,17 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SPOT CLIMA — Pesquisa de Clima Organizacional',
+  title: 'Spot Integra — Pesquisa de Clima Organizacional',
   description: 'Sistema de Pesquisa de Clima Organizacional do Restaurante Spot',
   robots: { index: false, follow: false },
   // O manifesto é o que permite instalar o sistema na tela de início. No
   // iPhone isso não é enfeite: o Safari só entrega aviso por push para um app
   // instalado — no navegador comum, a permissão nem é oferecida.
   manifest: '/manifest.webmanifest',
-  applicationName: 'SPOT CLIMA',
+  applicationName: 'Spot Integra',
   appleWebApp: {
     capable: true,
-    title: 'SPOT CLIMA',
+    title: 'Spot Integra',
     statusBarStyle: 'black-translucent',
   },
   icons: {

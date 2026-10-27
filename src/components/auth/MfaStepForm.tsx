@@ -62,7 +62,7 @@ export function MfaStepForm({ onSuccess, onBack }: { onSuccess: () => void; onBa
       <p className="text-sm text-spot-gray-600 leading-relaxed">
         {recuperacao
           ? 'Digite um dos códigos de recuperação que você guardou quando ligou a verificação. Cada um vale uma vez.'
-          : 'Abra o app autenticador no celular e digite o código de 6 dígitos do SPOT CLIMA.'}
+          : 'Abra o app autenticador no celular e digite o código de 6 dígitos do Spot Integra.'}
       </p>
       <div>
         <label className="label" htmlFor="mfa-codigo">{recuperacao ? 'Código de recuperação' : 'Código do app'}</label>

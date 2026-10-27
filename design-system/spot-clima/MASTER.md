@@ -1,4 +1,4 @@
-# SPOT CLIMA — Design System (MASTER)
+# Spot Integra — Design System (MASTER)
 
 > Fonte de verdade global. Regras de página em `pages/<nome>.md` sobrescrevem este
 > arquivo; na ausência de um arquivo de página, valem só as regras daqui.

@@ -102,7 +102,7 @@ const primeiroNome = (nome: string) => {
 /** Passo a passo do aviso no celular, igual na mensagem individual e na do grupo. */
 const COMO_ATIVAR_NO_CELULAR = [
   '• Android: depois de entrar, toque em "Ativar" no quadro "Receba os avisos no celular" e depois em "Permitir".',
-  '• iPhone: abra o site no Safari (se o link abrir dentro do WhatsApp, toque no ícone da bússola), toque em Compartilhar e em "Adicionar à Tela de Início". Abra o SPOT CLIMA pelo ícone novo, entre com o seu e-mail e senha e toque em "Ativar" e depois em "Permitir".',
+  '• iPhone: abra o site no Safari (se o link abrir dentro do WhatsApp, toque no ícone da bússola), toque em Compartilhar e em "Adicionar à Tela de Início". Abra o Spot Integra pelo ícone novo, entre com o seu e-mail e senha e toque em "Ativar" e depois em "Permitir".',
 ];
 
 /**
@@ -119,7 +119,7 @@ export function accessMessage(u: Pick<AccessUser, 'name' | 'email' | 'role' | 'f
       : gestor
         ? 'Nele você faz as avaliações de experiência (45 e 90 dias) da sua equipe, acompanha os prazos e registra os feedbacks.'
         : 'Nele você acompanha as pesquisas de clima, as avaliações de experiência e os treinamentos.';
-  const abertura = [`Olá, ${primeiroNome(u.name)}! Seu acesso ao Spot Clima está liberado.`, oQueFaz, ''];
+  const abertura = [`Olá, ${primeiroNome(u.name)}! Seu acesso ao Spot Integra está liberado.`, oQueFaz, ''];
   // O aviso no celular é o que faz o lembrete de prazo chegar; sem ele, fica
   // só no sino e a pessoa só vê quando abre o site. No iPhone a Apple exige o
   // site na Tela de Início, aberto pelo ícone — o passo que mais se pula.
@@ -172,9 +172,9 @@ export function accessMessage(u: Pick<AccessUser, 'name' | 'email' | 'role' | 'f
  */
 export function groupMessage(origin: string): string {
   return [
-    '*SPOT CLIMA — acesso dos gestores*',
+    '*Spot Integra — acesso dos gestores*',
     '',
-    'Pessoal, a partir de agora as avaliações de experiência (45 e 90 dias) e os feedbacks da equipe passam a ser feitos pelo Spot Clima.',
+    'Pessoal, a partir de agora as avaliações de experiência (45 e 90 dias) e os feedbacks da equipe passam a ser feitos pelo Spot Integra.',
     '',
     `Site: ${loginUrl(origin, 'GESTOR')}`,
     '',

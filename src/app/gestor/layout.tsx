@@ -3,7 +3,7 @@ import { ConfirmProvider, ToastProvider } from '@/components/async';
 import { GestorChrome } from './GestorChrome';
 
 export const metadata: Metadata = {
-  title: 'SPOT CLIMA — Avaliações e Treinamentos',
+  title: 'Spot Integra — Avaliações e Treinamentos',
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'SPOT Gestor', statusBarStyle: 'black-translucent' },
 };

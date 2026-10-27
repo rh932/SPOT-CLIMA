@@ -1,5 +1,5 @@
 /**
- * Matriz de permissões do Spot Clima (RBAC).
+ * Matriz de permissões do Spot Integra (RBAC).
  *
  * Cada papel tem um conjunto PRÓPRIO de permissões — o Treinador não é "um
  * gestor com menos opções": ele tem a lista dele, que não inclui nada de

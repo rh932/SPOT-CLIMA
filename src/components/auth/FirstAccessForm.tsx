@@ -87,7 +87,7 @@ export function FirstAccessForm({
     <form onSubmit={submit} className="flex flex-col gap-4">
       <p className="text-sm text-spot-gray-700 leading-relaxed">
         {pelolink
-          ? <>Olá, <strong>{nome}</strong>! Crie a sua senha para entrar no Spot Clima.</>
+          ? <>Olá, <strong>{nome}</strong>! Crie a sua senha para entrar no Spot Integra.</>
           : 'Use o e-mail e o código de primeiro acesso que o RH mandou para você, e crie a sua senha.'}
       </p>
 

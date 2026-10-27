@@ -3,7 +3,7 @@ import { ConfirmProvider, ToastProvider } from '@/components/async';
 import { AdminChrome } from './AdminChrome';
 
 export const metadata: Metadata = {
-  title: 'SPOT CLIMA — Painel Administrativo',
+  title: 'Spot Integra — Painel Administrativo',
   // Manifesto próprio: no iPhone, o atalho criado na tela de início abre o
   // start_url do manifesto, não a página em que ele foi criado. Com um só
   // manifesto (start_url /gestor), o atalho do admin abria o gestor.

@@ -10,7 +10,7 @@ export function buildCsv(results: SurveyResultsSummary): string {
     return `"${safe.replace(/"/g, '""')}"`;
   };
 
-  lines.push('SPOT CLIMA - Relatório Consolidado (dados agregados, sem identificação individual)');
+  lines.push('Spot Integra - Relatório Consolidado (dados agregados, sem identificação individual)');
   lines.push(`Pesquisa,${esc(results.surveyName)}`);
   lines.push(`Total de respostas,${results.totalResponses}`);
   lines.push(`Taxa de participação,${results.participationRate}%`);
@@ -51,7 +51,7 @@ export function buildCsv(results: SurveyResultsSummary): string {
 
 export async function buildXlsx(results: SurveyResultsSummary, comments: CommentAnalysis): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'SPOT CLIMA';
+  workbook.creator = 'Spot Integra';
   workbook.created = new Date();
 
   const resumo = workbook.addWorksheet('Resumo Executivo');

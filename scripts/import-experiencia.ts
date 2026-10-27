@@ -1,5 +1,5 @@
 /**
- * Importa o histórico da avaliação de experiência para o Spot Clima:
+ * Importa o histórico da avaliação de experiência para o Spot Integra:
  *
  * 1. os admitidos do ano (padrão 2026) do "Quadro de Admissões e Demissões"
  *    do DP, mais quem tiver resposta no Forms mesmo tendo entrado antes;

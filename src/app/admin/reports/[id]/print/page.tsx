@@ -38,7 +38,7 @@ export default async function PrintReportPage(props: { params: Promise<{ id: str
       <header className="flex items-center justify-between border-b-4 border-spot-yellow pb-4 mb-8">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">Relatório executivo</p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight mt-1">SPOT CLIMA</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight mt-1">Spot Integra</h1>
         </div>
         <div className="text-right text-xs text-spot-gray-500 tabular">
           <p>{results.surveyName}</p>
@@ -155,7 +155,7 @@ export default async function PrintReportPage(props: { params: Promise<{ id: str
       )}
 
       <footer className="text-[10px] text-spot-gray-500 mt-10 pt-4 border-t border-spot-gray-200">
-        Documento gerado automaticamente pelo SPOT CLIMA. Contém apenas dados agregados — nenhuma resposta individual
+        Documento gerado automaticamente pelo Spot Integra. Contém apenas dados agregados — nenhuma resposta individual
         é identificável.
       </footer>
     </div>

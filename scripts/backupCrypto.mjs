@@ -104,7 +104,7 @@ function openEncrypted(srcPath, passphrase) {
     fs.closeSync(fd);
   }
   if (!header.subarray(0, MAGIC.length).equals(MAGIC)) {
-    throw new Error('Não é um backup cifrado do SPOT CLIMA.');
+    throw new Error('Não é um backup cifrado do Spot Integra.');
   }
   const salt = header.subarray(MAGIC.length, MAGIC.length + SALT_LEN);
   const iv = header.subarray(MAGIC.length + SALT_LEN, HEADER_LEN);

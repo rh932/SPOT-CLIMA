@@ -65,7 +65,7 @@ export function PushPrompt({ portal }: { portal: 'admin' | 'gestor' }) {
       ) : estado === 'instalar' ? (
         <p className="text-xs text-spot-gray-600 leading-snug mt-1">
           No iPhone, toque em Compartilhar e escolha &quot;Adicionar à Tela de Início&quot;. Depois abra o
-          SPOT CLIMA por esse ícone e ligue os avisos no sino.
+          Spot Integra por esse ícone e ligue os avisos no sino.
         </p>
       ) : (
         <p className="text-xs text-spot-gray-600 leading-snug mt-1">

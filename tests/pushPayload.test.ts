@@ -13,7 +13,7 @@ describe('feedbackReminderPayload', () => {
   it('leva a mensagem do sino, sem inventar texto novo', () => {
     const p = feedbackReminderPayload({ ...base, portal: 'gestor' });
     expect(p.body).toBe(base.message);
-    expect(p.title).toContain('SPOT CLIMA');
+    expect(p.title).toContain('Spot Integra');
   });
 
   it('aponta para a ficha do colaborador no portal certo', () => {

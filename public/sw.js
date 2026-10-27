@@ -1,5 +1,5 @@
 /*
- * Service worker do SPOT CLIMA.
+ * Service worker do Spot Integra.
  *
  * Faz UMA coisa: receber e mostrar aviso de push. Não guarda página em cache
  * nem tenta funcionar offline — o sistema depende do banco a cada tela, e um
@@ -27,10 +27,10 @@ self.addEventListener('push', (event) => {
     payload = {};
   }
 
-  const title = payload.title || 'SPOT CLIMA';
+  const title = payload.title || 'Spot Integra';
   event.waitUntil((async () => {
     await self.registration.showNotification(title, {
-      body: payload.body || 'Você tem um aviso no SPOT CLIMA.',
+      body: payload.body || 'Você tem um aviso no Spot Integra.',
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       // `tag` igual substitui o aviso anterior do mesmo assunto em vez de

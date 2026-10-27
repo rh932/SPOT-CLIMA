@@ -189,7 +189,7 @@ async function main() {
     await client.query('BEGIN READ ONLY');
     const tables = await orderedTables(client);
 
-    await write(`-- SPOT CLIMA data dump (read-only export)\n`);
+    await write(`-- Spot Integra data dump (read-only export)\n`);
     await write(`-- Generated at ${new Date().toISOString()}\n`);
     await write(`-- Restore into a migrated database (truncate first if needed).\n`);
     await write(`SET client_encoding = 'UTF8';\n`);

@@ -28,7 +28,7 @@ export function PushToggle({ portal }: { portal: 'admin' | 'gestor' }) {
     <div className="px-4 py-3 border-t border-spot-gray-100 bg-spot-gray-50">
       {estado === 'instalar' && aviso(
         'Para receber aviso neste iPhone, toque em Compartilhar e escolha "Adicionar à Tela de Início". '
-        + 'Depois abra o SPOT CLIMA por esse ícone e volte aqui.',
+        + 'Depois abra o Spot Integra por esse ícone e volte aqui.',
       )}
 
       {estado === 'indisponivel' && aviso('Este navegador não consegue receber avisos no aparelho.')}

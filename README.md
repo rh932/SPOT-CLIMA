@@ -1,10 +1,10 @@
-# SPOT CLIMA
+# Spot Integra
 
 Sistema de Pesquisa de Clima Organizacional do Restaurante Spot.
 
 ## 1. Visão geral
 
-O SPOT CLIMA é a plataforma interna de gestão de pessoas do Restaurante Spot. Cobre dois módulos:
+O Spot Integra é a plataforma interna de gestão de pessoas do Restaurante Spot. Cobre dois módulos:
 **Pesquisa de Clima Organizacional** (ciclos contínuos a cada 3-6 meses, com histórico preservado) e
 **Avaliação de Experiência** (período de 90 dias, em dois ciclos de 45).
 

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'SPOT CLIMA — Pesquisa de Clima',
+  title: 'Spot Integra — Pesquisa de Clima',
   manifest: '/manifest-survey.webmanifest',
-  appleWebApp: { capable: true, title: 'SPOT CLIMA', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'Spot Integra', statusBarStyle: 'black-translucent' },
 };
 
 export default function SurveyLayout({ children }: { children: React.ReactNode }) {

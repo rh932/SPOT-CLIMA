@@ -35,8 +35,8 @@ const NAV: { href: string; label: string; short: string; permission: PermissionK
   { href: '/gestor', label: 'Avaliação de Experiência', short: 'Equipe', permission: 'evaluations.view' },
   { href: '/gestor/pendencias', label: 'Pendências', short: 'Pendências', permission: 'evaluations.view' },
   { href: '/gestor/proximas', label: 'Próximas avaliações', short: 'Próximas', permission: 'evaluations.view' },
-  { href: '/gestor/historico', label: 'Histórico de avaliações', short: 'Histórico', permission: 'evaluations.history.view' },
   { href: '/gestor/treinamento', label: 'Treinamento', short: 'Treinar', permission: 'trainings.view' },
+  { href: '/gestor/historico', label: 'Histórico de avaliações', short: 'Histórico', permission: 'evaluations.history.view' },
   { href: '/gestor/treinamento/historico', label: 'Histórico de treinamentos', short: 'Treinos feitos', permission: 'trainings.history.view' },
 ];
 

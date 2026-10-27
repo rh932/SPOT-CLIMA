@@ -19,7 +19,7 @@ describe('vigia da rotina diária', () => {
 
   it('o alerta leva para Configurações e não carrega dado de funcionário', () => {
     const p = notificationPayload({ type: 'SYSTEM_ALERT', employeeId: null, message: 'A rotina falhou.', portal: 'admin' });
-    expect(p.title).toBe('SPOT CLIMA — alerta do sistema');
+    expect(p.title).toBe('Spot Integra — alerta do sistema');
     expect(p.url).toBe('/admin/settings#rotina');
   });
 

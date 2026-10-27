@@ -55,7 +55,7 @@ export default function ReportsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `spot-clima-${survey.id}.${EXTENSION[format]}`;
+      a.download = `spot-integra-${survey.id}.${EXTENSION[format]}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
