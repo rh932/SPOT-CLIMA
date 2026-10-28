@@ -168,18 +168,11 @@
     @apply font-display text-[2.125rem] sm:text-5xl font-light leading-[1.05] tracking-[-0.02em] text-spot-gray-900;
   }
 
-  /* Borda serrilhada da comanda (ver src/components/theme/Comanda.tsx): dois
-     gradientes em diagonal desenham os dentes na cor do papel, logo abaixo
-     da folha. Sai da cor da variável, então acompanha o modo escuro. */
-  .serrilha {
-    @apply relative pb-2;
-  }
-  .serrilha::after {
-    content: '';
-    @apply absolute inset-x-0 bottom-0 h-2;
-    background:
-      linear-gradient(135deg, rgb(var(--spot-white)) 33%, transparent 33%) 0 0 / 14px 14px repeat-x,
-      linear-gradient(225deg, rgb(var(--spot-white)) 33%, transparent 33%) 0 0 / 14px 14px repeat-x;
+  /* As capas de entrada (LoginCover) ficaram FORA da linguagem "Comanda", por
+     decisão do usuário: o formulário do login mantém o canto antigo (0.5rem)
+     dos botões e campos, que no resto do sistema ficou quase reto. */
+  .capa-entrada :is(.btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .input) {
+    border-radius: 0.5rem;
   }
 
   /* ─── Seção ───────────────────────────────────────────────────────────

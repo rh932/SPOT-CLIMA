@@ -30,9 +30,12 @@
 > `<Icone>` em `src/components/ui/Icone.tsx`. A sombra segue sem reagir ao mouse.
 
 > **Revisado em 2026-10-28: o "Painel Spot" foi substituído pela "Comanda".** A
-> pedido do usuário ("design sem cara de IA em tudo"), o sistema inteiro,
-> **inclusive as capas de login e da pesquisa**, passou a seguir a comanda da
-> cozinha. Vale sobre as notas de 15/10 e 25/09 onde houver conflito:
+> pedido do usuário ("design sem cara de IA"), a parte de DENTRO do sistema
+> (painel do RH, portal do gestor e as telas de perguntas da pesquisa) passou
+> a seguir a comanda da cozinha. **As capas de entrada — `LoginCover` e
+> `SurveyCover` — continuam como estavam, por decisão do usuário** (a Comanda
+> chegou a ser aplicada nelas e foi desfeita no mesmo dia). O formulário do
+> login guarda o canto antigo dos botões e campos via `.capa-entrada`. Vale sobre as notas de 15/10 e 25/09 onde houver conflito:
 > - **Bloco (`.card`)**: papel com filete fino nos lados e filete GROSSO de
 >   tinta no topo, canto quase reto (`rounded-sm`), **sem sombra**. Raios:
 >   `xl2` 0.375rem (modal, painel), `btn` 0.25rem.
@@ -47,11 +50,6 @@
 > - **Título**: Fraunces **300** grande (`.titulo-pagina` / `<CabecalhoPagina>`,
 >   34px → 48px) contra corpo em Plex. Seção: índice "01 —" em mono + Fraunces 400.
 > - **Menu**: sem pílula de fundo; o item ativo é só o filete amarelo de 3px.
-> - **Capas** (`src/components/theme/Comanda.tsx`): faixa preta fina com a casa
->   e a data em mono, título enorme em Fraunces 300 à esquerda e a comanda de
->   papel à direita (filete de 6px, picote, borda serrilhada `.serrilha`) que
->   entra "imprimindo" (`animate-imprimir`). Saíram as formas amarelas e o
->   título em cartão amarelo com sombra deslocada.
 > - Gráfico: barra com canto de 2px; célula do mapa de calor `rounded-sm` com
 >   número em mono.
 

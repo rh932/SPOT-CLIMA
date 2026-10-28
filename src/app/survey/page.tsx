@@ -311,7 +311,7 @@ export default function SurveyPage() {
         }
         action={
           <CoverButton onClick={() => setStage(data.survey.requireAccessCode && !ticket ? 'codigo' : 'sector')}>
-            Responder a pesquisa
+            Começar Pesquisa
           </CoverButton>
         }
         footer={

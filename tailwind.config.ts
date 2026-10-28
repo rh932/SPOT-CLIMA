@@ -114,11 +114,6 @@ const config: Config = {
           '0%, 100%': { transform: 'scale(1)' },
           '50%': { transform: 'scale(1.03)' },
         },
-        // A comanda da capa saindo da impressora: revela de cima para baixo.
-        imprimir: {
-          '0%': { clipPath: 'inset(0 0 100% 0)' },
-          '100%': { clipPath: 'inset(0 0 0 0)' },
-        },
         // Painel de login subindo pela base da tela (LoginCover).
         sheetUp: {
           '0%': { opacity: '0', transform: 'translateY(100%)' },
@@ -150,7 +145,6 @@ const config: Config = {
         slideInRight: 'slideInRight 0.45s ease-out both',
         stampIn: 'stampIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both',
         breathe: 'breathe 3.5s ease-in-out infinite',
-        imprimir: 'imprimir 0.7s cubic-bezier(0.65, 0, 0.35, 1) both',
         sheetUp: 'sheetUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both',
         sheetDown: 'sheetDown 0.3s ease-in both',
         coverRecede: 'coverRecede 0.45s ease-out both',
