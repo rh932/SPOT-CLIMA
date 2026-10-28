@@ -97,7 +97,7 @@ export default function AdminEvaluationsHistoryPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Histórico de avaliações</h1>
+        <h1 className="titulo-pagina">Histórico de avaliações</h1>
         <p className="text-spot-gray-500 text-sm">
           Todas as avaliações de experiência e de feedback já registradas. Nenhuma é sobrescrita: cada uma fica como
           parte da evolução do colaborador.

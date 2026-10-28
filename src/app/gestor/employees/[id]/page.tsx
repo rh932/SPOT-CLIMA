@@ -173,7 +173,7 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
       </Link>
 
       <header>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">{e.fullName}</h1>
+        <h1 className="titulo-pagina">{e.fullName}</h1>
         <p className="text-spot-gray-500 text-sm mt-0.5">
           {e.roleDescription} · {e.sector?.name} · {e.unit?.name} · {SHIFT_LABEL[e.shift]}
         </p>
@@ -415,9 +415,9 @@ function ColorSheet({
       >
         <div
           ref={painelRef}
-          className="w-full sm:max-w-md bg-spot-white rounded-t-[1.75rem] max-h-[92vh] overflow-y-auto shadow-[0_-8px_40px_rgba(0,0,0,0.25)]"
+          className="w-full sm:max-w-md bg-spot-white rounded-t-xl2 max-h-[92vh] overflow-y-auto shadow-[0_-8px_40px_rgba(0,0,0,0.25)]"
         >
-          <div className="sticky top-0 bg-spot-white rounded-t-[1.75rem] pt-3 px-5 sm:px-7">
+          <div className="sticky top-0 bg-spot-white rounded-t-xl2 pt-3 px-5 sm:px-7">
             <span aria-hidden className="mx-auto block h-1.5 w-12 rounded-full bg-spot-gray-300" />
             <div className="flex items-start justify-between gap-4 pt-4">
               <div className="min-w-0">
@@ -451,7 +451,7 @@ function ColorSheet({
                 return (
                   <label
                     key={opt.value}
-                    className={`flex items-start gap-3 rounded-xl border px-4 py-3 transition ${
+                    className={`flex items-start gap-3 rounded-btn border px-4 py-3 transition ${
                       atual
                         ? 'border-spot-gray-200 bg-spot-gray-50 opacity-60 cursor-not-allowed'
                         : ativo
@@ -483,7 +483,7 @@ function ColorSheet({
 
             {/* Prévia: o que muda no prazo, antes de confirmar. */}
             {preview && (
-              <div className="rounded-xl bg-spot-gray-50 border border-spot-gray-200 px-4 py-3 text-sm">
+              <div className="rounded-btn bg-spot-gray-50 border border-spot-gray-200 px-4 py-3 text-sm">
                 <p className="font-semibold">
                   Próximo feedback: {formatDate(preview.nextDueDate)}
                 </p>

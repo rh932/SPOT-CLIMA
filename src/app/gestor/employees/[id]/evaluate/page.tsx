@@ -277,7 +277,7 @@ function EvaluateForm() {
   return (
     <div className="flex flex-col gap-6 pb-10">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">{employee.fullName}</h1>
+        <h1 className="titulo-pagina">{employee.fullName}</h1>
         <p className="text-spot-gray-500 text-sm">
           {employee.roleDescription} · {employee.sector?.name} · {employee.unit?.name}
         </p>
@@ -360,7 +360,7 @@ function EvaluateForm() {
           <legend className="label">De maneira geral, como o funcionário pode ser classificado:</legend>
           <div className="flex flex-col gap-2 mt-2">
             {CLASSIFICATION_OPTIONS.map((opt) => (
-              <label key={opt.value} className={`flex items-center gap-2.5 min-h-11 rounded-lg border px-3.5 py-2.5 cursor-pointer transition ${classification === opt.value ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'}`}>
+              <label key={opt.value} className={`flex items-center gap-2.5 min-h-11 rounded-btn border px-3.5 py-2.5 cursor-pointer transition ${classification === opt.value ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'}`}>
                 <input type="radio" name="classification" className="accent-spot-black" checked={classification === opt.value} onChange={() => setClassification(opt.value)} />
                 <span className="text-sm">{opt.label}</span>
               </label>
@@ -372,7 +372,7 @@ function EvaluateForm() {
             <legend className="label">CONCLUSÃO</legend>
             <div className="flex flex-col gap-2 mt-2">
               {conclusionOptions.map((opt) => (
-                <label key={opt.value} className={`flex items-center gap-2.5 min-h-11 rounded-lg border px-3.5 py-2.5 cursor-pointer transition ${conclusion === opt.value ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'}`}>
+                <label key={opt.value} className={`flex items-center gap-2.5 min-h-11 rounded-btn border px-3.5 py-2.5 cursor-pointer transition ${conclusion === opt.value ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'}`}>
                   <input type="radio" name="conclusion" className="accent-spot-black" checked={conclusion === opt.value} onChange={() => setConclusion(opt.value)} />
                   <span className="text-sm">{opt.label}</span>
                 </label>
@@ -426,7 +426,7 @@ function EvaluateForm() {
             {COLOR_OPTIONS.map((opt) => (
               <label
                 key={opt.value}
-                className={`flex items-start gap-2.5 min-h-11 rounded-lg border px-3.5 py-2.5 cursor-pointer transition ${color === opt.value ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'}`}
+                className={`flex items-start gap-2.5 min-h-11 rounded-btn border px-3.5 py-2.5 cursor-pointer transition ${color === opt.value ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'}`}
               >
                 <input type="radio" name="color" className="accent-spot-black mt-1" checked={color === opt.value} onChange={() => setColor(opt.value)} />
                 <span>

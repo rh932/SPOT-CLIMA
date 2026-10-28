@@ -71,7 +71,7 @@ function CommentsInner() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Comentários</h1>
+          <h1 className="titulo-pagina">Comentários</h1>
           <p className="text-spot-gray-500 text-sm">
             Respostas abertas, agrupadas por tema. Nenhuma informação de quem respondeu é exibida.
           </p>

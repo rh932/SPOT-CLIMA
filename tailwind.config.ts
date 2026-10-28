@@ -73,10 +73,11 @@ const config: Config = {
         // Sombra de repouso dos blocos do painel: rasa, sem reação ao mouse.
         card: '0 1px 2px rgba(20,20,15,0.05), 0 4px 14px -6px rgba(20,20,15,0.08)',
       },
-      // Raio da linguagem "Painel Spot" (ver MASTER.md): bloco grande, controle médio.
+      // Raio da linguagem "Comanda" (ver MASTER.md): quase reto. Papel cortado,
+      // não cartão de app — o raio grande era metade da cara de template.
       borderRadius: {
-        xl2: '0.875rem',
-        btn: '0.5rem',
+        xl2: '0.375rem',
+        btn: '0.25rem',
       },
       keyframes: {
         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
@@ -113,6 +114,11 @@ const config: Config = {
           '0%, 100%': { transform: 'scale(1)' },
           '50%': { transform: 'scale(1.03)' },
         },
+        // A comanda da capa saindo da impressora: revela de cima para baixo.
+        imprimir: {
+          '0%': { clipPath: 'inset(0 0 100% 0)' },
+          '100%': { clipPath: 'inset(0 0 0 0)' },
+        },
         // Painel de login subindo pela base da tela (LoginCover).
         sheetUp: {
           '0%': { opacity: '0', transform: 'translateY(100%)' },
@@ -144,6 +150,7 @@ const config: Config = {
         slideInRight: 'slideInRight 0.45s ease-out both',
         stampIn: 'stampIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both',
         breathe: 'breathe 3.5s ease-in-out infinite',
+        imprimir: 'imprimir 0.7s cubic-bezier(0.65, 0, 0.35, 1) both',
         sheetUp: 'sheetUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both',
         sheetDown: 'sheetDown 0.3s ease-in both',
         coverRecede: 'coverRecede 0.45s ease-out both',

@@ -1,6 +1,7 @@
 /**
- * Bloco de conteúdo da linguagem "Painel Spot": um `.card` com cabeçalho —
- * marca de índice, título em serifa e apoio à direita.
+ * Bloco de conteúdo da linguagem "Comanda": um `.card` (folha com filete
+ * grosso no topo) com cabeçalho — índice em mono, título em serifa e apoio à
+ * direita.
  *
  * O índice não é enfeite — numerar as seções dá à pessoa uma referência para
  * falar ("o 03 está zerado") e impõe uma ordem de leitura. Onde não fizer
@@ -53,9 +54,9 @@ export function Secao({
 }
 
 /**
- * Grade de indicadores: cada número é um cartão (`.stat`), em uma, duas ou
- * quatro colunas conforme a largura. Para mais ou menos de quatro indicadores,
- * passe `className` com as colunas desejadas.
+ * Régua de indicadores: os números lado a lado numa faixa só, separados por
+ * filete, em duas ou quatro colunas conforme a largura. Para mais ou menos de
+ * quatro indicadores, passe `className` com as colunas desejadas.
  */
 export function ReguaIndicadores({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={`stat-regua ${className ?? ''}`}>{children}</div>;

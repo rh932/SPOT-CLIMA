@@ -82,7 +82,7 @@ export default function GestorDashboardPage() {
         <div className="flex flex-col gap-6">
           {abertas.length > 0 && (
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-800 border-b border-spot-gray-300 pb-2 mb-1">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-800 border-b-2 border-spot-gray-900 pb-2 mb-1">
                 Avaliação disponível · {abertas.length}
               </p>
               <EmployeeList>
@@ -93,7 +93,7 @@ export default function GestorDashboardPage() {
 
           {aguardando.length > 0 && (
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500 border-b border-spot-gray-300 pb-2 mb-1">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500 border-b border-spot-gray-400 pb-2 mb-1">
                 Em experiência · {aguardando.length}
               </p>
               <EmployeeList>

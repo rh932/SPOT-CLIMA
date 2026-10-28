@@ -67,7 +67,7 @@ export function SkeletonForm({ campos = 4 }: { campos?: number }) {
       {Array.from({ length: campos }).map((_, i) => (
         <div key={i} className="card flex flex-col gap-3">
           <Skeleton className="h-4 w-1/3 max-w-[12rem]" />
-          <Skeleton className="h-10 w-full rounded-lg" />
+          <Skeleton className="h-10 w-full rounded-btn" />
         </div>
       ))}
     </div>

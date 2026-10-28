@@ -146,7 +146,7 @@ export default function TreinamentoPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Treinar colaborador</h1>
+          <h1 className="titulo-pagina">Treinar colaborador</h1>
           <p className="text-spot-gray-500 text-sm">Escolha quem você vai treinar agora.</p>
         </div>
         <button className="btn-primary" onClick={() => setShowCreate(true)}>+ Cadastrar colaborador</button>
@@ -521,7 +521,7 @@ function TrainingForm({
         <button className="text-sm text-spot-gray-500 hover:text-spot-gray-900 transition mb-3" onClick={onCancel}>
           ← Voltar para a lista
         </button>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">{employee.fullName}</h1>
+        <h1 className="titulo-pagina">{employee.fullName}</h1>
         <p className="text-spot-gray-500 text-sm">
           {employee.roleDescription} · {employee.sector?.name} · {employee.unit?.name} · {SHIFT_LABEL[employee.shift]}
         </p>
@@ -572,7 +572,7 @@ function TrainingForm({
                   {m.instructions && <p className="text-xs text-spot-gray-600 mt-0.5">{m.instructions}</p>}
                   {m.imageDataUri && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.imageDataUri} alt={m.title} className="mt-2 rounded-lg border border-spot-gray-200 max-w-full" />
+                    <img src={m.imageDataUri} alt={m.title} className="mt-2 rounded-btn border border-spot-gray-200 max-w-full" />
                   )}
                 </div>
               ))}
@@ -625,7 +625,7 @@ function TrainingForm({
                           onChange={() => setAnswers((a) => ({ ...a, [c.id]: o.value }))}
                           /* min-h-11: era 26px de altura, um quarto do alvo de
                              toque que o resto do app já adota. */
-                          className={`flex items-center justify-center min-h-11 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                          className={`flex items-center justify-center min-h-11 rounded-btn border px-3 py-1.5 text-xs font-medium transition ${
                             active
                               ? 'bg-spot-yellow border-spot-yellow text-spot-onYellow'
                               : 'border-spot-gray-300 text-spot-gray-600 hover:border-spot-black'

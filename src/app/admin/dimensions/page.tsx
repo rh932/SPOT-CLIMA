@@ -74,7 +74,7 @@ export default function DimensionsPage() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Dimensões</h1>
+        <h1 className="titulo-pagina">Dimensões</h1>
         <p className="text-spot-gray-500 text-sm">Categorias usadas para organizar as perguntas e os indicadores.</p>
       </div>
 

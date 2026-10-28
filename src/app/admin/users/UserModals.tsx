@@ -49,7 +49,7 @@ function ScopeCheckboxList({
        selecao" sem nunca dizer que a pergunta era "Setores". */
     <fieldset className="min-w-0 border-0 p-0 m-0">
       <legend className="label">{label}</legend>
-      <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto border border-spot-gray-200 rounded-lg p-2.5">
+      <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto border border-spot-gray-200 rounded-btn p-2.5">
         {options.length === 0 && <p className="text-xs text-spot-gray-500">{emptyText}</p>}
         {options.map((o) => (
           /* min-h-11: a area clicavel era a altura do texto (~20px). */
@@ -333,7 +333,7 @@ export function CreateAdminModal({
           </>
         )}
         {role === 'TREINADOR' && (
-          <p className="text-xs text-spot-gray-500 bg-spot-gray-50 border border-spot-gray-200 rounded-lg px-3 py-2">
+          <p className="text-xs text-spot-gray-500 bg-spot-gray-50 border border-spot-gray-200 rounded-btn px-3 py-2">
             O Treinador acessa apenas a área de Treinamento, e só enxerga os colaboradores das lojas, setores e turnos
             marcados acima. Para mudar o setor dele depois, é só editar o usuário.
           </p>
@@ -437,7 +437,7 @@ export function EditAdminModal({
           </>
         )}
         {role === 'TREINADOR' && (
-          <p className="text-xs text-spot-gray-500 bg-spot-gray-50 border border-spot-gray-200 rounded-lg px-3 py-2">
+          <p className="text-xs text-spot-gray-500 bg-spot-gray-50 border border-spot-gray-200 rounded-btn px-3 py-2">
             O Treinador acessa apenas a área de Treinamento, e só enxerga os colaboradores das lojas, setores e turnos
             marcados acima. Para mudar o setor dele depois, é só editar o usuário.
           </p>

@@ -288,7 +288,7 @@ function ResultsInner() {
                       <span aria-hidden className="font-mono text-[11px] text-spot-gray-500 mr-2">{String(i + 1).padStart(2, '0')}</span>
                       {q.text}
                     </span>
-                    <span className="font-display font-semibold text-spot-success shrink-0 tabular">{q.favorable}%</span>
+                    <span className="font-mono font-medium text-spot-success shrink-0 tabular">{q.favorable}%</span>
                   </li>
                 ))}
               </ol>
@@ -301,7 +301,7 @@ function ResultsInner() {
                       <span aria-hidden className="font-mono text-[11px] text-spot-gray-500 mr-2">{String(i + 1).padStart(2, '0')}</span>
                       {q.text}
                     </span>
-                    <span className="font-display font-semibold text-spot-danger shrink-0 tabular">{q.favorable}%</span>
+                    <span className="font-mono font-medium text-spot-danger shrink-0 tabular">{q.favorable}%</span>
                   </li>
                 ))}
               </ol>

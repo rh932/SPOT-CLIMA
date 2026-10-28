@@ -109,7 +109,7 @@ export default function EmployeeDetailPage() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">{employee.fullName}</h1>
+        <h1 className="titulo-pagina">{employee.fullName}</h1>
         <p className="text-spot-gray-500 text-sm">
           {employee.roleDescription} · {employee.sector?.name} · {employee.unit?.name} · {SHIFT_LABEL[employee.shift]}
         </p>

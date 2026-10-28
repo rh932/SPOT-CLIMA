@@ -114,7 +114,7 @@ export default function ActionPlansPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Plano de Ação</h1>
+          <h1 className="titulo-pagina">Plano de Ação</h1>
           <p className="text-spot-gray-500 text-sm">Ações criadas a partir dos resultados da pesquisa de clima.</p>
         </div>
         <div className="flex gap-2">
@@ -324,7 +324,7 @@ function PriorityMatrix({ plans }: { plans: ActionPlan[] }) {
           </p>
           <ul className="flex flex-col gap-2 text-sm">
             {items.map((p) => (
-              <li key={p.id} className="bg-spot-white/70 rounded-lg px-3 py-2">{p.problem}</li>
+              <li key={p.id} className="bg-spot-white/70 rounded-btn px-3 py-2">{p.problem}</li>
             ))}
             {items.length === 0 && <li className="text-spot-gray-500">Nenhum plano.</li>}
           </ul>

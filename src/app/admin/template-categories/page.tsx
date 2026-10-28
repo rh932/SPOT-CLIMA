@@ -60,7 +60,7 @@ export default function TemplateCategoriesPage() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Categorias de Modelo</h1>
+        <h1 className="titulo-pagina">Categorias de Modelo</h1>
         <p className="text-spot-gray-500 text-sm">
           Agrupam os modelos na Biblioteca de Modelos (ex.: Engajamento, Clima organizacional, Liderança).
         </p>

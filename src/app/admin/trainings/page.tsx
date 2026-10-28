@@ -116,7 +116,7 @@ export default function AdminTrainingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Treinamentos</h1>
+        <h1 className="titulo-pagina">Treinamentos</h1>
         <p className="text-spot-gray-500 text-sm">Acompanhamento dos treinamentos registrados pelos treinadores.</p>
       </div>
 

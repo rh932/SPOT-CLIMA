@@ -74,7 +74,7 @@ export default function UnitsPage() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Unidades</h1>
+        <h1 className="titulo-pagina">Unidades</h1>
         <p className="text-spot-gray-500 text-sm">
           Loja/unidade física — o colaborador seleciona junto com o setor ao responder.
         </p>

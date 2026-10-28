@@ -114,7 +114,7 @@ export default function SurveysPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Pesquisas</h1>
+          <h1 className="titulo-pagina">Pesquisas</h1>
           <p className="text-spot-gray-500 text-sm">Crie, publique, encerre e duplique ciclos de pesquisa.</p>
         </div>
         <button className="btn-primary" onClick={() => setShowCreate(true)}>

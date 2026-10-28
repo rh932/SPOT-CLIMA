@@ -51,7 +51,7 @@ export function IndexBarChart({ data, dataKey = 'index', nameKey = 'name' }: { d
         <XAxis type="number" domain={[0, 100]} tick={p.tick(12)} axisLine={false} tickLine={false} />
         <YAxis type="category" dataKey={nameKey} width={150} tick={p.tick(12)} axisLine={false} tickLine={false} />
         <Tooltip formatter={(v: number) => `${v}%`} {...p.tooltip} />
-        <Bar dataKey={dataKey} fill={p.tinta} radius={[0, 8, 8, 0]} barSize={18}>
+        <Bar dataKey={dataKey} fill={p.tinta} radius={[0, 2, 2, 0]} barSize={18}>
           {data.map((_, i) => (
             <Cell key={i} fill={(data[i][dataKey] as number) >= 75 ? FAVORABLE : (data[i][dataKey] as number) >= 65 ? NEUTRAL : UNFAVORABLE} />
           ))}

@@ -120,7 +120,7 @@ function AdminEmployees() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Avaliação de Experiência</h1>
+          <h1 className="titulo-pagina">Avaliação de Experiência</h1>
           <p className="text-spot-gray-500 text-sm">Funcionários em período de 90 dias, divididos em 2 ciclos de 45.</p>
         </div>
         <div className="flex flex-wrap gap-2">

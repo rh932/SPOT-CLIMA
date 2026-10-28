@@ -110,7 +110,7 @@ export default function EditTemplateQuestionsPage() {
           <Link href="/admin/templates" className="text-sm text-spot-gray-500 hover:underline">
             ← Modelos
           </Link>
-          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">{template.name}</h1>
+          <h1 className="titulo-pagina">{template.name}</h1>
           <p className="text-spot-gray-500 text-sm">{questions.length} pergunta(s)</p>
         </div>
         <div className="flex gap-2 flex-wrap">

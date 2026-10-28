@@ -31,7 +31,7 @@ export function EmployeeCard({
   return (
     <Link
       href={`/gestor/employees/${employee.id}`}
-      className={`group flex items-center justify-between gap-4 py-4 border-b border-spot-gray-200 transition-colors hover:bg-spot-white${
+      className={`group flex items-center justify-between gap-4 py-4 border-b border-dashed border-spot-gray-300 transition-colors hover:bg-spot-white${
         muted ? ' opacity-70' : ''
       }`}
     >

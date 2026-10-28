@@ -14,7 +14,7 @@ export default function NotFound() {
     <main className="min-h-dvh bg-spot-cream flex items-center px-4 py-10">
       <div className="w-full max-w-md mx-auto">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-spot-gray-500">Erro 404</p>
-        <h1 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight text-spot-gray-900 mt-3 pb-5 border-b border-spot-gray-300">
+        <h1 className="titulo-pagina mt-3 pb-5 border-b border-spot-gray-300">
           Esta página não existe
         </h1>
         <p className="text-sm text-spot-gray-600 leading-relaxed mt-5 max-w-prose">

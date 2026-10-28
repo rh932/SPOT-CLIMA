@@ -81,7 +81,7 @@ export default function ComparisonsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Comparativos</h1>
+        <h1 className="titulo-pagina">Comparativos</h1>
         <p className="text-spot-gray-500 text-sm">Evolução do clima entre diferentes ciclos de pesquisa.</p>
       </div>
 
@@ -160,7 +160,7 @@ export default function ComparisonsPage() {
                     {comparison.overallSeries.map((s) => (
                       <div key={s.surveyId} className="bg-spot-gray-50 px-4 py-3 min-w-[9rem]">
                         <dt className="text-xs text-spot-gray-500">{s.surveyName}</dt>
-                        <dd className="font-display text-2xl font-semibold tabular-nums">
+                        <dd className="font-mono text-2xl font-medium tabular-nums">
                           {s.enps === null ? '—' : s.enps > 0 ? `+${s.enps}` : s.enps}
                         </dd>
                       </div>

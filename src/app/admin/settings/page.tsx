@@ -65,7 +65,7 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Configurações</h1>
+        <h1 className="titulo-pagina">Configurações</h1>
         <p className="text-spot-gray-500 text-sm">Parâmetros gerais do sistema.</p>
       </div>
 

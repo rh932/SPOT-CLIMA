@@ -133,7 +133,7 @@ export default function EditSurveyQuestionsPage() {
           <Link href="/admin/surveys" className="text-sm text-spot-gray-500 hover:underline">
             ← Pesquisas
           </Link>
-          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">{survey.name}</h1>
+          <h1 className="titulo-pagina">{survey.name}</h1>
           <p className="text-spot-gray-500 text-sm">{questions.length} pergunta(s)</p>
         </div>
         {canEdit && (

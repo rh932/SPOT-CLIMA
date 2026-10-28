@@ -87,7 +87,7 @@ export default function HistoricoTreinamentosPage() {
         {/* Quem supervisiona (Gestor Líder, Super Admin) vê os treinamentos da
             equipe; quem treina vê os próprios. O título precisa dizer qual dos
             dois é, senão uma lista vazia parece defeito. */}
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">
+        <h1 className="titulo-pagina">
           {supervisiona ? 'Treinamentos da equipe' : 'Meus treinamentos'}
         </h1>
         <p className="text-spot-gray-500 text-sm">

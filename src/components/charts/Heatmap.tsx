@@ -75,7 +75,7 @@ export function Heatmap({ cells, rowLabel = 'Setor' }: { cells: HeatmapCell[]; r
                   <td key={d} className="p-0">
                     <div
                       title={cell?.visible ? `${value}%` : 'Oculto (anonimato)'}
-                      className="rounded-md h-12 w-full min-w-[64px] flex items-center justify-center font-semibold"
+                      className="rounded-sm h-12 w-full min-w-[64px] flex items-center justify-center font-mono text-[13px] font-medium tabular"
                       style={{ background: colorFor(value), color: textColorFor(value) }}
                     >
                       {value !== null ? `${value}%` : '—'}

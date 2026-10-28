@@ -163,7 +163,7 @@ export default function SectorsPage() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Setores</h1>
+        <h1 className="titulo-pagina">Setores</h1>
         <p className="text-spot-gray-500 text-sm">
           Um dos dois recortes usados nas pesquisas, junto com a unidade — é o que o funcionário seleciona ao responder.
         </p>

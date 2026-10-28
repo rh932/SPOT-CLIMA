@@ -52,7 +52,7 @@ export function EvaluationDimensionCard({
               checked={rating === opt}
               onChange={() => onRatingChange(opt)}
               /* min-h-11: media 42px, dois pixels abaixo do alvo minimo. */
-              className={`flex items-center justify-center min-h-11 rounded-lg border px-3 py-2.5 text-sm font-semibold text-center transition active:scale-[0.97] ${
+              className={`flex items-center justify-center min-h-11 rounded-btn border px-3 py-2.5 text-sm font-semibold text-center transition active:scale-[0.97] ${
                 rating === opt ? 'bg-spot-black text-spot-onBlack border-spot-black' : 'border-spot-gray-300 hover:border-spot-black text-spot-gray-700'
               }`}
             >
@@ -79,7 +79,7 @@ export function EvaluationDimensionCard({
                   onChange={() => onSubAnswerChange(sq.key, opt)}
                   /* min-h-11: media 34px — a sub-resposta era o menor alvo
                      da ficha, e sao 24 delas por avaliacao. */
-                  className={`flex items-center justify-center min-h-11 rounded-lg border px-4 py-2 text-xs font-semibold transition active:scale-[0.97] ${
+                  className={`flex items-center justify-center min-h-11 rounded-btn border px-4 py-2 text-xs font-semibold transition active:scale-[0.97] ${
                     subAnswers[sq.key] === opt ? 'bg-spot-black text-spot-onBlack border-spot-black' : 'border-spot-gray-300 hover:border-spot-black text-spot-gray-700'
                   }`}
                 >

@@ -109,7 +109,7 @@ export default function TrainingReportPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight">Relatório de treinamentos</h1>
+          <h1 className="titulo-pagina">Relatório de treinamentos</h1>
           <p className="text-spot-gray-500 text-sm">Onde a operação está indo bem e onde precisa de reforço.</p>
         </div>
         <Link href="/admin/trainings" className="btn-ghost text-sm py-2 px-4">Ver registros</Link>
