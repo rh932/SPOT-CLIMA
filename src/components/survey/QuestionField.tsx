@@ -17,6 +17,14 @@ export interface QuestionData {
   isEnps?: boolean;
 }
 
+/*
+ * Resposta em TECLA ("Placa de serviço"): filete de tinta e sombra sólida de
+ * 3px; a escolhida fica afundada (desce os 3px e perde a sombra) e acesa em
+ * tinta. Dá para ver de longe qual foi marcada, e o dedo sente o clique.
+ */
+const TECLA = 'border-[1.5px] border-spot-gray-900 bg-spot-white text-spot-gray-900 shadow-[0_3px_0_rgb(var(--spot-gray-900))] hover:bg-spot-gray-50';
+const TECLA_ACESA = 'border-[1.5px] border-spot-gray-900 bg-spot-black text-spot-onBlack translate-y-[3px] shadow-none';
+
 const LIKERT_OPTIONS = [
   { value: 1, label: 'Muito em desacordo' },
   { value: 2, label: 'Em desacordo' },
@@ -49,7 +57,7 @@ export function QuestionField({
    * (aria-hidden) e a informação vai por escrito, no `sr-only`.
    */
   const enunciado = (
-    <span id={idEnunciado} className="block font-medium text-spot-gray-900 mb-3">
+    <span id={idEnunciado} className="block font-display italic text-[1.375rem] sm:text-2xl leading-snug text-spot-gray-900 mb-4">
       {question.text}
       {question.required && (
         <>
@@ -78,15 +86,15 @@ export function QuestionField({
                 value={String(opt.value)}
                 checked={value?.numericValue === opt.value}
                 onChange={() => onChange({ numericValue: opt.value })}
-                className={`block rounded-btn border px-3 py-3 text-xs sm:text-[13px] leading-snug text-center transition active:scale-[0.97] ${
+                className={`block rounded-btn px-3 py-3 text-xs sm:text-[13px] leading-snug text-center transition-[transform,box-shadow,background-color] duration-100 active:translate-y-[3px] active:shadow-none ${
                   value?.numericValue === opt.value
-                    ? 'bg-spot-black text-spot-onBlack border-spot-black'
-                    : 'border-spot-gray-300 hover:border-spot-black text-spot-gray-700'
+                    ? TECLA_ACESA
+                    : TECLA
                 }`}
               >
                 {/* O número é enfeite: o rótulo já diz "De acordo". Lê-lo
                     também faria o leitor anunciar "4 De acordo". */}
-                <span aria-hidden className="block font-display text-xl font-semibold mb-1">{opt.value}</span>
+                <span aria-hidden className="block font-sans text-xl font-extrabold tracking-tight mb-1">{opt.value}</span>
                 {opt.label}
               </ChoiceOption>
             ))}
@@ -108,10 +116,10 @@ export function QuestionField({
                 value={String(n)}
                 checked={value?.numericValue === n}
                 onChange={() => onChange({ numericValue: n })}
-                className={`block rounded-btn border py-3 text-sm font-semibold text-center transition active:scale-[0.97] ${
+                className={`block rounded-btn py-3 text-base font-extrabold text-center transition-[transform,box-shadow,background-color] duration-100 active:translate-y-[3px] active:shadow-none ${
                   value?.numericValue === n
-                    ? 'bg-spot-black text-spot-onBlack border-spot-black'
-                    : 'border-spot-gray-300 hover:border-spot-black text-spot-gray-700'
+                    ? TECLA_ACESA
+                    : TECLA
                 }`}
               >
                 <span aria-hidden>{n}</span>
@@ -141,10 +149,10 @@ export function QuestionField({
                 checked={value?.choiceValues?.[0] === label}
                 onChange={() => onChange({ choiceValues: [label] })}
                 wrapperClassName="flex-1"
-                className={`block text-center rounded-btn border px-4 py-3 text-sm font-semibold transition active:scale-[0.97] ${
+                className={`block text-center rounded-btn px-4 py-3 text-base font-semibold transition-[transform,box-shadow,background-color] duration-100 active:translate-y-[3px] active:shadow-none ${
                   value?.choiceValues?.[0] === label
-                    ? 'bg-spot-black text-spot-onBlack border-spot-black'
-                    : 'border-spot-gray-300 hover:border-spot-black text-spot-gray-700'
+                    ? TECLA_ACESA
+                    : TECLA
                 }`}
               >
                 {label}

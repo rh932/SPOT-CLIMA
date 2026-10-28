@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LayoutGroup, MotionConfig, motion } from 'motion/react';
 import { SpotBrand } from '@/components/theme/SpotBrand';
 import { NotificationBell } from '@/components/NotificationBell';
 import { PushPrompt } from '@/components/PushPrompt';
@@ -62,9 +63,17 @@ const GRUPOS: { titulo: string; itens: { href: string; label: string; icone: Nom
 const TODOS_OS_HREFS = GRUPOS.flatMap((g) => g.itens.map((i) => i.href));
 
 /**
- * Item do menu. O ativo vira uma pílula com fundo suave e o ícone em amarelo —
- * o amarelo marca posição, como no resto do sistema. Alvo de toque de 44px.
+ * Item do menu. O ativo vira uma tecla clara sobre a barra escura (papel com
+ * texto de tinta), como as abas de um painel físico. Alvo de toque de 44px.
+ *
+ * A tecla é elemento compartilhado (`layoutId`): ao trocar de tela ele desliza
+ * com mola do item antigo até o novo, e o olho acompanha para onde foi em vez
+ * de procurar o item aceso. Cada lista (lateral, menu do celular) fica num
+ * LayoutGroup próprio — senão o filete da lista escondida por CSS tentaria
+ * voar até a visível.
  */
+const MOLA_MENU = { type: 'spring', stiffness: 520, damping: 42, mass: 0.9 } as const;
+
 function ItemMenu({
   href,
   label,
@@ -83,14 +92,16 @@ function ItemMenu({
       href={href}
       onClick={onClick}
       aria-current={ativo ? 'page' : undefined}
-      className={`group relative mx-3 flex items-center gap-3 min-h-11 rounded-btn px-3 text-sm transition-colors ${
+      className={`group relative isolate mx-3 flex items-center gap-3 min-h-11 rounded-btn px-3 text-sm transition-colors ${
         ativo
-          ? 'bg-white/10 text-white font-semibold'
-          : 'text-spot-sidebarText/75 font-normal hover:bg-white/5 hover:text-white'
+          ? 'text-spot-sidebar font-semibold'
+          : 'text-spot-sidebarText/70 font-normal hover:text-white'
       }`}
     >
-      {ativo && <span aria-hidden className="absolute -left-3 top-2.5 bottom-2.5 w-1 rounded-r-full bg-spot-accent" />}
-      <Icone nome={icone} className={`h-[18px] w-[18px] ${ativo ? 'text-spot-accent' : 'text-spot-sidebarText/60 group-hover:text-spot-sidebarText'}`} />
+      {ativo && (
+        <motion.span layoutId="filete" transition={MOLA_MENU} aria-hidden className="absolute inset-0 -z-10 rounded-btn bg-spot-sidebarText" />
+      )}
+      <Icone nome={icone} className={`h-[18px] w-[18px] ${ativo ? 'text-spot-sidebar' : 'text-spot-sidebarText/60 group-hover:text-spot-sidebarText'}`} />
       <span className="min-w-0 truncate">{label}</span>
     </Link>
   );
@@ -98,7 +109,7 @@ function ItemMenu({
 
 function TituloGrupo({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-spot-sidebarText/55 px-6 pt-5 pb-1.5 first:pt-1">
+    <p className="font-mono text-[10.5px] font-medium uppercase tracking-[0.18em] text-spot-sidebarText/55 px-6 pt-5 pb-1.5 first:pt-1">
       {children}
     </p>
   );
@@ -113,7 +124,7 @@ function Avatar({ nome }: { nome: string | null }) {
     .map((p) => p[0]!.toUpperCase())
     .join('');
   return (
-    <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-spot-yellow text-spot-onYellow text-sm font-semibold">
+    <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-spot-yellow text-spot-onYellow font-mono text-sm font-medium">
       {iniciais || '·'}
     </span>
   );
@@ -149,15 +160,21 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
   const activeHref = activeNavHref(pathname, TODOS_OS_HREFS);
 
   return (
+    // reducedMotion="user": com "reduzir movimento" ligado no aparelho, as
+    // animações do Motion trocam o deslocamento por um corte seco.
+    <MotionConfig reducedMotion="user">
     <div className="min-h-dvh flex bg-spot-cream">
       <a href="#conteudo" className="pular-conteudo print:hidden">Pular para o conteúdo</a>
       {/* Sidebar - desktop */}
-      <aside className="hidden lg:flex w-72 shrink-0 flex-col bg-spot-sidebar text-spot-sidebarText print:hidden sticky top-0 h-dvh">
+      <aside className="hidden lg:flex w-72 shrink-0 flex-col bg-spot-sidebar text-spot-sidebarText print:hidden sticky top-0 h-dvh z-40">
         <div className="px-6 py-6 flex items-center gap-3 border-b border-white/10">
           <SpotBrand size="sm" layout="row" />
           <p className="text-[11px] text-spot-sidebarText/65 leading-tight">Restaurante Spot</p>
         </div>
-        <nav className="flex-1 py-3 flex flex-col overflow-y-auto" aria-label="Seções do painel">
+        <LayoutGroup id="menu-lateral">
+        {/* layoutScroll: a lista rola, e sem isto a mola mede o item no lugar
+            errado quando o menu não está no topo. */}
+        <motion.nav layoutScroll className="flex-1 py-3 flex flex-col overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Seções do painel">
           {GRUPOS.map((grupo) => (
             <div key={grupo.titulo}>
               <TituloGrupo>{grupo.titulo}</TituloGrupo>
@@ -168,13 +185,14 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           ))}
-        </nav>
-        <div className="m-3 rounded-xl2 bg-white/5 p-3">
+        </motion.nav>
+        </LayoutGroup>
+        <div className="border-t border-white/10 px-3 py-3">
           <div className="flex items-center gap-3">
             <Avatar nome={adminName} />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-spot-sidebarText truncate">{adminName ?? 'Conta'}</p>
-              <p className="text-xs text-spot-sidebarText/65">Painel do RH</p>
+              <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-spot-sidebarText/65">Painel do RH</p>
             </div>
             <NotificationBell portal="admin" placement="above" />
           </div>
@@ -215,13 +233,15 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
             onClick={() => setMenuOpen(false)}
             aria-hidden
           />
-          <div
+          <LayoutGroup id="menu-celular">
+          <motion.div
+            layoutScroll
             id="admin-menu-mobile"
             ref={menuRef}
             role="dialog"
             aria-modal="true"
             aria-label="Menu de seções"
-            className="lg:hidden fixed top-14 inset-x-0 z-20 bg-spot-sidebar text-spot-sidebarText py-2 flex flex-col max-h-[calc(100dvh-56px)] overflow-y-auto"
+            className="lg:hidden fixed top-14 inset-x-0 z-20 bg-spot-sidebar text-spot-sidebarText py-2 flex flex-col max-h-[calc(100dvh-56px)] overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {GRUPOS.map((grupo) => (
               <div key={grupo.titulo}>
@@ -245,7 +265,8 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
               <Icone nome="sair" className="h-[18px] w-[18px]" />
               Sair da conta
             </button>
-          </div>
+          </motion.div>
+          </LayoutGroup>
         </>
       )}
 
@@ -261,5 +282,6 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
         </div>
       </main>
     </div>
+    </MotionConfig>
   );
 }

@@ -21,7 +21,7 @@ export function WordCloud({ words }: { words: { word: string; count: number }[] 
         <span
           key={w.word}
           style={{ fontSize: `${sizeFor(w.count)}px`, opacity: 0.55 + 0.45 * (w.count / max) }}
-          className="font-display font-semibold text-spot-black leading-none"
+          className="font-sans font-extrabold tracking-tight text-spot-black leading-none"
           title={`${w.count} ocorrências`}
         >
           {w.word}

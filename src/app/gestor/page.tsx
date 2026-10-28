@@ -56,15 +56,18 @@ export default function GestorDashboardPage() {
       <RefreshingBar visible={reloading} texto="Atualizando a lista..." />
 
       {!loading && !error && urgent.length > 0 && (
-        <div className="border-l-[3px] border-spot-yellow bg-spot-white py-3 pl-4 pr-3">
-          <p className="text-sm font-semibold">
-            {urgent.length === 1 ? '1 avaliação passou do prazo de preenchimento' : `${urgent.length} avaliações passaram do prazo de preenchimento`}
+        <div className="flex items-center gap-4 rounded-xl2 bg-spot-yellow text-spot-onYellow p-4">
+          <p className="text-6xl font-extrabold leading-[0.85] tracking-[-0.05em] tabular shrink-0">{urgent.length}</p>
+          <div className="min-w-0">
+          <p className="font-display italic text-xl leading-tight">
+            {urgent.length === 1 ? 'avaliação passou do prazo de preenchimento' : 'avaliações passaram do prazo de preenchimento'}
           </p>
-          <p className="text-xs text-spot-gray-500 mt-0.5">
+          <p className="text-xs mt-1">
             {canEvaluate
               ? 'Elas já estão em Pendências.'
               : 'Veja em Pendências quem cobrar.'}
           </p>
+          </div>
         </div>
       )}
 
@@ -82,7 +85,7 @@ export default function GestorDashboardPage() {
         <div className="flex flex-col gap-6">
           {abertas.length > 0 && (
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-800 border-b-2 border-spot-gray-900 pb-2 mb-1">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-900 border-b-[1.5px] border-spot-gray-900 pb-2 mb-3">
                 Avaliação disponível · {abertas.length}
               </p>
               <EmployeeList>
@@ -93,7 +96,7 @@ export default function GestorDashboardPage() {
 
           {aguardando.length > 0 && (
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500 border-b border-spot-gray-400 pb-2 mb-1">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-600 border-b border-spot-gray-400 pb-2 mb-3">
                 Em experiência · {aguardando.length}
               </p>
               <EmployeeList>

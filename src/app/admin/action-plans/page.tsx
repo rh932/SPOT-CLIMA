@@ -319,7 +319,7 @@ function PriorityMatrix({ plans }: { plans: ActionPlan[] }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {Object.entries(groups).map(([label, items]) => (
         <div key={label} className={`bg-spot-white border-l-[3px] py-4 px-4 ${QUADRANT_STYLE[label]}`}>
-          <p className="font-display text-lg font-semibold mb-3">
+          <p className="font-sans text-lg font-extrabold tracking-tight mb-3">
             {label} <span className="font-sans font-normal text-sm text-spot-gray-500 tabular">({items.length})</span>
           </p>
           <ul className="flex flex-col gap-2 text-sm">
@@ -414,7 +414,7 @@ function ActionPlanForm({
         aria-label={plan ? 'Editar plano de ação' : 'Novo plano de ação'}
         className="bg-spot-white rounded-xl2 max-w-lg w-full p-6 flex flex-col gap-4 my-8 modal-panel"
       >
-        <h2 className="font-display text-xl font-semibold">{plan ? 'Editar plano de ação' : 'Novo plano de ação'}</h2>
+        <h2 className="font-sans text-xl font-extrabold tracking-tight">{plan ? 'Editar plano de ação' : 'Novo plano de ação'}</h2>
         <div>
           <label className="block">
             <span className="label">Problema identificado</span>

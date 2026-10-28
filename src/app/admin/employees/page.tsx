@@ -235,7 +235,7 @@ function AdminEmployees() {
           {acompanhamento.pendentes.map((loja) => (
             <section key={loja.chave} aria-labelledby={`loja-${loja.chave}`}>
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b-2 border-spot-gray-900 pb-2">
-                <h2 id={`loja-${loja.chave}`} className="font-display text-2xl font-semibold leading-tight">
+                <h2 id={`loja-${loja.chave}`} className="font-sans text-2xl font-extrabold tracking-tight leading-tight">
                   {loja.unidade?.name ?? 'Sem loja'}
                 </h2>
                 <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-spot-gray-500">
@@ -260,7 +260,7 @@ function AdminEmployees() {
             <section aria-labelledby="arquivo" className="border-t-2 border-spot-gray-300 pt-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 id="arquivo" className="font-display text-xl font-semibold leading-tight text-spot-gray-800">
+                  <h2 id="arquivo" className="font-sans text-xl font-extrabold tracking-tight leading-tight text-spot-gray-800">
                     Arquivo <span className="text-spot-gray-500 font-normal">({acompanhamento.totalArquivados})</span>
                   </h2>
                   <p className="text-sm text-spot-gray-500">Avaliações concluídas: efetivados, desligados e aprendizes.</p>
@@ -422,7 +422,7 @@ function CreateEmployeeModal({
         aria-label="Cadastrar funcionário em experiência"
         className="bg-spot-white rounded-xl2 max-w-md w-full p-6 flex flex-col gap-4 modal-panel"
       >
-        <h2 className="font-display text-xl font-semibold">Cadastrar funcionário em experiência</h2>
+        <h2 className="font-sans text-xl font-extrabold tracking-tight">Cadastrar funcionário em experiência</h2>
         <div>
           <label className="block">
             <span className="label">Nome completo</span>

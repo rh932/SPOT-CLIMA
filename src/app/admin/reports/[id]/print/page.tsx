@@ -38,7 +38,7 @@ export default async function PrintReportPage(props: { params: Promise<{ id: str
       <header className="flex items-center justify-between border-b-4 border-spot-yellow pb-4 mb-8">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">Relatório executivo</p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight mt-1">Spot Integra</h1>
+          <h1 className="font-sans text-3xl font-extrabold tracking-tight tracking-tight mt-1">Spot Integra</h1>
         </div>
         <div className="text-right text-xs text-spot-gray-500 tabular">
           <p>{results.surveyName}</p>
@@ -165,7 +165,7 @@ export default async function PrintReportPage(props: { params: Promise<{ id: str
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-7 break-inside-avoid">
-      <h2 className="font-display text-xl font-semibold text-spot-black border-b border-spot-gray-300 pb-2 mb-3 break-after-avoid">{title}</h2>
+      <h2 className="font-sans text-xl font-extrabold tracking-tight text-spot-black border-b border-spot-gray-300 pb-2 mb-3 break-after-avoid">{title}</h2>
       <div className="flex flex-col gap-1.5">{children}</div>
     </section>
   );

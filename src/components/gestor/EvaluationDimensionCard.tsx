@@ -34,7 +34,7 @@ export function EvaluationDimensionCard({
 
   return (
     <div className={`card flex flex-col gap-4 ${showError ? 'ring-2 ring-spot-danger' : ''}`}>
-      <p className="font-display text-lg font-semibold text-spot-gray-900">{dimension.name}</p>
+      <p className="font-sans text-lg font-extrabold tracking-tight text-spot-gray-900">{dimension.name}</p>
 
       <ChoiceGroup
         legenda={<span className="block text-sm font-medium text-spot-gray-800 mb-2">{dimension.gradedQuestion}</span>}

@@ -5,14 +5,16 @@ import {
   PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   LineChart, Line, Legend,
 } from 'recharts';
+import { useEffect, useState } from 'react';
+import { useReducedMotion } from 'motion/react';
 import { useModoEscuro } from '@/components/theme/useModoEscuro';
 
 // Faixas de favorabilidade (verde/amarelo/vermelho) são fixas de propósito —
 // mesma classificação usada em src/lib/calculations.ts, e legíveis nos dois
 // modos (são preenchimento, não texto).
-const FAVORABLE = '#1F9D55';
-const NEUTRAL = '#D9AE00';
-const UNFAVORABLE = '#D64545';
+const FAVORABLE = '#2F7A4D';
+const NEUTRAL = '#E3B300';
+const UNFAVORABLE = '#D9442A';
 const PRIMARY = '#F5C400';
 const EXTRA_SERIES_COLORS = ['#3B82F6', '#D64545', '#8B5CF6'];
 
@@ -23,8 +25,8 @@ const EXTRA_SERIES_COLORS = ['#3B82F6', '#D64545', '#8B5CF6'];
  * fundo e os eixos saíam no #666 padrão da biblioteca (3:1 sobre o cartão).
  */
 const PALETA = {
-  claro: { tinta: '#0B0B0B', grade: '#E4E4E1', eixo: '#54544F', fundo: '#FFFFFF', texto: '#151512' },
-  escuro: { tinta: '#F2EFE8', grade: '#2E2E2B', eixo: '#B3B1A9', fundo: '#1B1B19', texto: '#F2EFE8' },
+  claro: { tinta: '#16130F', grade: '#D6CDBC', eixo: '#504A3E', fundo: '#FBF8F1', texto: '#16130F' },
+  escuro: { tinta: '#EEE8DC', grade: '#363229', eixo: '#BAB2A2', fundo: '#201D19', texto: '#EEE8DC' },
 };
 
 function usePaleta() {
@@ -42,22 +44,65 @@ function usePaleta() {
   };
 }
 
+/*
+ * Tempo dos gráficos que se desenham na entrada. O padrão do Recharts (1,5 s
+ * com `ease` no donut) se arrastava depois que o resto da tela já tinha
+ * chegado; aqui as barras crescem e o anel fecha logo depois que o cartão
+ * assenta (ver Cascata), com saída suave. Com "reduzir movimento" ligado o
+ * gráfico já nasce pronto — o Recharts não lê essa preferência sozinho.
+ */
+const DESENHO = { animationDuration: 700, animationEasing: 'ease-out' } as const;
+
+/** Quantos segmentos tem o medidor: cada um vale 5 pontos de 0 a 100. */
+const SEGMENTOS = 20;
+
+/**
+ * Índice por dimensão como MEDIDOR EM LED ("Placa de serviço"): cada linha é
+ * uma régua de 20 segmentos que acendem até o valor, na cor da faixa
+ * (favorável/neutro/desfavorável), com o número em mono ao lado. Lê-se de
+ * relance como o painel de um aparelho, e o nome e o número continuam em
+ * texto — a cor reforça, não carrega o sentido sozinha.
+ *
+ * Os segmentos acendem em sequência quando o bloco aparece; com "reduzir
+ * movimento" já nascem acesos.
+ */
 export function IndexBarChart({ data, dataKey = 'index', nameKey = 'name' }: { data: Record<string, unknown>[]; dataKey?: string; nameKey?: string }) {
   const p = usePaleta();
+  const reduzido = useReducedMotion();
+  const [aceso, setAceso] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setAceso(true), 150);
+    return () => window.clearTimeout(t);
+  }, []);
+  const ligado = aceso || !!reduzido;
+
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
-        <CartesianGrid strokeDasharray="4 4" horizontal={false} stroke={p.grade} />
-        <XAxis type="number" domain={[0, 100]} tick={p.tick(12)} axisLine={false} tickLine={false} />
-        <YAxis type="category" dataKey={nameKey} width={150} tick={p.tick(12)} axisLine={false} tickLine={false} />
-        <Tooltip formatter={(v: number) => `${v}%`} {...p.tooltip} />
-        <Bar dataKey={dataKey} fill={p.tinta} radius={[0, 2, 2, 0]} barSize={18}>
-          {data.map((_, i) => (
-            <Cell key={i} fill={(data[i][dataKey] as number) >= 75 ? FAVORABLE : (data[i][dataKey] as number) >= 65 ? NEUTRAL : UNFAVORABLE} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <ul className="flex flex-col gap-3 py-1">
+      {data.map((d, linha) => {
+        const nome = String(d[nameKey]);
+        const valor = Number(d[dataKey]) || 0;
+        const cor = valor >= 75 ? FAVORABLE : valor >= 65 ? NEUTRAL : UNFAVORABLE;
+        const acesos = Math.round(Math.min(100, Math.max(0, valor)) / (100 / SEGMENTOS));
+        return (
+          <li key={nome} className="grid grid-cols-[minmax(0,8.5rem)_1fr_3rem] sm:grid-cols-[minmax(0,11rem)_1fr_3rem] items-center gap-3 text-sm">
+            <span className="truncate" title={nome}>{nome}</span>
+            <span aria-hidden className="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-[2px]">
+              {Array.from({ length: SEGMENTOS }, (_, i) => (
+                <i
+                  key={i}
+                  className="block h-3.5 rounded-[1px]"
+                  style={{
+                    background: ligado && i < acesos ? cor : p.grade,
+                    transition: reduzido ? undefined : `background-color 90ms ${linha * 60 + i * 22}ms`,
+                  }}
+                />
+              ))}
+            </span>
+            <span className="font-mono text-sm font-medium text-right tabular">{valor}%</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -68,10 +113,11 @@ export function FavorabilityDonut({ favorable, neutral, unfavorable }: { favorab
     { name: 'Neutro', value: neutral, color: NEUTRAL },
     { name: 'Desfavorável', value: unfavorable, color: UNFAVORABLE },
   ];
+  const reduzido = useReducedMotion();
   return (
     <ResponsiveContainer width="100%" height={260}>
       <PieChart>
-        <Pie data={data} dataKey="value" nameKey="name" innerRadius={64} outerRadius={96} paddingAngle={3} cornerRadius={4} stroke="none">
+        <Pie data={data} dataKey="value" nameKey="name" innerRadius={64} outerRadius={96} paddingAngle={3} cornerRadius={4} stroke="none" isAnimationActive={!reduzido} animationBegin={350} {...DESENHO} animationDuration={850}>
           {data.map((d, i) => (
             <Cell key={i} fill={d.color} />
           ))}

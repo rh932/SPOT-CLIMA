@@ -367,7 +367,7 @@ export default function SurveyPage() {
 
     return (
       <CenteredMessage key="codigo" wide>
-        <h2 className="font-display text-3xl font-normal tracking-tight mb-1">Código de participação</h2>
+        <h2 className="voz text-[2rem] sm:text-[2.5rem] leading-[1.02] text-spot-gray-900 mb-1">Código de participação</h2>
         <p className="text-spot-gray-500 text-sm mb-6">
           {depoisDoCodigo === 'review'
             ? 'Precisamos do código de novo para enviar. As suas respostas continuam guardadas.'
@@ -428,7 +428,7 @@ export default function SurveyPage() {
   if (stage === 'sector') {
     return (
       <CenteredMessage key="sector" wide>
-        <h2 className="font-display text-3xl font-normal tracking-tight mb-1">Qual é o seu setor?</h2>
+        <h2 className="voz text-[2rem] sm:text-[2.5rem] leading-[1.02] text-spot-gray-900 mb-1">Qual é o seu setor?</h2>
         <p className="text-spot-gray-500 text-sm mb-6">
           Usamos apenas o setor e a unidade para organizar os resultados — sua resposta continua anônima.
         </p>
@@ -460,7 +460,7 @@ export default function SurveyPage() {
   if (stage === 'unit') {
     return (
       <CenteredMessage key="unit" wide>
-        <h2 className="font-display text-3xl font-normal tracking-tight mb-1">Qual é a sua unidade?</h2>
+        <h2 className="voz text-[2rem] sm:text-[2.5rem] leading-[1.02] text-spot-gray-900 mb-1">Qual é a sua unidade?</h2>
         <p className="text-spot-gray-500 text-sm mb-6">
           A loja/unidade em que você trabalha — sua resposta continua anônima.
         </p>
@@ -527,7 +527,7 @@ export default function SurveyPage() {
         <div className="mb-6">
           <ProgressBar current={pageIndex + 1} total={pages.length} />
         </div>
-        <h2 className="font-display text-3xl font-normal tracking-tight mb-5 text-spot-gray-900">{page.name}</h2>
+        <h2 className="voz text-[2rem] sm:text-[2.5rem] leading-[1.02] text-spot-gray-900 mb-5 text-spot-gray-900">{page.name}</h2>
         <div className="flex flex-col gap-4 mb-8">
           {page.questions.map((q) => (
             <div
@@ -641,7 +641,7 @@ export default function SurveyPage() {
 
     return (
       <CenteredMessage key="review" wide>
-        <h2 className="font-display text-3xl font-normal tracking-tight mb-3">Pronto para enviar?</h2>
+        <h2 className="voz text-[2rem] sm:text-[2.5rem] leading-[1.02] text-spot-gray-900 mb-3">Pronto para enviar?</h2>
         <p className="text-spot-gray-600 text-sm mb-6">
           Você está prestes a enviar sua pesquisa. Suas respostas serão registradas de forma anônima e não poderão
           ser alteradas depois do envio. Você respondeu {answeredCount} de {data.questions.length} perguntas.
@@ -671,7 +671,7 @@ export default function SurveyPage() {
           <div className="mx-auto mb-5 h-14 w-14 rounded-full bg-spot-yellow flex items-center justify-center text-spot-onYellow animate-checkPop">
             <svg aria-hidden viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
           </div>
-          <h2 className="font-display text-4xl font-light tracking-tight mb-2">Obrigado por participar.</h2>
+          <h2 className="voz text-5xl leading-none text-spot-gray-900 mb-3">Obrigado por participar.</h2>
           <p className="text-spot-gray-600 text-sm">Suas respostas foram registradas de forma anônima.</p>
           {openSurveys.length > 1 && (
             <button className="btn-ghost mt-6" onClick={backToSelection}>

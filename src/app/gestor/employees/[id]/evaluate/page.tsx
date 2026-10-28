@@ -340,7 +340,7 @@ function EvaluateForm() {
       ))}
 
       <div className="card flex flex-col gap-4" data-erro={attempted && finalIncomplete ? 'true' : undefined}>
-        <p className="font-display text-lg font-semibold text-spot-gray-900">Avaliação final</p>
+        <p className="font-sans text-lg font-extrabold tracking-tight text-spot-gray-900">Avaliação final</p>
         <div>
           <label className="block">
             <span className="label">Quais os aspectos MAIS favoráveis do funcionário?</span>
@@ -385,7 +385,7 @@ function EvaluateForm() {
 
       <div className="card flex flex-col gap-4">
         <div>
-          <p className="font-display text-lg font-semibold text-spot-gray-900">Desenvolvimento</p>
+          <p className="font-sans text-lg font-extrabold tracking-tight text-spot-gray-900">Desenvolvimento</p>
           <p className="text-xs text-spot-gray-500 mt-0.5">Opcional — alimenta o histórico e a indicação de treinamento.</p>
         </div>
         <div>
@@ -416,7 +416,7 @@ function EvaluateForm() {
       {needsColor && (
         <div className="card flex flex-col gap-4" data-erro={attempted && !color ? 'true' : undefined}>
           <div>
-            <p className="font-display text-lg font-semibold text-spot-gray-900">Classificação por cor</p>
+            <p className="font-sans text-lg font-extrabold tracking-tight text-spot-gray-900">Classificação por cor</p>
             <p className="text-xs text-spot-gray-500 mt-0.5">
               A cor define de quanto em quanto tempo {employee.fullName.split(' ')[0]} recebe o próximo feedback.
             </p>

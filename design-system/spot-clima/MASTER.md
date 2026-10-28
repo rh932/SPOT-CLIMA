@@ -29,29 +29,32 @@
 > `.badge*`, `.tabela`, `.label`, `<Secao>` (agora é o próprio bloco) e
 > `<Icone>` em `src/components/ui/Icone.tsx`. A sombra segue sem reagir ao mouse.
 
-> **Revisado em 2026-10-28: o "Painel Spot" foi substituído pela "Comanda".** A
-> pedido do usuário ("design sem cara de IA"), a parte de DENTRO do sistema
-> (painel do RH, portal do gestor e as telas de perguntas da pesquisa) passou
-> a seguir a comanda da cozinha. **As capas de entrada — `LoginCover` e
-> `SurveyCover` — continuam como estavam, por decisão do usuário** (a Comanda
-> chegou a ser aplicada nelas e foi desfeita no mesmo dia). O formulário do
-> login guarda o canto antigo dos botões e campos via `.capa-entrada`. Vale sobre as notas de 15/10 e 25/09 onde houver conflito:
-> - **Bloco (`.card`)**: papel com filete fino nos lados e filete GROSSO de
->   tinta no topo, canto quase reto (`rounded-sm`), **sem sombra**. Raios:
->   `xl2` 0.375rem (modal, painel), `btn` 0.25rem.
-> - **Indicadores**: régua única (`.stat-regua`) com filete grosso em cima e
->   divisões finas; **número em Plex Mono tabular**, rótulo em mono caixa-alta,
->   sem ícone (`.stat-icone` está oculto). Destaque = quadradinho amarelo antes
->   do rótulo, sem fundo escuro nem gradiente.
-> - **Status**: ponto + rótulo em mono caixa-alta, sem pílula tingida. `.badge`
->   puro é etiqueta de canto reto (carimbo).
-> - **Tabela**: cabeçalho em mono sobre filete grosso; linhas por **picote**
->   (tracejado). `.picote` e `.rotulo-mono` são as classes soltas.
-> - **Título**: Fraunces **300** grande (`.titulo-pagina` / `<CabecalhoPagina>`,
->   34px → 48px) contra corpo em Plex. Seção: índice "01 —" em mono + Fraunces 400.
-> - **Menu**: sem pílula de fundo; o item ativo é só o filete amarelo de 3px.
-> - Gráfico: barra com canto de 2px; célula do mapa de calor `rounded-sm` com
->   número em mono.
+> **Revisado em 2026-10-28 (tarde): a "Comanda" foi substituída pela "Placa de
+> serviço".** Conceito em `design-system/conceitos/placa-de-servico.png`. Vale
+> para a parte de DENTRO (painel do RH, portal do gestor e telas da pesquisa
+> depois da capa). **As capas de entrada — `LoginCover` e `SurveyCover` —
+> continuam como estavam**: dentro de `.capa-entrada` (globals.css) valem a
+> paleta, a fonte (IBM Plex Sans via `--font-capa`) e os botões/campos antigos.
+> Onde as seções abaixo falarem de Fraunces, Plex, filete grosso ou pílula,
+> vale esta nota.
+> - **Fontes**: Bricolage Grotesque (`font-sans`: corpo e títulos; 800 no
+>   título e no número grande), Instrument Serif itálica (`font-display`, classe
+>   `.voz`: subtítulo, pergunta da pesquisa, o que fala com a pessoa) e DM Mono
+>   (`font-mono`: rótulo, prazo, dado pequeno).
+> - **Paleta**: tinta #16130F, papel #EEE8DC (página) e #FBF8F1 (bloco),
+>   amarelo Spot como SUPERFÍCIE (a "placa", uma por tela), tomate #B2321E para
+>   atraso/erro e verde folha #245E3C. Escuro quente equivalente.
+> - **Botão = tecla**: filete de tinta de 1.5px e sombra sólida de 3px que some
+>   ao apertar. É o único relevo do sistema; bloco não tem sombra.
+> - **Indicadores**: número em grotesca 800 sob filete de tinta, sem cartão; o
+>   destaque (`destaque` no StatCard) é a placa amarela.
+> - **Seção**: cabeçalho em mono caixa-alta sobre filete de tinta.
+> - **Gestor**: cada pessoa é uma ficha com aba colorida pelo prazo (tomate
+>   atrasado, amarelo até 7 dias, cinza o resto) e etiqueta em mono.
+> - **Pesquisa**: respostas em teclas físicas; a escolhida fica afundada.
+> - **Índice por dimensão**: medidor em LED de 20 segmentos (IndexBarChart).
+> - **Menu**: o item ativo vira uma tecla clara sobre a barra escura.
+> - Raios: bloco `xl2` 0.75rem, controle `btn` 0.5rem.
 
 ---
 

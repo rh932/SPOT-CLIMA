@@ -121,7 +121,7 @@ export function QuestionModal({
         aria-label={question ? 'Editar pergunta' : 'Nova pergunta'}
         className="bg-spot-white rounded-xl2 max-w-lg w-full p-6 flex flex-col gap-4 my-8 modal-panel"
       >
-        <h2 className="font-display text-xl font-semibold">{question ? 'Editar pergunta' : 'Nova pergunta'}</h2>
+        <h2 className="font-sans text-xl font-extrabold tracking-tight">{question ? 'Editar pergunta' : 'Nova pergunta'}</h2>
         <div>
           <label className="block">
             <span className="label">Texto da pergunta</span>

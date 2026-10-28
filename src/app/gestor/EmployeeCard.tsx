@@ -15,37 +15,53 @@ import { SHIFT_LABEL, prazoBadge, isFeedbackCycle, awaitsSecond, type GestorEmpl
  * olhava podia avaliar — e, quando não podia (Gestor Líder), não ia a lugar
  * nenhum, o que fazia a lista parecer quebrada.
  *
- * Deixou de ser um card branco solto para virar uma LINHA de lista. Doze cards
- * empilhados com sombra e espaço entre eles viram doze caixas iguais que o
- * olho tem de abrir uma a uma; separados por filete, viram uma lista que se
- * varre de cima a baixo — e cabe muito mais coisa na tela do telefone, que é
- * onde o gestor usa isto. A área de toque continua a linha inteira, bem acima
- * dos 44px.
+ * Na linguagem "Placa de serviço" cada pessoa é uma FICHA: papel claro com
+ * filete de tinta e uma aba colorida à esquerda que diz o prazo de longe —
+ * tomate para atrasado, amarelo para o que vence em até 7 dias, cinza para o
+ * resto. A etiqueta em mono repete o prazo por escrito: cor sozinha não
+ * carrega significado. A área de toque é a ficha inteira, bem acima de 44px.
  */
+/** Tom da aba a partir do selo de prazo (ver dueBadge em src/lib/probation). */
+function tomDoPrazo(className: string | undefined): 'atrasado' | 'perto' | 'longe' {
+  if (!className) return 'longe';
+  if (className.includes('C93A3A')) return 'atrasado';
+  if (className.includes('gray-800')) return 'perto';
+  return 'longe';
+}
+
+const ABA = { atrasado: 'bg-spot-danger', perto: 'bg-spot-yellow', longe: 'bg-spot-gray-300' } as const;
+const ETIQUETA = {
+  atrasado: 'bg-spot-dangerFill text-white',
+  perto: 'bg-spot-yellow text-spot-onYellow',
+  longe: 'border border-spot-gray-900 text-spot-gray-900',
+} as const;
+
 export function EmployeeCard({
   employee, muted = false,
 }: { employee: GestorEmployee; muted?: boolean; index?: number }) {
   const badge = prazoBadge(employee);
+  const tom = tomDoPrazo(badge?.className);
   const colorOption = employee.currentColor ? COLOR_OPTIONS.find((c) => c.value === employee.currentColor) : null;
 
   return (
     <Link
       href={`/gestor/employees/${employee.id}`}
-      className={`group flex items-center justify-between gap-4 py-4 border-b border-dashed border-spot-gray-300 transition-colors hover:bg-spot-white${
-        muted ? ' opacity-70' : ''
+      className={`group relative flex items-start justify-between gap-3 overflow-hidden rounded-xl2 border-[1.5px] bg-spot-white py-3.5 pl-5 pr-3.5 transition-[transform,box-shadow] duration-100 hover:-translate-y-px hover:shadow-[0_3px_0_rgb(var(--spot-gray-900))] ${
+        muted ? 'border-spot-gray-300' : 'border-spot-gray-900'
       }`}
     >
+      <span aria-hidden className={`absolute inset-y-0 left-0 w-[7px] ${ABA[tom]}`} />
       <div className="min-w-0">
-        <p className="font-semibold truncate group-hover:underline underline-offset-4 decoration-spot-yellow decoration-2">
+        <p className="text-base font-semibold truncate">
           {employee.fullName}
         </p>
-        <p className="text-xs text-spot-gray-500 mt-0.5">
+        <p className="text-xs text-spot-gray-600 mt-0.5">
           {employee.roleDescription} · {employee.sector?.name} · {employee.unit?.name} · {SHIFT_LABEL[employee.shift]}
         </p>
-        <p className="text-xs text-spot-gray-500 mt-1 flex items-center gap-1.5">
+        <p className="text-xs text-spot-gray-600 mt-1 flex items-center gap-1.5">
           {colorOption && (
             <span
-              className={`h-2 w-2 rounded-full ${colorOption.dotClassName}`}
+              className={`h-2 w-2 rounded-[1px] ${colorOption.dotClassName}`}
               title={`Classificação ${COLOR_LABELS[colorOption.value]}`}
             />
           )}
@@ -61,7 +77,7 @@ export function EmployeeCard({
         )}
       </div>
       {badge && (
-        <span className={`font-mono text-[11px] uppercase tracking-[0.1em] shrink-0 text-right ${badge.className}`}>
+        <span className={`badge shrink-0 mt-0.5 ${ETIQUETA[tom]}`}>
           {badge.label}
         </span>
       )}
@@ -69,14 +85,14 @@ export function EmployeeCard({
   );
 }
 
-/** Lista de funcionários: filete entre as linhas, sem o último para não sobrar traço solto. */
+/** Lista de funcionários: fichas empilhadas, com respiro entre elas. */
 export function EmployeeList({ children }: { children: React.ReactNode }) {
-  return <div className="[&>*:last-child]:border-b-0">{children}</div>;
+  return <div className="flex flex-col gap-2.5">{children}</div>;
 }
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-y border-spot-gray-200 text-center py-12 text-spot-gray-500 text-sm">{children}</div>
+    <div className="rounded-xl2 border-[1.5px] border-dashed border-spot-gray-300 text-center py-12 px-4 voz text-lg">{children}</div>
   );
 }
 

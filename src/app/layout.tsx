@@ -1,45 +1,52 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { Bricolage_Grotesque, DM_Mono, IBM_Plex_Sans, Instrument_Serif } from 'next/font/google';
 import './globals.css';
 
 /*
- * Tipografia do sistema — ver design-system/spot-clima/MASTER.md, seção 4.
+ * Tipografia do sistema — linguagem "Placa de serviço", ver
+ * design-system/spot-clima/MASTER.md.
  *
- * Até aqui o Tailwind declarava `Inter` mas NINGUÉM carregava a fonte: o app
- * inteiro renderizava no system-ui de cada aparelho (San Francisco no iPhone,
- * Segoe no Windows, Roboto no Android). Ou seja, a mesma tela tinha três caras
- * diferentes e nenhuma delas era uma escolha.
+ * Três famílias, cada uma com um papel:
+ *   sans (Bricolage Grotesque) — corpo E títulos. Grotesca de eixo óptico:
+ *     em 800 e grande ela vira a "placa" (o número que é o título da tela);
+ *     em 400 pequena, lê bem em tabela e formulário.
+ *   display (Instrument Serif, itálico) — a voz do sistema falando com a
+ *     pessoa: subtítulo, pergunta da pesquisa, o que pede atenção. Nunca em
+ *     dado nem em botão.
+ *   mono (DM Mono) — rótulo micro em caixa-alta, prazo, número tabular.
  *
- * As três famílias têm papéis separados e não se misturam:
- *   display (Fraunces) — títulos e NÚMEROS. Serifa de eixo variável, com
- *     desenho claramente autoral; é o que tira o painel da cara de template.
- *     Só de 20px para cima, onde o desenho aparece e a leitura não sofre.
- *   sans (IBM Plex Sans) — corpo, formulário, tabela. Humanista e feita para
- *     tela densa; diferente do Inter/Roboto que todo painel usa.
- *   mono (IBM Plex Mono) — rótulo micro em caixa-alta e número tabular. É o
- *     que dá o ar de boletim interno em vez de dashboard genérico.
+ * `capa` (IBM Plex Sans) só existe para as capas de entrada (login e capa da
+ * pesquisa), que ficaram fora do redesenho por decisão do usuário.
  *
  * `next/font` baixa e hospeda as fontes junto do app: sem request para o
  * Google em runtime (importa num PWA que roda no wifi do salão) e sem o pulo
  * de layout do FOUT.
  */
-const display = Fraunces({
+const sans = Bricolage_Grotesque({
   subsets: ['latin'],
-  variable: '--font-display',
-  display: 'swap',
-});
-
-const sans = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
   display: 'swap',
 });
 
-const mono = IBM_Plex_Mono({
+const display = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const mono = DM_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-mono',
+  display: 'swap',
+});
+
+const capa = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-capa',
   display: 'swap',
 });
 
@@ -67,12 +74,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0B0B0B',
+  themeColor: '#16130F',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="pt-BR" className={`${display.variable} ${sans.variable} ${mono.variable} ${capa.variable}`}>
       <body>{children}</body>
     </html>
   );

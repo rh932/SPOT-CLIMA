@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { LayoutGroup, MotionConfig, motion } from 'motion/react';
 import { SpotBrand } from '@/components/theme/SpotBrand';
 import { NotificationBell } from '@/components/NotificationBell';
 import { PushPrompt } from '@/components/PushPrompt';
@@ -40,6 +41,14 @@ const NAV: { href: string; label: string; short: string; permission: PermissionK
   { href: '/gestor/historico', label: 'Histórico de avaliações', short: 'Histórico', permission: 'evaluations.history.view' },
   { href: '/gestor/treinamento/historico', label: 'Histórico de treinamentos', short: 'Treinos feitos', permission: 'trainings.history.view' },
 ];
+
+/**
+ * O marcador do item ativo (traço amarelo e fundo) é um elemento compartilhado
+ * (`layoutId`): ao trocar de aba ele desliza com mola até a nova, em vez de
+ * apagar numa e acender na outra. Faixa do celular e barra lateral ficam em
+ * LayoutGroups separados — a escondida por CSS não pode puxar o marcador.
+ */
+const MOLA_MENU = { type: 'spring', stiffness: 520, damping: 42, mass: 0.9 } as const;
 
 export function GestorChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -94,6 +103,9 @@ export function GestorChrome({ children }: { children: React.ReactNode }) {
   const ativo = activeNavHref(pathname, visibleNav.map((i) => i.href));
 
   return (
+    // reducedMotion="user": com "reduzir movimento" ligado no aparelho, o
+    // marcador do menu troca de lugar sem deslizar.
+    <MotionConfig reducedMotion="user">
     <div className="min-h-dvh flex flex-col bg-spot-cream">
       <a href="#conteudo" className="pular-conteudo print:hidden">Pular para o conteúdo</a>
       <header className="bg-spot-sidebar text-spot-sidebarText flex items-center justify-between px-4 sm:px-6 h-14 shrink-0 print:hidden">
@@ -132,7 +144,9 @@ export function GestorChrome({ children }: { children: React.ReactNode }) {
         rola na horizontal — o gestor usa o painel quase todo pelo telefone, e
         um menu escondido atrás de um botão já deixou a tela sem navegação.
       */}
-      <nav
+      <LayoutGroup id="abas-celular">
+      <motion.nav
+        layoutScroll
         aria-label="Seções do painel"
         className="lg:hidden bg-spot-sidebar text-spot-sidebarText px-2 flex gap-1 overflow-x-auto print:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
@@ -147,20 +161,25 @@ export function GestorChrome({ children }: { children: React.ReactNode }) {
                pílula amarela preenchida: eram seis pastilhas disputando
                atenção numa faixa de 360px, e a cheia parecia um botão a
                apertar em vez do lugar onde a pessoa já está. */
-            className={`flex items-center min-h-11 border-b-2 px-3 text-xs whitespace-nowrap shrink-0 transition-colors ${
+            className={`relative flex items-center min-h-11 px-3 text-xs whitespace-nowrap shrink-0 transition-colors ${
               ativo === item.href
-                ? 'border-spot-accent text-white font-semibold'
-                : 'border-transparent text-spot-sidebarText/75 font-normal hover:text-white'
+                ? 'text-white font-semibold'
+                : 'text-spot-sidebarText/75 font-normal hover:text-white'
             }`}
           >
             <span className="sm:hidden">{item.short}</span>
             <span className="hidden sm:inline">{item.label}</span>
+            {ativo === item.href && (
+              <motion.span layoutId="traco" transition={MOLA_MENU} aria-hidden className="absolute inset-x-0 bottom-0 h-0.5 bg-spot-accent" />
+            )}
           </Link>
         ))}
-      </nav>
+      </motion.nav>
+      </LayoutGroup>
 
       <div className="flex-1 flex min-h-0">
         <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-spot-sidebar text-spot-sidebarText print:hidden">
+          <LayoutGroup id="menu-lateral">
           <nav className="flex-1 py-4 flex flex-col">
             {visibleNav.length === 0 && navFallback('px-3 py-2.5 text-sm text-spot-sidebarText/75')}
             {visibleNav.map((item) => (
@@ -168,16 +187,20 @@ export function GestorChrome({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 aria-current={ativo === item.href ? 'page' : undefined}
-                className={`flex items-center min-h-11 border-l-2 pl-4 pr-3 text-sm transition-colors ${
+                className={`relative isolate flex items-center min-h-11 pl-5 pr-3 text-sm transition-colors ${
                   ativo === item.href
-                    ? 'border-spot-accent bg-white/[0.07] text-white font-semibold'
-                    : 'border-transparent text-spot-sidebarText/75 font-normal hover:bg-white/5 hover:text-white'
+                    ? 'text-spot-sidebar font-semibold'
+                    : 'text-spot-sidebarText/75 font-normal hover:text-white'
                 }`}
               >
+                {ativo === item.href && (
+                  <motion.span layoutId="marcador" transition={MOLA_MENU} aria-hidden className="absolute inset-y-1 left-2 right-2 -z-10 rounded-btn bg-spot-sidebarText" />
+                )}
                 {item.label}
               </Link>
             ))}
           </nav>
+          </LayoutGroup>
           <div className="px-4 py-4 border-t border-white/10">
             <p className="font-mono text-[11px] text-spot-sidebarText/65 truncate mb-1">{gestorName}</p>
             <button
@@ -199,5 +222,6 @@ export function GestorChrome({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+    </MotionConfig>
   );
 }

@@ -70,7 +70,7 @@ export function SurveyCover({
   footer?: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-spot-white flex flex-col">
+    <div className="capa-entrada min-h-dvh bg-spot-white flex flex-col">
       {/* Moldura preta superior */}
       <div className="h-5 sm:h-7 bg-spot-black shrink-0" />
 

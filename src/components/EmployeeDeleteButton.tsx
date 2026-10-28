@@ -106,7 +106,7 @@ export function EmployeeDeleteButton({
             aria-modal="true"
             aria-label={`Confirmar a exclusão de ${employeeName}`}
           >
-            <h2 className="font-display text-xl font-semibold">Excluir {employeeName}?</h2>
+            <h2 className="font-sans text-xl font-extrabold tracking-tight">Excluir {employeeName}?</h2>
 
             <div className="text-sm text-spot-gray-700 leading-relaxed flex flex-col gap-2">
               <p>Este colaborador tem histórico registrado. Será apagado junto:</p>

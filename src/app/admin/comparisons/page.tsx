@@ -160,7 +160,7 @@ export default function ComparisonsPage() {
                     {comparison.overallSeries.map((s) => (
                       <div key={s.surveyId} className="bg-spot-gray-50 px-4 py-3 min-w-[9rem]">
                         <dt className="text-xs text-spot-gray-500">{s.surveyName}</dt>
-                        <dd className="font-mono text-2xl font-medium tabular-nums">
+                        <dd className="font-sans text-3xl font-extrabold tracking-tight tabular-nums">
                           {s.enps === null ? '—' : s.enps > 0 ? `+${s.enps}` : s.enps}
                         </dd>
                       </div>

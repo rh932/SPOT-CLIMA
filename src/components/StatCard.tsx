@@ -1,21 +1,21 @@
 import { Icone, type NomeIcone } from '@/components/ui/Icone';
+import { NumeroRolante } from '@/components/ui/NumeroRolante';
 
 /**
- * Indicador da grade (ver ReguaIndicadores em src/components/ui/Secao): cartão
- * com rótulo, ícone opcional, valor grande em serifa e a variação logo abaixo.
+ * Indicador da régua (ver ReguaIndicadores em src/components/ui/Secao): rótulo
+ * em mono, valor grande em mono tabular e a variação logo abaixo.
  *
- * `destaque` pinta o cartão na superfície escura da barra lateral — use em um
- * só indicador por tela, o que o RH precisa ver primeiro.
+ * `destaque` põe a marca amarela antes do rótulo — use em um só indicador por
+ * tela, o que o RH precisa ver primeiro.
  *
- * Quem o usa está em quase toda tela do admin e do gestor; por isso o nome e
- * os parâmetros antigos continuam valendo e `icone`/`destaque` são opcionais.
+ * `icone` é aceito e ignorado: o ícone no quadradinho era sinal de template e
+ * saiu na linguagem "Comanda". Fica na assinatura para não quebrar quem passa.
  */
 export function StatCard({
   label,
   value,
   sub,
   trend,
-  icone,
   destaque,
 }: {
   label: string;
@@ -27,15 +27,8 @@ export function StatCard({
 }) {
   return (
     <div className={`stat ${destaque ? 'stat-destaque' : ''}`}>
-      <div className="flex items-start justify-between gap-3">
-        <p className="stat-rotulo pt-0.5">{label}</p>
-        {icone && (
-          <span className="stat-icone">
-            <Icone nome={icone} />
-          </span>
-        )}
-      </div>
-      <p className="stat-valor">{value}</p>
+      <p className="stat-rotulo">{label}</p>
+      <p className="stat-valor"><NumeroRolante valor={value} /></p>
       {sub && <p className="stat-apoio">{sub}</p>}
       {trend && (
         <p

@@ -335,7 +335,7 @@ function CreateEmployeeModal({ onClose, onCreated }: { onClose: () => void; onCr
         className="bg-spot-white w-full sm:max-w-lg rounded-t-xl2 sm:rounded-xl2 flex flex-col max-h-[92vh] modal-panel"
       >
         <div className="px-5 py-4 border-b border-spot-gray-200 shrink-0">
-          <h2 className="font-display text-xl font-semibold">Cadastrar colaborador</h2>
+          <h2 className="font-sans text-xl font-extrabold tracking-tight">Cadastrar colaborador</h2>
           <p className="text-xs text-spot-gray-500 mt-0.5">
             Só aparecem as unidades e turnos do seu escopo. A admissão entra como hoje — se a pessoa entrou antes,
             o RH ajusta no painel.
@@ -797,7 +797,7 @@ function TrainingForm({
             className="modal-panel bg-spot-white w-full max-w-md rounded-xl2 p-6 flex flex-col gap-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="font-display text-xl font-semibold">Finalizar o Treinamento Definitivo</h2>
+            <h2 className="font-sans text-xl font-extrabold tracking-tight">Finalizar o Treinamento Definitivo</h2>
             <p className="text-sm text-spot-gray-700 leading-relaxed">
               Atenção: ao finalizar o treinamento definitivo, o treinamento
               {type ? ` "${type.name}" ` : ' '}

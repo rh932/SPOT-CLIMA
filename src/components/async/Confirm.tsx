@@ -84,7 +84,7 @@ function Dialogo({ pedido, onResponder }: { pedido: PedidoConfirmacao; onRespond
         className="modal-panel bg-spot-white w-full max-w-md rounded-xl2 p-6 flex flex-col gap-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="confirmar-titulo" className="font-display text-xl font-semibold leading-snug">
+        <h2 id="confirmar-titulo" className="font-sans text-xl font-extrabold tracking-tight leading-snug">
           {pedido.titulo}
         </h2>
         {(pedido.texto || pedido.perigo) && (

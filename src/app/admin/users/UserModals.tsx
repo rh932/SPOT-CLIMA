@@ -190,7 +190,7 @@ function ModalShell({
         className="bg-spot-white w-full sm:max-w-2xl rounded-t-xl2 sm:rounded-xl2 flex flex-col max-h-[92vh] sm:max-h-[88vh] modal-panel"
       >
         <div className="px-5 sm:px-6 py-4 border-b border-spot-gray-200 shrink-0">
-          <h2 className="font-display text-xl font-semibold">{title}</h2>
+          <h2 className="font-sans text-xl font-extrabold tracking-tight">{title}</h2>
           {subtitle && <p className="text-xs text-spot-gray-500 mt-0.5">{subtitle}</p>}
         </div>
 

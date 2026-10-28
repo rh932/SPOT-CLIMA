@@ -349,7 +349,7 @@ function ResultsInner() {
                 {results.recommendations.map((r) => (
                   <div key={r.dimension} className="py-4 border-b border-spot-gray-200 last:border-b-0">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <p className="font-display text-lg font-semibold">
+                      <p className="font-sans text-lg font-extrabold tracking-tight">
                         {r.dimension} <span className="text-spot-gray-500 tabular">{r.index}%</span>
                       </p>
                       <Link

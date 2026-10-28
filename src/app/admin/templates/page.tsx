@@ -264,7 +264,7 @@ function CreateTemplateModal({
         aria-label="Novo modelo"
         className="bg-spot-white rounded-xl2 max-w-md w-full p-6 flex flex-col gap-4 modal-panel"
       >
-        <h2 className="font-display text-xl font-semibold">Novo modelo</h2>
+        <h2 className="font-sans text-xl font-extrabold tracking-tight">Novo modelo</h2>
         <div>
           <label className="block">
             <span className="label">Nome do modelo</span>
@@ -332,7 +332,7 @@ function CreateSurveyFromTemplateModal({
         aria-label={`Criar pesquisa a partir do modelo ${template.name}`}
         className="bg-spot-white rounded-xl2 max-w-md w-full p-6 flex flex-col gap-4 modal-panel"
       >
-        <h2 className="font-display text-xl font-semibold">Criar pesquisa a partir de &ldquo;{template.name}&rdquo;</h2>
+        <h2 className="font-sans text-xl font-extrabold tracking-tight">Criar pesquisa a partir de &ldquo;{template.name}&rdquo;</h2>
         <div>
           <label className="block">
             <span className="label">Nome da pesquisa</span>

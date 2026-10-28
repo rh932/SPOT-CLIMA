@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/apiClient';
+import { motion } from 'motion/react';
 import { StatCard, ClassificationBadge } from '@/components/StatCard';
 import { CabecalhoPagina } from '@/components/ui/CabecalhoPagina';
-import { ReguaIndicadores, Secao } from '@/components/ui/Secao';
+import { Secao } from '@/components/ui/Secao';
+import { Cascata, Surge } from '@/components/ui/Cascata';
+import { NumeroRolante } from '@/components/ui/NumeroRolante';
 import { ErrorState, LiveStatus, RefreshingBar, Skeleton, SkeletonStats, SkeletonTable } from '@/components/async';
 import type { SurveyResultsSummary } from '@/lib/results';
 import { SystemNotices } from '@/components/admin/SystemNotices';
@@ -115,7 +118,7 @@ export default function AdminOverviewPage() {
         subtitulo="Clima organizacional da pesquisa em foco."
         acao={
           <Link href={`/admin/results?survey=${survey.id}`} className="btn-secondary">
-            Ver dashboard completo
+            Abrir resultado completo
           </Link>
         }
       />
@@ -125,7 +128,7 @@ export default function AdminOverviewPage() {
           <p className="stat-rotulo">Pesquisa em foco</p>
           {allSurveys.length > 1 ? (
             <select
-              className="input !w-auto font-display font-semibold text-lg !py-1.5 mt-1"
+              className="input !w-auto font-sans font-extrabold text-lg tracking-tight !py-1.5 mt-1"
               value={survey.id}
               onChange={(e) => switchSurvey(e.target.value)}
             >
@@ -134,15 +137,18 @@ export default function AdminOverviewPage() {
               ))}
             </select>
           ) : (
-            <p className="font-display font-semibold text-xl mt-0.5">{survey.name}</p>
+            <p className="font-sans font-extrabold text-xl tracking-tight mt-0.5">{survey.name}</p>
           )}
         </div>
+        <RefreshingBar visible={switching && !!results} texto="Carregando os resultados..." />
         <span className="badge badge-good">{STATUS_LABEL[survey.status]}</span>
       </div>
 
-      {/* Troca de pesquisa: esqueleto com a forma dos cartões, em vez de uma
-          linha de texto que deixa a página saltando de altura. */}
-      {switching && (
+      {/* Primeira carga sem números ainda: esqueleto com a forma dos cartões,
+          em vez de uma linha de texto que deixa a página saltando de altura.
+          Na troca de pesquisa os números da anterior ficam na tela, apagados,
+          e rolam até os novos quando chegam — ver NumeroRolante. */}
+      {switching && !results && (
         <div aria-busy="true" className="flex flex-col gap-6">
           <LiveStatus>Carregando os resultados da pesquisa...</LiveStatus>
           <SkeletonStats cards={4} />
@@ -154,25 +160,42 @@ export default function AdminOverviewPage() {
         <ErrorState message={resultsError} onRetry={() => loadResultsFor(survey)} />
       )}
 
-      {results && !switching && (
-        <>
-          <ReguaIndicadores>
-            <StatCard destaque icone="clima" label="Índice de Clima" value={`${results.climateIndex}%`} sub={results.climateClassification.label} />
-            <StatCard
-              icone="participacao"
-              label="Participação"
-              value={`${results.participationRate}%`}
-              sub={`${results.totalResponses} / ${results.eligiblePopulation ?? '—'} colaboradores`}
-            />
-            <StatCard icone="respostas" label="Total de respostas" value={String(results.totalResponses)} sub={results.participationClassification} />
-            <StatCard icone="plano" label="Planos de ação pendentes" value={String(pendingActions)} sub="Não iniciados ou em andamento" />
-          </ReguaIndicadores>
+      {/* Entrada orquestrada (ver Cascata): os indicadores um a um, depois os
+          gráficos se desenhando, as duas pontas e a leitura. Toca uma vez, na
+          montagem; trocar de pesquisa não repete a entrada. */}
+      {results && (
+        <Cascata
+          raiz
+          aria-busy={switching}
+          className={`flex flex-col gap-10 transition-opacity duration-200 ${switching ? 'opacity-60' : ''}`}
+        >
+          <Cascata className="stat-regua" passo={0.05}>
+            {/* O indicador de destaque entra como o cartão do título do login:
+                carimbado. Os outros deslizam, como os textos da capa. */}
+            <Surge className="grid" como="carimbo">
+              <StatCard destaque icone="clima" label="Índice de Clima" value={`${results.climateIndex}%`} sub={results.climateClassification.label} />
+            </Surge>
+            <Surge className="grid">
+              <StatCard
+                icone="participacao"
+                label="Participação"
+                value={`${results.participationRate}%`}
+                sub={`${results.totalResponses} / ${results.eligiblePopulation ?? '—'} colaboradores`}
+              />
+            </Surge>
+            <Surge className="grid">
+              <StatCard icone="respostas" label="Total de respostas" value={String(results.totalResponses)} sub={results.participationClassification} />
+            </Surge>
+            <Surge className="grid">
+              <StatCard icone="plano" label="Planos de ação pendentes" value={String(pendingActions)} sub="Não iniciados ou em andamento" />
+            </Surge>
+          </Cascata>
 
           {/* Os dois gráficos que respondem "como estamos?" logo na entrada. Com
               a pesquisa travada por anonimato (`locked`), `byDimension` vem
               vazio e os blocos somem em vez de desenhar eixos sem dado. */}
           {results.byDimension.length > 0 && (
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+            <Surge className="grid grid-cols-1 xl:grid-cols-5 gap-6">
               <Secao
                 className="xl:col-span-3"
                 indice="01"
@@ -189,54 +212,79 @@ export default function AdminOverviewPage() {
               <Secao className="xl:col-span-2" indice="02" titulo="Favorável × Neutro × Desfavorável">
                 <FavorabilityDonut {...results.favorability} />
               </Secao>
-            </div>
+            </Surge>
           )}
 
           {/* As duas pontas da pesquisa lado a lado: a dimensão que melhor
               foi e a que pior foi. Cada ponta é um cartão com filete de cor
               no topo; as cores saem da MESMA escala do mapa de calor
-              (#0F7A3D = 5.42:1 e #C93A3A = 5.06:1 sobre branco). */}
+              (#0F7A3D = 5.42:1 e #C93A3A = 5.06:1 sobre branco). O filete se
+              preenche da esquerda para a direita quando o cartão chega. */}
           {(best || worst) && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <Surge className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {best && (
-                <div className="card border-t-4 border-t-spot-success">
+                <div className="card relative overflow-hidden !border-t-spot-gray-200">
+                  <Filete className="bg-spot-success" />
                   <p className="stat-rotulo">Destaque</p>
-                  <p className="font-display text-xl font-semibold mt-1.5">{best.dimension}</p>
+                  <p className="voz text-[1.75rem] leading-tight mt-1.5">{best.dimension}</p>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-2">
-                    <span className="font-display text-4xl font-semibold text-spot-success tabular">{best.index}%</span>
+                    <span className="font-sans text-6xl font-extrabold tracking-[-0.05em] leading-[0.85] text-spot-success tabular"><NumeroRolante valor={`${best.index}%`} /></span>
                     <ClassificationBadge label={best.classification.label} colorToken={best.classification.colorToken} />
                   </div>
                 </div>
               )}
               {worst && (
-                <div className="card border-t-4 border-t-spot-danger">
+                <div className="card relative overflow-hidden !border-t-spot-gray-200">
+                  <Filete className="bg-spot-danger" />
                   <p className="stat-rotulo">Ponto de atenção</p>
-                  <p className="font-display text-xl font-semibold mt-1.5">{worst.dimension}</p>
+                  <p className="voz text-[1.75rem] leading-tight mt-1.5">{worst.dimension}</p>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-2">
-                    <span className="font-display text-4xl font-semibold text-spot-danger tabular">{worst.index}%</span>
+                    <span className="font-sans text-6xl font-extrabold tracking-[-0.05em] leading-[0.85] text-spot-danger tabular"><NumeroRolante valor={`${worst.index}%`} /></span>
                     <ClassificationBadge label={worst.classification.label} colorToken={worst.classification.colorToken} />
                   </div>
                 </div>
               )}
-            </div>
+            </Surge>
           )}
 
           {results.insights.length > 0 && (
+            <Surge>
             <Secao indice="03" titulo="Leitura da pesquisa">
               <ul className="flex flex-col">
                 {results.insights.map((insight, i) => (
-                  <li key={i} className="flex gap-4 py-3 border-b border-spot-gray-200 last:border-b-0 text-sm text-spot-gray-800">
-                    <span aria-hidden className="secao-indice !h-6 !min-w-6">
-                      {i + 1}
+                  <li key={i} className="flex gap-4 py-3 border-b border-dashed border-spot-gray-300 last:border-b-0 text-sm text-spot-gray-800">
+                    <span aria-hidden className="secao-indice pt-0.5">
+                      {String(i + 1).padStart(2, '0')}
                     </span>
                     {insight}
                   </li>
                 ))}
               </ul>
             </Secao>
+            </Surge>
           )}
-        </>
+        </Cascata>
       )}
     </div>
+  );
+}
+
+/**
+ * Filete de cor no topo do cartão das pontas. Escala de 0 a 1 na horizontal
+ * (transform, não largura) quando o `<Surge>` em volta chega — herda a vez da
+ * cascata pelos nomes `oculto`/`visivel`.
+ */
+function Filete({ className }: { className: string }) {
+  return (
+    <motion.span
+      aria-hidden
+      className={`absolute inset-x-0 top-0 h-[3px] origin-left ${className}`}
+      variants={{
+        oculto: { scaleX: 0 },
+        // Como a régua ao lado do rótulo na capa do login: desenha-se da
+        // esquerda logo depois que o cartão chega.
+        visivel: { scaleX: 1, transition: { delay: 0.2, duration: 0.45, ease: 'easeOut' } },
+      }}
+    />
   );
 }

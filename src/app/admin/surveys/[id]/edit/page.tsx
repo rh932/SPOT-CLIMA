@@ -240,7 +240,7 @@ function SaveAsTemplateModal({
         aria-label="Salvar a pesquisa como modelo"
         className="bg-spot-white rounded-xl2 max-w-md w-full p-6 flex flex-col gap-4 modal-panel"
       >
-        <h2 className="font-display text-xl font-semibold">Salvar como modelo</h2>
+        <h2 className="font-sans text-xl font-extrabold tracking-tight">Salvar como modelo</h2>
         <div>
           <label className="block">
             <span className="label">Nome do novo modelo</span>

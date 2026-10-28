@@ -414,7 +414,7 @@ export function ConsultaAvancada({
         ].map(([k, v]) => (
           <div key={k} className="min-w-0">
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-spot-gray-500 truncate">{k}</p>
-            <p className="font-mono text-2xl font-medium tabular-nums">{v}</p>
+            <p className="font-sans text-3xl font-extrabold tracking-tight tabular-nums">{v}</p>
           </div>
         ))}
         {resumo.delivered > 0 && (

@@ -24,6 +24,7 @@
     "db:verify-backup": "node scripts/verificar-backup.mjs"
   },
   "dependencies": {
+    "@number-flow/react": "^0.6.2",
     "@paralleldrive/cuid2": "^2.2.2",
     "@sparticuz/chromium": "^130.0.0",
     "bcryptjs": "2.4.3",
@@ -31,6 +32,7 @@
     "drizzle-orm": "^0.45.4",
     "exceljs": "4.4.0",
     "jose": "5.9.6",
+    "motion": "^14.3.0",
     "next": "^15.5.27",
     "pg": "^8.13.0",
     "playwright-core": "^1.48.0",
@@ -55,8 +57,8 @@
     "eslint-config-next": "^15.5.27",
     "postcss": "8.4.47",
     "tailwindcss": "3.4.13",
-    "tsx": "4.19.1",
+    "tsx": "^4.23.15",
     "typescript": "5.6.3",
-    "vitest": "2.1.2"
+    "vitest": "^2.1.9"
   }
 }

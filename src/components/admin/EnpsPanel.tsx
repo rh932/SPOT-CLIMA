@@ -12,7 +12,7 @@ export function EnpsPanel({ enps }: { enps: EnpsResult }) {
       <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">eNPS</p>
-          <p className="font-mono text-5xl font-medium leading-none mt-1 tabular">{sinal}</p>
+          <p className="font-sans text-6xl font-extrabold tracking-[-0.05em] leading-[0.85] mt-1 tabular">{sinal}</p>
           <p className="text-sm mt-1 inline-flex items-center gap-1.5">
             <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: enps.classification.color }} />
             {enps.classification.zone} · {enps.respondents} respostas

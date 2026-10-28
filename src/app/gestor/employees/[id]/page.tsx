@@ -192,7 +192,7 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
         </div>
 
         {prazoAberto ? (
-          <p className="font-display text-2xl font-semibold leading-snug">
+          <p className="font-sans text-2xl font-extrabold tracking-tight leading-snug">
             {formatDate(prazoAberto)}
             <span className="text-spot-gray-500 font-normal text-base"> — {prazoEmPalavras(diasParaPrazo!)}</span>
           </p>
@@ -421,7 +421,7 @@ function ColorSheet({
             <span aria-hidden className="mx-auto block h-1.5 w-12 rounded-full bg-spot-gray-300" />
             <div className="flex items-start justify-between gap-4 pt-4">
               <div className="min-w-0">
-                <h2 className="font-display text-xl font-semibold leading-tight">Classificação por cor</h2>
+                <h2 className="font-sans text-xl font-extrabold tracking-tight leading-tight">Classificação por cor</h2>
                 <p className="text-xs text-spot-gray-500 mt-0.5 truncate">{employee.fullName}</p>
               </div>
               {/* O nome diz o EFEITO, nao o desenho: quem fecha aqui perde a

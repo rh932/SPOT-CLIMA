@@ -73,11 +73,11 @@ const config: Config = {
         // Sombra de repouso dos blocos do painel: rasa, sem reação ao mouse.
         card: '0 1px 2px rgba(20,20,15,0.05), 0 4px 14px -6px rgba(20,20,15,0.08)',
       },
-      // Raio da linguagem "Comanda" (ver MASTER.md): quase reto. Papel cortado,
-      // não cartão de app — o raio grande era metade da cara de template.
+      // Raio da linguagem "Placa de serviço" (ver MASTER.md): de tecla e de
+      // placa pintada — bloco 0.75rem, controle 0.5rem.
       borderRadius: {
-        xl2: '0.375rem',
-        btn: '0.25rem',
+        xl2: '0.75rem',
+        btn: '0.5rem',
       },
       keyframes: {
         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },

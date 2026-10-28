@@ -144,7 +144,7 @@ export default function SurveysPage() {
             <div key={s.id} className="flex flex-wrap items-center justify-between gap-4 py-4 border-b border-spot-gray-200">
               <div className="min-w-[200px]">
                 <div className="flex items-center gap-2.5 mb-1">
-                  <p className="font-display text-lg font-semibold">{s.name}</p>
+                  <p className="font-sans text-lg font-extrabold tracking-tight">{s.name}</p>
                   <span className={`badge ${STATUS_BADGE[s.status]}`}>{STATUS_LABEL[s.status]}</span>
                 </div>
                 {s.description && <p className="text-sm text-spot-gray-500">{s.description}</p>}
@@ -379,7 +379,7 @@ function CreateSurveyModal({ onClose, onCreated }: { onClose: () => void; onCrea
           </div>
         ) : source === 'choose' ? (
           <div className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold">Nova pesquisa</h2>
+            <h2 className="font-sans text-xl font-extrabold tracking-tight">Nova pesquisa</h2>
             <p className="text-sm text-spot-gray-500">Como você quer começar?</p>
             <div className="flex flex-col gap-3">
               <button className="card text-left hover:border-spot-black transition" onClick={() => setSource('blank')}>
@@ -407,7 +407,7 @@ function CreateSurveyModal({ onClose, onCreated }: { onClose: () => void; onCrea
           </div>
         ) : source === 'blank' ? (
           <form onSubmit={submitBlank} className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold">Nova pesquisa — do zero</h2>
+            <h2 className="font-sans text-xl font-extrabold tracking-tight">Nova pesquisa — do zero</h2>
             <div>
               <label className="block">
                 <span className="label">Nome</span>
@@ -451,7 +451,7 @@ function CreateSurveyModal({ onClose, onCreated }: { onClose: () => void; onCrea
           </form>
         ) : (
           <form onSubmit={submitFromTemplate} className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold">Nova pesquisa — a partir de modelo</h2>
+            <h2 className="font-sans text-xl font-extrabold tracking-tight">Nova pesquisa — a partir de modelo</h2>
             <div>
               <label className="block">
                 <span className="label">Modelo</span>
