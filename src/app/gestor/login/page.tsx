@@ -66,7 +66,7 @@ function GestorLoginForm() {
 
   return (
     <LoginCover
-      eyebrow="Avaliações e Treinamentos"
+      eyebrow="Avaliações e treinamentos"
       title="A sua equipe, do primeiro dia em diante"
       description="Avaliações de 45 e 90 dias, feedbacks e treinamentos dos colaboradores dos seus setores, unidades e turno — com o prazo de cada ciclo à vista."
       sheetTitle={primeiro ? 'Primeiro acesso' : segundaEtapa ? 'Verificação em duas etapas' : 'Entrar'}

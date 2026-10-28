@@ -65,7 +65,7 @@ function AdminLoginForm() {
   return (
     <LoginCover
       eyebrow="Painel administrativo"
-      title="Clima e pessoas, num lugar só"
+      title="O clima e as pessoas do Spot, por dentro"
       description="Pesquisas de clima, resultados, planos de ação, relatórios e configuração do sistema. Acesso de RH e Super Admin."
       sheetTitle={primeiro ? 'Primeiro acesso' : segundaEtapa ? 'Verificação em duas etapas' : 'Entrar'}
       sheetSubtitle={primeiro ? 'Crie a sua senha para usar o painel.' : 'Área administrativa — RH e Super Admin.'}
