@@ -3,8 +3,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { EmployeeCard, EmployeeList, EmptyState, PageHeader } from './EmployeeCard';
-import { useGestorEmployees, isPending, isUrgent } from './useGestorEmployees';
-import { statusLabel } from '@/lib/probation';
+import {
+  useGestorEmployees, isExperience, evaluationOpen, evaluationOverdue, daysUntilDue,
+  EVALUATION_OPENS_DAYS, EVALUATION_FILL_DAYS,
+} from './useGestorEmployees';
 import { useMyPermissions } from './useMyPermissions';
 import { AsyncSection, LiveStatus, RefreshingBar, Skeleton, SkeletonCardList } from '@/components/async';
 
@@ -33,16 +35,21 @@ export default function GestorDashboardPage() {
     );
   }
 
-  const pending = employees.filter(isPending);
-  const closed = employees.filter((e) => !isPending(e));
-  const urgent = pending.filter(isUrgent);
+  // Só quem ainda está em contrato de experiência. Deu baixa na última
+  // avaliação, a pessoa sai daqui sozinha e passa para a aba Feedback.
+  const emExperiencia = employees
+    .filter(isExperience)
+    .sort((a, b) => (daysUntilDue(a) ?? 0) - (daysUntilDue(b) ?? 0));
+  const abertas = emExperiencia.filter(evaluationOpen);
+  const aguardando = emExperiencia.filter((e) => !evaluationOpen(e));
+  const urgent = emExperiencia.filter(evaluationOverdue);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Avaliação de Experiência"
         subtitle={canEvaluate
-          ? 'Funcionários em período de experiência nos seus setores, unidades e turno.'
+          ? `Funcionários em contrato de experiência nos seus setores, unidades e turno. A avaliação sobe ${EVALUATION_OPENS_DAYS} dias antes do fim do contrato e você tem ${EVALUATION_FILL_DAYS} dias para preencher.`
           : 'Acompanhamento das avaliações nos seus setores, unidades e turnos. Quem avalia é o gestor do turno.'}
       />
 
@@ -51,11 +58,11 @@ export default function GestorDashboardPage() {
       {!loading && !error && urgent.length > 0 && (
         <div className="border-l-[3px] border-spot-yellow bg-spot-white py-3 pl-4 pr-3">
           <p className="text-sm font-semibold">
-            {urgent.length === 1 ? '1 avaliação precisa de atenção' : `${urgent.length} avaliações precisam de atenção`}
+            {urgent.length === 1 ? '1 avaliação passou do prazo de preenchimento' : `${urgent.length} avaliações passaram do prazo de preenchimento`}
           </p>
           <p className="text-xs text-spot-gray-500 mt-0.5">
             {canEvaluate
-              ? 'Veja em Pendências o que está vencendo ou já venceu.'
+              ? 'Elas já estão em Pendências.'
               : 'Veja em Pendências quem cobrar.'}
           </p>
         </div>
@@ -69,34 +76,28 @@ export default function GestorDashboardPage() {
         retrying={reloading}
         rotulo="a sua equipe"
         skeleton={<SkeletonCardList rows={4} />}
-        empty={pending.length === 0 && closed.length === 0}
-        emptyState={<EmptyState>Nenhuma avaliação em andamento.</EmptyState>}
+        empty={emExperiencia.length === 0}
+        emptyState={<EmptyState>Ninguém em contrato de experiência.</EmptyState>}
       >
         <div className="flex flex-col gap-6">
-          <EmployeeList>
-            {pending.length === 0 && <EmptyState>Nenhuma avaliação em andamento.</EmptyState>}
-            {pending.map((e) => (
-              <EmployeeCard key={e.id} employee={e} />
-            ))}
-          </EmployeeList>
-
-          {closed.length > 0 && (
+          {abertas.length > 0 && (
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500 border-b border-spot-gray-300 pb-2 mb-1">
-                Processos concluídos
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-800 border-b border-spot-gray-300 pb-2 mb-1">
+                Avaliação disponível · {abertas.length}
               </p>
               <EmployeeList>
-                {closed.map((e) => (
-                  <div key={e.id} className="flex items-center justify-between gap-4 py-4 border-b border-spot-gray-200 opacity-70">
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate">{e.fullName}</p>
-                      <p className="text-xs text-spot-gray-500 mt-0.5">{e.roleDescription}</p>
-                    </div>
-                    <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-spot-gray-500 shrink-0">
-                      {statusLabel(e)}
-                    </span>
-                  </div>
-                ))}
+                {abertas.map((e) => <EmployeeCard key={e.id} employee={e} />)}
+              </EmployeeList>
+            </div>
+          )}
+
+          {aguardando.length > 0 && (
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500 border-b border-spot-gray-300 pb-2 mb-1">
+                Em experiência · {aguardando.length}
+              </p>
+              <EmployeeList>
+                {aguardando.map((e) => <EmployeeCard key={e.id} employee={e} muted />)}
               </EmployeeList>
             </div>
           )}

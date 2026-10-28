@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { dueBadge, statusLabel } from '@/lib/probation';
+import { statusLabel } from '@/lib/probation';
 import { COLOR_OPTIONS, COLOR_LABELS } from '@/lib/feedbackCycle';
 import { CabecalhoPagina } from '@/components/ui/CabecalhoPagina';
-import { SHIFT_LABEL, openDueDate, isFeedbackCycle, awaitsSecond, type GestorEmployee } from './useGestorEmployees';
+import { SHIFT_LABEL, prazoBadge, isFeedbackCycle, awaitsSecond, type GestorEmployee } from './useGestorEmployees';
 
 /**
  * Linha de funcionário usada por todas as abas do painel do gestor.
@@ -25,7 +25,7 @@ import { SHIFT_LABEL, openDueDate, isFeedbackCycle, awaitsSecond, type GestorEmp
 export function EmployeeCard({
   employee, muted = false,
 }: { employee: GestorEmployee; muted?: boolean; index?: number }) {
-  const badge = dueBadge(openDueDate(employee));
+  const badge = prazoBadge(employee);
   const colorOption = employee.currentColor ? COLOR_OPTIONS.find((c) => c.value === employee.currentColor) : null;
 
   return (

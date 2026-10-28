@@ -32,7 +32,8 @@ import type { PermissionKey } from '@/lib/permissions';
  * do único elemento que informa, que é o rótulo.
  */
 const NAV: { href: string; label: string; short: string; permission: PermissionKey }[] = [
-  { href: '/gestor', label: 'Avaliação de Experiência', short: 'Equipe', permission: 'evaluations.view' },
+  { href: '/gestor', label: 'Avaliação de Experiência', short: 'Experiência', permission: 'evaluations.view' },
+  { href: '/gestor/feedback', label: 'Feedback', short: 'Feedback', permission: 'evaluations.view' },
   { href: '/gestor/pendencias', label: 'Pendências', short: 'Pendências', permission: 'evaluations.view' },
   { href: '/gestor/proximas', label: 'Próximas avaliações', short: 'Próximas', permission: 'evaluations.view' },
   { href: '/gestor/treinamento', label: 'Treinamento', short: 'Treinar', permission: 'trainings.view' },

@@ -2,7 +2,7 @@
 
 import { apiFetch } from '@/lib/apiClient';
 import { useAsyncData } from '@/components/async';
-import { daysUntilDueDay, pendingDueDate, type DueDateFields } from '@/lib/probation';
+import { daysUntilDueDay, dueBadge, pendingDueDate, type DueBadge, type DueDateFields } from '@/lib/probation';
 import type { FeedbackColor } from '@/lib/feedbackCycle';
 import { awaitsSecondEvaluation } from '@/lib/colorUnlock';
 
@@ -100,6 +100,85 @@ export function isUrgent(e: GestorEmployee): boolean {
   if (!isPending(e)) return false;
   const days = daysUntilDue(e);
   return days !== null && days <= URGENT_DAYS;
+}
+
+// ------------------------------------------------------------------
+// Prazos de preenchimento. A avaliação de experiência "sobe" para o gestor
+// alguns dias antes do fim do contrato e, se não for preenchida em tantos
+// dias, vai para Pendências — ainda com folga antes de o contrato vencer, que
+// é o limite legal. O feedback tem um prazo contado do dia em que vence.
+// ------------------------------------------------------------------
+
+/** Dias antes do fim do contrato em que a avaliação de experiência sobe para o gestor. */
+export const EVALUATION_OPENS_DAYS = 10;
+/** Dias que o gestor tem, depois de a avaliação subir, para preencher antes de ela virar pendência. */
+export const EVALUATION_FILL_DAYS = 5;
+/** Dias que o gestor tem para fazer o feedback, contando do dia em que ele vence. */
+export const FEEDBACK_FILL_DAYS = 15;
+
+/**
+ * Ainda em contrato de experiência: aguardando o 1º ou o 2º período, ou
+ * efetivado no 1º num setor de cores e devendo a 2ª. Deu baixa na última
+ * avaliação, sai daqui e passa para o Feedback.
+ */
+export function isExperience(e: GestorEmployee): boolean {
+  if (e.isApprentice) return false;
+  if (e.status === 'HIRED') return awaitsSecond(e);
+  return e.status === 'AWAITING_PERIOD_1' || e.status === 'AWAITING_PERIOD_2';
+}
+
+/** Efetivado no ciclo de cores, já sem avaliação de experiência em aberto. */
+export function isFeedback(e: GestorEmployee): boolean {
+  return isFeedbackCycle(e) && !awaitsSecond(e);
+}
+
+/** A avaliação de experiência já subiu para o gestor preencher. */
+export function evaluationOpen(e: GestorEmployee): boolean {
+  const days = daysUntilDue(e);
+  return isExperience(e) && days !== null && days <= EVALUATION_OPENS_DAYS;
+}
+
+/** Subiu e não foi preenchida dentro do prazo: vai para Pendências. */
+export function evaluationOverdue(e: GestorEmployee): boolean {
+  const days = daysUntilDue(e);
+  return isExperience(e) && days !== null && days <= EVALUATION_OPENS_DAYS - EVALUATION_FILL_DAYS;
+}
+
+/** Feedback que já venceu: entra em Pendências no dia do vencimento. */
+export function feedbackDue(e: GestorEmployee): boolean {
+  const days = daysUntilDue(e);
+  return isFeedback(e) && days !== null && days <= 0;
+}
+
+/** Feedback vencido que passou também do prazo para fazer. */
+export function feedbackLate(e: GestorEmployee): boolean {
+  const days = daysUntilDue(e);
+  return isFeedback(e) && days !== null && days < -FEEDBACK_FILL_DAYS;
+}
+
+/** Entra na aba Pendências. */
+export function isPendencia(e: GestorEmployee): boolean {
+  return evaluationOverdue(e) || feedbackDue(e);
+}
+
+/**
+ * Selo do prazo na linha do colaborador. Para o feedback vencido, conta o
+ * prazo para fazer em vez de anunciar "Atrasado" logo no primeiro dia — ele
+ * só fica atrasado quando passa do prazo.
+ */
+export function prazoBadge(e: GestorEmployee): DueBadge | null {
+  if (feedbackDue(e) && !feedbackLate(e)) {
+    const restam = FEEDBACK_FILL_DAYS + (daysUntilDue(e) ?? 0);
+    return {
+      label: restam === 0 ? 'Prazo termina hoje' : `Prazo: ${restam}d`,
+      className: 'text-spot-gray-800 font-semibold',
+    };
+  }
+  if (feedbackLate(e)) {
+    const atraso = -(daysUntilDue(e) ?? 0) - FEEDBACK_FILL_DAYS;
+    return { label: `Atrasado (${atraso}d)`, className: 'text-[#C93A3A] font-semibold' };
+  }
+  return dueBadge(openDueDate(e));
 }
 
 /**
