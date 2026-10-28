@@ -77,6 +77,8 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
         .update(schema.admins)
         .set({
           ...rest,
+          // A área só existe para Líder: trocar de perfil limpa o rótulo.
+          ...(nextRole !== 'GESTOR_LIDER' ? { leaderArea: null } : {}),
           ...(email ? { email: email.toLowerCase() } : {}),
           ...(passwordHash ? { passwordHash } : {}),
           updatedAt: new Date(),

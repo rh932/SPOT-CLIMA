@@ -253,6 +253,8 @@ const adminScopeFields = {
   scopedUnitIds: z.array(idSchema).max(100).optional(),
   scopedSectorIds: z.array(idSchema).max(100).optional(),
   scopedShifts: z.array(z.enum(['DIA', 'NOITE'])).max(2).optional(),
+  // Área do Líder (Cozinha, Salão, Adm, Delivery); ignorada para os outros perfis.
+  leaderArea: z.enum(['COZINHA', 'SALAO', 'ADM', 'DELIVERY']).nullable().optional(),
 };
 
 

@@ -27,6 +27,7 @@ const id = () =>
 // ------------------------------------------------------------------
 
 export const adminRoleEnum = pgEnum('admin_role', ['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR']);
+export const leaderAreaEnum = pgEnum('leader_area', ['COZINHA', 'SALAO', 'ADM', 'DELIVERY']);
 export const surveyStatusEnum = pgEnum('survey_status', ['DRAFT', 'SCHEDULED', 'OPEN', 'CLOSED', 'ARCHIVED']);
 export const questionTypeEnum = pgEnum('question_type', [
   'LIKERT',
@@ -137,6 +138,8 @@ export const admins = pgTable('admins', {
   name: text('name').notNull(),
   role: adminRoleEnum('role').notNull().default('RH'),
   active: boolean('active').notNull().default(true),
+  // Área do Líder (GESTOR_LIDER): só rótulo para organizar e filtrar os vários líderes.
+  leaderArea: leaderAreaEnum('leader_area'),
   // O escopo de um GESTOR/GESTOR_LIDER (unidades, setores e turnos) mora
   // inteiro nas tabelas adminUnits/adminSectors/adminShifts — vários de cada.
   // SUPER_ADMIN/RH não têm escopo (enxergam tudo pelo painel admin).

@@ -61,7 +61,7 @@ const RULES: Record<ActivityType, Rule> = {
   TRAINING_CREATED: { permission: 'trainings.view', roles: SUPERVISORES },
   TRAINING_REOPENED: { permission: 'trainings.view', roles: SUPERVISORES },
   // Formulário novo interessa a quem aplica treinamento.
-  TRAINING_TYPE_CREATED: { permission: 'trainings.view', roles: ['TREINADOR', 'GESTOR_LIDER'] },
+  TRAINING_TYPE_CREATED: { permission: 'trainings.view', roles: ['TREINADOR', 'GESTOR', 'GESTOR_LIDER'] },
 };
 
 function temEscopoTotal(role: string): boolean {

@@ -804,7 +804,7 @@ function TrainingForm({
               de <strong>{employee.fullName}</strong> será fechado e não poderá realizar mais alterações.
             </p>
             <p className="text-xs text-spot-gray-500">
-              Depois disso, só o RH ou o Gestor Líder conseguem reabrir.
+              Depois disso, só o RH ou o Líder conseguem reabrir.
             </p>
             <fieldset className="min-w-0 border-0 p-0 m-0">
               <legend className="label">Resultado final</legend>

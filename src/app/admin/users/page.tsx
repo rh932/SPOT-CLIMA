@@ -16,8 +16,8 @@ import {
   AsyncSection, EmptyState, RefreshingBar, SkeletonCardList, useAsyncData, useConfirm, useToast,
 } from '@/components/async';
 import {
-  accessMessage, accessOf, EMPTY_USER_FILTERS, groupMessage, matchesUserFilters, ROLE_LABEL, SCOPED_ROLES, sortUsers,
-  type AccessFilter, type AccessUser, type UserFilters, type UserRole,
+  accessMessage, accessOf, EMPTY_USER_FILTERS, groupMessage, matchesUserFilters, LEADER_AREA_LABEL, ROLE_LABEL, SCOPED_ROLES, SELECTABLE_ROLES, sortUsers,
+  type AccessFilter, type AccessUser, type LeaderArea, type UserFilters, type UserRole,
 } from '@/lib/userAccess';
 import { CreateAdminModal, EditAdminModal } from './UserModals';
 
@@ -234,14 +234,18 @@ export default function UsersPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <label className="block min-w-0">
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">Buscar</span>
               <input type="search" className="input mt-1" placeholder="Nome ou e-mail" value={filtros.q} onChange={(e) => mudar({ q: e.target.value })} />
             </label>
             <Selecao rotulo="Perfil" value={filtros.role} onChange={(v) => mudar({ role: v as UserRole | '' })}>
               <option value="">Todos</option>
-              {(Object.keys(ROLE_LABEL) as UserRole[]).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+              {SELECTABLE_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
+            </Selecao>
+            <Selecao rotulo="Área do Líder" value={filtros.area} onChange={(v) => mudar({ area: v as LeaderArea | '' })}>
+              <option value="">Todas</option>
+              {(Object.keys(LEADER_AREA_LABEL) as LeaderArea[]).map((a) => <option key={a} value={a}>{LEADER_AREA_LABEL[a]}</option>)}
             </Selecao>
             <Selecao rotulo="Loja" value={filtros.unit} onChange={(v) => mudar({ unit: v })}>
               <option value="">Todas</option>
@@ -282,7 +286,7 @@ export default function UsersPage() {
                           <p className="font-semibold">{u.name}</p>
                           <p className="text-xs text-spot-gray-500 break-all">{u.email}</p>
                         </td>
-                        <td className="py-3.5 pr-4 whitespace-nowrap">{ROLE_LABEL[u.role]}</td>
+                        <td className="py-3.5 pr-4 whitespace-nowrap">{ROLE_LABEL[u.role]}{u.leaderArea ? ` · ${LEADER_AREA_LABEL[u.leaderArea]}` : ''}</td>
                         <td className="py-3.5 pr-4">{escopo(u)}</td>
                         <td className="py-3.5 pr-4"><Acesso u={u} /></td>
                         <td className="py-3 text-right">{acoes(u)}</td>
@@ -301,7 +305,7 @@ export default function UsersPage() {
                         <p className="font-semibold">{u.name}</p>
                         <p className="text-xs text-spot-gray-500 break-all">{u.email}</p>
                       </div>
-                      <span className="badge bg-spot-gray-100 text-spot-gray-700 shrink-0">{ROLE_LABEL[u.role]}</span>
+                      <span className="badge bg-spot-gray-100 text-spot-gray-700 shrink-0">{ROLE_LABEL[u.role]}{u.leaderArea ? ` · ${LEADER_AREA_LABEL[u.leaderArea]}` : ''}</span>
                     </div>
                     {escopo(u)}
                     <div className="text-sm"><Acesso u={u} /></div>

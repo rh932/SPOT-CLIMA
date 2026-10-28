@@ -85,6 +85,10 @@ const GESTAO_KEYS: PermissionKey[] = [
   'evaluations.view',
   'evaluations.create',
   'evaluations.history.view',
+  // O gestor do salão também conclui o treinamento da equipe dele.
+  'trainings.view',
+  'trainings.create',
+  'trainings.history.view',
   'notifications.receive',
 ];
 
@@ -106,7 +110,7 @@ const TREINADOR_KEYS: PermissionKey[] = [
 export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   SUPER_ADMIN: ALL_KEYS,
   RH: ALL_KEYS,
-  // Gestor: avaliação de experiência da equipe dele. Não vê treinamento.
+  // Gestor: avaliação de experiência e treinamento da equipe dele.
   GESTOR: GESTAO_KEYS,
   /**
    * Gestor Líder: enxerga os dois lados da operação — avaliações E
@@ -125,6 +129,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
     'evaluations.view',
     'evaluations.history.view',
     'trainings.view',
+    // Gerente treinador: também registra e conclui o treinamento.
+    'trainings.create',
     'trainings.history.view',
     // Reabrir um encerramento definitivo é justamente o papel de quem
     // acompanha e corrige a operação — não de quem registrou o treinamento.

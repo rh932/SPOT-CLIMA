@@ -8,7 +8,7 @@
 import { useId, useState } from 'react';
 import { apiFetch } from '@/lib/apiClient';
 import { usePainelModal } from '@/components/forms/usePainelModal';
-import { SCOPED_ROLES, type AccessUser, type UserRole } from '@/lib/userAccess';
+import { LEADER_AREA_LABEL, SCOPED_ROLES, type AccessUser, type LeaderArea, type UserRole } from '@/lib/userAccess';
 
 interface Lookup { id: string; name: string; inTraining?: boolean }
 
@@ -35,9 +35,9 @@ function generatePassword(): string {
 }
 
 function ScopeCheckboxList({
-  label, options, selected, onChange, emptyText, hint,
+  label, options, selected, onChange, emptyText, hint, todos = false,
 }: {
-  label: string; options: Lookup[]; selected: string[]; onChange: (ids: string[]) => void;
+  todos?: boolean; label: string; options: Lookup[]; selected: string[]; onChange: (ids: string[]) => void;
   emptyText: string; hint: string;
 }) {
   const toggle = (id: string) => {
@@ -49,6 +49,15 @@ function ScopeCheckboxList({
        selecao" sem nunca dizer que a pergunta era "Setores". */
     <fieldset className="min-w-0 border-0 p-0 m-0">
       <legend className="label">{label}</legend>
+      {todos && options.length > 0 && (
+        <button
+          type="button"
+          className="text-xs underline underline-offset-4 text-spot-gray-600 hover:text-spot-gray-900 mb-1.5 min-h-8"
+          onClick={() => onChange(selected.length === options.length ? [] : options.map((o) => o.id))}
+        >
+          {selected.length === options.length ? 'Desmarcar todos' : 'Marcar todos'}
+        </button>
+      )}
       <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto border border-spot-gray-200 rounded-btn p-2.5">
         {options.length === 0 && <p className="text-xs text-spot-gray-500">{emptyText}</p>}
         {options.map((o) => (
@@ -79,6 +88,7 @@ function ScopeFields({
         options={units}
         selected={unitIds}
         onChange={onUnits}
+        todos={role === 'GESTOR_LIDER'}
         emptyText="Nenhuma unidade cadastrada."
         hint="Pode ser vinculado a mais de uma unidade."
       />
@@ -87,6 +97,7 @@ function ScopeFields({
         options={role === 'TREINADOR' ? sectors.filter((s) => s.inTraining) : sectors}
         selected={sectorIds}
         onChange={onSectors}
+        todos={role === 'GESTOR_LIDER'}
         emptyText="Nenhum setor cadastrado."
         hint={role === 'TREINADOR'
           ? 'O treinamento é só do Salão. O treinador vê e treina apenas os colaboradores dos setores marcados aqui (ex.: Bar, Atendimento, Gerente).'
@@ -97,9 +108,10 @@ function ScopeFields({
         options={SHIFT_OPTIONS}
         selected={shifts}
         onChange={onShifts}
+        todos={role === 'GESTOR_LIDER'}
         emptyText=""
         hint={role === 'GESTOR_LIDER'
-          ? 'O Gestor Líder costuma acompanhar os dois turnos.'
+          ? 'O Líder costuma acompanhar os dois turnos.'
           : 'O gestor do diurno e o do noturno são contas separadas — marque só o turno dele.'}
       />
     </>
@@ -160,9 +172,8 @@ function PasswordField({
 const ROLE_OPTIONS: { value: UserRole; label: string; hint: string }[] = [
   { value: 'RH', label: 'RH', hint: 'Acesso administrativo completo.' },
   { value: 'SUPER_ADMIN', label: 'Super Admin', hint: 'Acesso completo, incluindo usuários e personalização.' },
-  { value: 'GESTOR', label: 'Gestor', hint: 'Avalia a equipe do próprio setor/turno.' },
-  { value: 'GESTOR_LIDER', label: 'Gestor Líder', hint: 'Acompanha e cobra vários setores/turnos, sem avaliar.' },
-  { value: 'TREINADOR', label: 'Treinador', hint: 'Só treinamento — sem acesso a avaliações ou administração.' },
+  { value: 'GESTOR', label: 'Gestor', hint: 'Avalia a equipe do próprio setor/turno e conclui o treinamento dela.' },
+  { value: 'GESTOR_LIDER', label: 'Líder', hint: 'Enxerga todas as lojas, setores e turnos, sem avaliar; conclui treinamentos.' },
 ];
 
 /**
@@ -242,6 +253,18 @@ function RoleField({ value, onChange }: { value: UserRole; onChange: (r: UserRol
   );
 }
 
+function AreaField({ value, onChange }: { value: LeaderArea | ''; onChange: (a: LeaderArea | '') => void }) {
+  return (
+    <Field label="Área do Líder" htmlFor="admin-area">
+      <select id="admin-area" className="input" value={value} onChange={(e) => onChange(e.target.value as LeaderArea | '')}>
+        <option value="">Sem área definida</option>
+        {(Object.keys(LEADER_AREA_LABEL) as LeaderArea[]).map((a) => <option key={a} value={a}>{LEADER_AREA_LABEL[a]}</option>)}
+      </select>
+      <p className="text-xs text-spot-gray-500 mt-1">Só organiza e filtra a lista de líderes.</p>
+    </Field>
+  );
+}
+
 export function CreateAdminModal({
   sectors, units, onClose, onCreated,
 }: { sectors: Lookup[]; units: Lookup[]; onClose: () => void; onCreated: () => void }) {
@@ -250,6 +273,7 @@ export function CreateAdminModal({
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [role, setRole] = useState<UserRole>('RH');
+  const [leaderArea, setLeaderArea] = useState<LeaderArea | ''>('');
   const [scopedUnitIds, setScopedUnitIds] = useState<string[]>([]);
   const [scopedSectorIds, setScopedSectorIds] = useState<string[]>([]);
   const [scopedShifts, setScopedShifts] = useState<string[]>(['DIA']);
@@ -279,6 +303,7 @@ export function CreateAdminModal({
         method: 'POST',
         body: JSON.stringify({
           name, email, password, role,
+          leaderArea: role === 'GESTOR_LIDER' ? (leaderArea || null) : undefined,
           scopedUnitIds: isGestor ? scopedUnitIds : undefined,
           scopedSectorIds: isGestor ? setoresDoPerfil(role, sectors, scopedSectorIds) : undefined,
           scopedShifts: isGestor ? scopedShifts : undefined,
@@ -297,7 +322,7 @@ export function CreateAdminModal({
   return (
     <ModalShell
       title="Novo usuário"
-      subtitle="Gestor, Gestor Líder, Treinador ou administrador."
+      subtitle="Gestor, Líder ou administrador."
       onClose={onClose}
       onSubmit={submit}
       saving={saving}
@@ -316,6 +341,7 @@ export function CreateAdminModal({
 
       <Section title="Perfil e permissões">
         <RoleField value={role} onChange={setRole} />
+        {role === 'GESTOR_LIDER' && <AreaField value={leaderArea} onChange={setLeaderArea} />}
         {isGestor && (
           <>
             <ScopeFields
@@ -369,6 +395,7 @@ export function EditAdminModal({
   const [email, setEmail] = useState(admin.email);
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>(admin.role as UserRole);
+  const [leaderArea, setLeaderArea] = useState<LeaderArea | ''>(admin.leaderArea ?? '');
   const [scopedUnitIds, setScopedUnitIds] = useState<string[]>(admin.scopedUnits.map((u) => u.id));
   const [scopedSectorIds, setScopedSectorIds] = useState<string[]>(admin.scopedSectors.map((s) => s.id));
   const [scopedShifts, setScopedShifts] = useState<string[]>(admin.scopedShifts ?? []);
@@ -398,6 +425,7 @@ export function EditAdminModal({
         body: JSON.stringify({
           email,
           role,
+          ...(role === 'GESTOR_LIDER' ? { leaderArea: leaderArea || null } : {}),
           password: password || undefined,
           ...(isGestor ? { scopedUnitIds, scopedSectorIds: setoresDoPerfil(role, sectors, scopedSectorIds), scopedShifts } : {}),
         }),
@@ -420,6 +448,7 @@ export function EditAdminModal({
     >
       <Section title="Perfil e permissões">
         <RoleField value={role} onChange={setRole} />
+        {role === 'GESTOR_LIDER' && <AreaField value={leaderArea} onChange={setLeaderArea} />}
         {isGestor && (
           <>
             <ScopeFields

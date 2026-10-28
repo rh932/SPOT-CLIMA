@@ -16,7 +16,7 @@ import { isUniqueViolation } from '@/lib/dbErrors';
 /**
  * Histórico de treinamentos.
  *
- * Quem SUPERVISIONA (Gestor Líder, Super Admin — os que podem reabrir um
+ * Quem SUPERVISIONA (Líder, Super Admin — os que podem reabrir um
  * encerramento) vê os treinamentos da equipe dentro do escopo, que é o ponto
  * de ter acesso a treinamento: cobrar o que está pendente. Quem apenas treina
  * (o Treinador) vê os que ele mesmo registrou.
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     if (jaEncerrado) {
       return NextResponse.json(
         {
-          error: `O treinamento "${trainingType.name}" de ${employee.fullName} foi encerrado em definitivo por ${jaEncerrado.trainer?.name ?? 'outro treinador'} em ${jaEncerrado.trainingDate.toLocaleDateString('pt-BR')}. Peça ao RH ou ao Gestor Líder para reabrir.`,
+          error: `O treinamento "${trainingType.name}" de ${employee.fullName} foi encerrado em definitivo por ${jaEncerrado.trainer?.name ?? 'outro treinador'} em ${jaEncerrado.trainingDate.toLocaleDateString('pt-BR')}. Peça ao RH ou ao Líder para reabrir.`,
           alreadyClosed: true,
           closedBy: jaEncerrado.trainer?.name ?? null,
           closedAt: jaEncerrado.trainingDate,
@@ -195,7 +195,7 @@ export async function POST(req: NextRequest) {
     if (!row) {
       return NextResponse.json(
         {
-          error: `O treinamento "${trainingType.name}" de ${employee.fullName} acabou de ser encerrado em definitivo por outro treinador. Peça ao RH ou ao Gestor Líder para reabrir.`,
+          error: `O treinamento "${trainingType.name}" de ${employee.fullName} acabou de ser encerrado em definitivo por outro treinador. Peça ao RH ou ao Líder para reabrir.`,
           alreadyClosed: true,
         },
         { status: 409 },

@@ -41,16 +41,18 @@ describe('hasPermission', () => {
     expect(hasPermission('GESTOR_LIDER', 'trainings.view')).toBe(true);
     expect(hasPermission('GESTOR_LIDER', 'trainings.history.view')).toBe(true);
     expect(hasPermission('GESTOR_LIDER', 'reports.view')).toBe(true);
-    // ...mas quem avalia é o gestor do turno e quem treina é o treinador.
+    // ...quem avalia é o gestor do turno, mas ele também conclui treinamentos.
     expect(hasPermission('GESTOR_LIDER', 'evaluations.create')).toBe(false);
-    expect(hasPermission('GESTOR_LIDER', 'trainings.create')).toBe(false);
+    expect(hasPermission('GESTOR_LIDER', 'trainings.create')).toBe(true);
     // E nada de administração.
     expect(hasPermission('GESTOR_LIDER', 'users.manage')).toBe(false);
   });
 
-  it('GESTOR não enxerga treinamento; TREINADOR não enxerga avaliação', () => {
-    expect(hasPermission('GESTOR', 'trainings.view')).toBe(false);
-    expect(hasPermission('GESTOR', 'trainings.history.view')).toBe(false);
+  it('GESTOR conclui treinamento (sem reabrir); TREINADOR não enxerga avaliação', () => {
+    expect(hasPermission('GESTOR', 'trainings.view')).toBe(true);
+    expect(hasPermission('GESTOR', 'trainings.create')).toBe(true);
+    expect(hasPermission('GESTOR', 'trainings.history.view')).toBe(true);
+    expect(hasPermission('GESTOR', 'trainings.reopen')).toBe(false);
     expect(hasPermission('TREINADOR', 'evaluations.view')).toBe(false);
     expect(hasPermission('TREINADOR', 'evaluations.history.view')).toBe(false);
   });

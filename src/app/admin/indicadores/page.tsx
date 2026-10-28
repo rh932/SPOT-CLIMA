@@ -20,7 +20,7 @@ const nomeMes = (m: string) => {
   const [y, mm] = m.split('-').map(Number);
   return `${MESES[mm - 1]}/${String(y).slice(2)}`;
 };
-const ROLE: Record<string, string> = { GESTOR: 'Gestor', GESTOR_LIDER: 'Gestor Líder' };
+const ROLE: Record<string, string> = { GESTOR: 'Gestor', GESTOR_LIDER: 'Líder' };
 
 export default function IndicadoresPage() {
   const { data, loading, reloading, error, forbidden, reload } = useAsyncData(
@@ -148,7 +148,7 @@ export default function IndicadoresPage() {
                 </div>
               )}
               <p className="text-xs text-spot-gray-500 mt-2">
-                O Gestor Líder não avalia (acompanha o escopo), por isso só aparece na cobrança. Para mandar o lembrete na
+                O Líder não avalia (acompanha o escopo), por isso só aparece na cobrança. Para mandar o lembrete na
                 hora, use &quot;Lembrar gestores agora&quot; em <Link href="/admin/employees" className="underline">Avaliação de Experiência</Link>.
               </p>
             </Secao>

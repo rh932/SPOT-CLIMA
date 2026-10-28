@@ -55,7 +55,7 @@ describe('activityTargets', () => {
   it('formulário novo de treinamento vai para quem treina, sem recorte de escopo', () => {
     const noutroTurno = conta('t2', 'TREINADOR', { scopedShifts: ['NOITE'] });
     expect(ids({ type: 'TRAINING_TYPE_CREATED', trainingType: 'Bar' }, 'rh', [...todos, noutroTurno]))
-      .toEqual(['lider', 't2', 'treinador']);
+      .toEqual(['gestor', 'lider', 't2', 'treinador']);
   });
 
   it.each([['EMPLOYEE_CREATED'], ['EMPLOYEE_UPDATED'], ['EMPLOYEE_REMOVED'], ['COLOR_CHANGED']] as const)(

@@ -9,8 +9,17 @@
 export type UserRole = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR';
 
 export const ROLE_LABEL: Record<UserRole, string> = {
-  SUPER_ADMIN: 'Super Admin', RH: 'RH', GESTOR: 'Gestor', GESTOR_LIDER: 'Gestor Líder', TREINADOR: 'Treinador',
+  SUPER_ADMIN: 'Super Admin', RH: 'RH', GESTOR: 'Gestor', GESTOR_LIDER: 'Líder', TREINADOR: 'Treinador',
 };
+
+export type LeaderArea = 'COZINHA' | 'SALAO' | 'ADM' | 'DELIVERY';
+
+export const LEADER_AREA_LABEL: Record<LeaderArea, string> = {
+  COZINHA: 'Cozinha', SALAO: 'Salão', ADM: 'Adm', DELIVERY: 'Delivery',
+};
+
+/** Perfis oferecidos no filtro e no cadastro. O Treinador foi desligado por ora: Gestor e Líder concluem o treinamento. */
+export const SELECTABLE_ROLES: UserRole[] = ['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER'];
 
 /** Papéis que trabalham por recorte de unidade/setor/turno e entram pelo portal da operação. */
 export const SCOPED_ROLES: UserRole[] = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR'];
@@ -22,6 +31,8 @@ export interface AccessUser {
   name: string;
   email: string;
   role: UserRole;
+  /** Só para o Líder. */
+  leaderArea?: LeaderArea | null;
   active: boolean;
   scopedUnits: Lookup[];
   scopedSectors: Lookup[];
@@ -39,12 +50,13 @@ export type AccessFilter = '' | 'PENDENTE' | 'ENTROU' | 'INATIVO';
 export interface UserFilters {
   q: string;
   role: UserRole | '';
+  area: LeaderArea | '';
   unit: string;
   sector: string;
   access: AccessFilter;
 }
 
-export const EMPTY_USER_FILTERS: UserFilters = { q: '', role: '', unit: '', sector: '', access: '' };
+export const EMPTY_USER_FILTERS: UserFilters = { q: '', role: '', area: '', unit: '', sector: '', access: '' };
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
@@ -59,6 +71,7 @@ export function matchesUserFilters(u: AccessUser, f: UserFilters): boolean {
     if (!norm(u.name).includes(q) && !norm(u.email).includes(q)) return false;
   }
   if (f.role && u.role !== f.role) return false;
+  if (f.area && u.leaderArea !== f.area) return false;
   if (f.unit && !u.scopedUnits.some((x) => x.id === f.unit)) return false;
   if (f.sector && !u.scopedSectors.some((x) => x.id === f.sector)) return false;
   if (f.access && accessOf(u) !== f.access) return false;
