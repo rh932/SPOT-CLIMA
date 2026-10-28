@@ -20,7 +20,7 @@ const nomeMes = (m: string) => {
   const [y, mm] = m.split('-').map(Number);
   return `${MESES[mm - 1]}/${String(y).slice(2)}`;
 };
-const ROLE: Record<string, string> = { GESTOR: 'Gestor', GESTOR_LIDER: 'Líder' };
+const ROLE: Record<string, string> = { GESTOR: 'Gestor', GERENTE: 'Gerente', GESTOR_LIDER: 'Líder' };
 
 export default function IndicadoresPage() {
   const { data, loading, reloading, error, forbidden, reload } = useAsyncData(
@@ -136,8 +136,8 @@ export default function IndicadoresPage() {
                             {g.overdueNow}
                           </td>
                           <td className="py-2 pr-3 text-right tabular-nums">{g.dueSoon}</td>
-                          <td className="py-2 pr-3 text-right tabular-nums">{g.role === 'GESTOR' ? g.evaluations : '—'}</td>
-                          <td className="py-2 pr-3 text-right tabular-nums">{g.role === 'GESTOR' ? pct(g.onTimeRate) : '—'}</td>
+                          <td className="py-2 pr-3 text-right tabular-nums">{g.role !== 'GESTOR_LIDER' ? g.evaluations : '—'}</td>
+                          <td className="py-2 pr-3 text-right tabular-nums">{g.role !== 'GESTOR_LIDER' ? pct(g.onTimeRate) : '—'}</td>
                           <td className="py-2 text-right tabular-nums">
                             {g.avgDaysLate === null ? '—' : `${g.avgDaysLate.toLocaleString('pt-BR')} dia(s)`}
                           </td>

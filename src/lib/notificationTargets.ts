@@ -16,7 +16,7 @@ import { hasPermission } from './permissions';
 import { isInScope, type GestorScope, type ScopedEmployee } from './scope';
 
 /** Papéis de operação que acompanham o ciclo de feedback. */
-const FEEDBACK_ROLES = ['GESTOR', 'GESTOR_LIDER'];
+const FEEDBACK_ROLES = ['GESTOR', 'GERENTE', 'GESTOR_LIDER'];
 
 export interface NotifiableAdmin extends GestorScope {
   id: string;

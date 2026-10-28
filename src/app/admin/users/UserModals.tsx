@@ -19,7 +19,7 @@ interface Lookup { id: string; name: string; inTraining?: boolean }
  * A rota de usuários valida o mesmo.
  */
 function setoresDoPerfil(role: string, sectors: Lookup[], ids: string[]): string[] {
-  if (role !== 'TREINADOR') return ids;
+  if (role !== 'TREINADOR' && role !== 'GERENTE') return ids;
   return ids.filter((id) => sectors.find((s) => s.id === id)?.inTraining);
 }
 
@@ -94,12 +94,14 @@ function ScopeFields({
       />
       <ScopeCheckboxList
         label={role === 'TREINADOR' ? 'Setor / grupo que ele treina' : 'Setores'}
-        options={role === 'TREINADOR' ? sectors.filter((s) => s.inTraining) : sectors}
+        options={role === 'TREINADOR' || role === 'GERENTE' ? sectors.filter((s) => s.inTraining) : sectors}
         selected={sectorIds}
         onChange={onSectors}
         todos={role === 'GESTOR_LIDER'}
         emptyText="Nenhum setor cadastrado."
-        hint={role === 'TREINADOR'
+        hint={role === 'GERENTE'
+          ? 'O Gerente é só do Salão: aparecem apenas os setores de Salão.'
+          : role === 'TREINADOR'
           ? 'O treinamento é só do Salão. O treinador vê e treina apenas os colaboradores dos setores marcados aqui (ex.: Bar, Atendimento, Gerente).'
           : 'Vincule um ou mais setores. O gestor só enxerga funcionários que estejam em um destes setores.'}
       />
@@ -173,6 +175,7 @@ const ROLE_OPTIONS: { value: UserRole; label: string; hint: string }[] = [
   { value: 'RH', label: 'RH', hint: 'Acesso administrativo completo.' },
   { value: 'SUPER_ADMIN', label: 'Super Admin', hint: 'Acesso completo, incluindo usuários e personalização.' },
   { value: 'GESTOR', label: 'Gestor', hint: 'Avalia a equipe do próprio setor/turno e conclui o treinamento dela.' },
+  { value: 'GERENTE', label: 'Gerente', hint: 'Mesma função do Gestor (avalia e treina a equipe), mas só no Salão.' },
   { value: 'GESTOR_LIDER', label: 'Líder', hint: 'Enxerga todas as lojas, setores e turnos, sem avaliar; conclui treinamentos.' },
 ];
 
@@ -246,7 +249,7 @@ function RoleField({ value, onChange }: { value: UserRole; onChange: (r: UserRol
   return (
     <Field label="Perfil de acesso" htmlFor="admin-role">
       <select id="admin-role" className="input" value={value} onChange={(e) => onChange(e.target.value as UserRole)}>
-        {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {ROLE_OPTIONS.filter((o) => o.value !== 'RH' || value === 'RH').map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
       {hint && <p className="text-xs text-spot-gray-500 mt-1">{hint}</p>}
     </Field>
@@ -272,7 +275,7 @@ export function CreateAdminModal({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [role, setRole] = useState<UserRole>('RH');
+  const [role, setRole] = useState<UserRole>('GESTOR');
   const [leaderArea, setLeaderArea] = useState<LeaderArea | ''>('');
   const [scopedUnitIds, setScopedUnitIds] = useState<string[]>([]);
   const [scopedSectorIds, setScopedSectorIds] = useState<string[]>([]);

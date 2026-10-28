@@ -169,6 +169,13 @@
       "when": 1793219750264,
       "tag": "0023_area_do_lider",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793220184488,
+      "tag": "0024_perfil_gerente",
+      "breakpoints": true
     }
   ]
 }

@@ -71,7 +71,7 @@ export const PERMISSIONS: PermissionDefinition[] = [
   { key: 'audit.view', label: 'Auditoria', category: 'Administração' },
 ];
 
-export type Role = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR';
+export type Role = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR' | 'GERENTE';
 
 const ALL_KEYS = PERMISSIONS.map((p) => p.key);
 
@@ -112,6 +112,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   RH: ALL_KEYS,
   // Gestor: avaliação de experiência e treinamento da equipe dele.
   GESTOR: GESTAO_KEYS,
+  // Gerente: mesma função do Gestor, mas só no Salão (o escopo é limitado a setores de Salão).
+  GERENTE: GESTAO_KEYS,
   /**
    * Gestor Líder: enxerga os dois lados da operação — avaliações E
    * treinamentos. Continua sem executar nenhum dos dois (quem avalia é o
@@ -158,7 +160,7 @@ export const ADMIN_ROLES: Role[] = ['SUPER_ADMIN', 'RH'];
  * pela mesma porta — o que cada um vê é decidido pelas permissões, não por
  * ter um site separado.
  */
-export const GESTOR_ROLES: Role[] = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR'];
+export const GESTOR_ROLES: Role[] = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE'];
 
 /**
  * Quem consegue ENTRAR no portal da operação.

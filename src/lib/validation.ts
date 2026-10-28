@@ -263,12 +263,12 @@ export const createAdminSchema = z.object({
   name: z.string().min(2).max(160),
   email: emailSchema,
   password: accountPasswordSchema,
-  role: z.enum(['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR']),
+  role: z.enum(['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE']),
   ...adminScopeFields,
 }).refine(
   // Gestor, Líder e Treinador operam por recorte (unidade + setor + turno).
   // Papéis administrativos enxergam tudo e não têm escopo.
-  (d) => !['GESTOR', 'GESTOR_LIDER', 'TREINADOR'].includes(d.role)
+  (d) => !['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE'].includes(d.role)
     || ((d.scopedUnitIds?.length ?? 0) > 0 && (d.scopedSectorIds?.length ?? 0) > 0 && (d.scopedShifts?.length ?? 0) > 0),
   { message: 'Selecione ao menos uma unidade, um setor e um turno.', path: ['scopedUnitIds'] },
 );
@@ -279,7 +279,7 @@ export const updateAdminSchema = z.object({
   name: z.string().min(2).max(160).optional(),
   email: emailSchema.optional(),
   password: accountPasswordSchema.optional(),
-  role: z.enum(['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR']).optional(),
+  role: z.enum(['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE']).optional(),
   active: z.boolean().optional(),
   ...adminScopeFields,
 });

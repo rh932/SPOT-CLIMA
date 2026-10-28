@@ -6,10 +6,10 @@
  * o começo do sistema — não precisou de coluna nova no cadastro.
  */
 
-export type UserRole = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR';
+export type UserRole = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR' | 'GERENTE';
 
 export const ROLE_LABEL: Record<UserRole, string> = {
-  SUPER_ADMIN: 'Super Admin', RH: 'RH', GESTOR: 'Gestor', GESTOR_LIDER: 'Líder', TREINADOR: 'Treinador',
+  SUPER_ADMIN: 'Super Admin', RH: 'RH', GESTOR: 'Gestor', GESTOR_LIDER: 'Líder', TREINADOR: 'Treinador', GERENTE: 'Gerente',
 };
 
 export type LeaderArea = 'COZINHA' | 'SALAO' | 'ADM' | 'DELIVERY';
@@ -18,11 +18,11 @@ export const LEADER_AREA_LABEL: Record<LeaderArea, string> = {
   COZINHA: 'Cozinha', SALAO: 'Salão', ADM: 'Adm', DELIVERY: 'Delivery',
 };
 
-/** Perfis oferecidos no filtro e no cadastro. O Treinador foi desligado por ora: Gestor e Líder concluem o treinamento. */
-export const SELECTABLE_ROLES: UserRole[] = ['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER'];
+/** Perfis oferecidos no filtro e no cadastro. O RH e o Treinador foram desligados por ora: Gestor e Líder concluem o treinamento. */
+export const SELECTABLE_ROLES: UserRole[] = ['SUPER_ADMIN', 'GESTOR', 'GERENTE', 'GESTOR_LIDER'];
 
 /** Papéis que trabalham por recorte de unidade/setor/turno e entram pelo portal da operação. */
-export const SCOPED_ROLES: UserRole[] = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR'];
+export const SCOPED_ROLES: UserRole[] = ['GESTOR', 'GERENTE', 'GESTOR_LIDER', 'TREINADOR'];
 
 interface Lookup { id: string; name: string }
 

@@ -37,7 +37,7 @@ export async function GET() {
         columns: { evaluatorAdminId: true, period: true, evaluationDate: true, dueDateAtEvaluation: true },
       }),
       db.query.admins.findMany({
-        where: inArray(schema.admins.role, ['GESTOR', 'GESTOR_LIDER']),
+        where: inArray(schema.admins.role, ['GESTOR', 'GERENTE', 'GESTOR_LIDER']),
         columns: { id: true, name: true, role: true, active: true },
         with: {
           scopedUnits: { columns: { unitId: true } },

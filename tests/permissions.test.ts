@@ -154,3 +154,12 @@ describe('acesso do SUPER_ADMIN ao portal da operação', () => {
     expect(hasPermission('TREINADOR', 'trainings.reopen')).toBe(false);
   });
 });
+
+describe('GERENTE', () => {
+  it('tem as mesmas permissões do GESTOR (avalia e treina), sem administração', () => {
+    expect([...DEFAULT_ROLE_PERMISSIONS.GERENTE].sort()).toEqual([...DEFAULT_ROLE_PERMISSIONS.GESTOR].sort());
+    expect(hasPermission('GERENTE', 'evaluations.create')).toBe(true);
+    expect(hasPermission('GERENTE', 'trainings.create')).toBe(true);
+    expect(hasPermission('GERENTE', 'users.manage')).toBe(false);
+  });
+});

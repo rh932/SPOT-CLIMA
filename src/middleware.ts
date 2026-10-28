@@ -28,7 +28,7 @@ const PORTALS: PortalConfig[] = [
     homePath: '/admin',
     publicPagePaths: ['/admin/login'],
     cookieName: SESSION_COOKIES.admin,
-    blockedRoles: ['GESTOR', 'GESTOR_LIDER', 'TREINADOR'],
+    blockedRoles: ['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE'],
   },
   {
     pagePrefix: '/gestor',
@@ -51,6 +51,7 @@ const ROLE_HOME: Record<string, string> = {
   GESTOR: '/gestor',
   GESTOR_LIDER: '/gestor',
   TREINADOR: '/gestor',
+  GERENTE: '/gestor',
   RH: '/admin',
   SUPER_ADMIN: '/admin',
 };

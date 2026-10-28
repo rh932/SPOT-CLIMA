@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await hashPassword(parsed.data.password);
     // Gestor, Líder e Treinador têm escopo; papéis administrativos não.
-    const isGestor = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR'].includes(parsed.data.role);
+    const isGestor = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE'].includes(parsed.data.role);
 
     // Conta e escopo numa transação só: um escopo inválido não pode deixar
     // para trás uma conta ativa sem vínculo nenhum.
