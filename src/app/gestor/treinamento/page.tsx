@@ -9,6 +9,7 @@ import {
 } from '@/components/async';
 import { scrollToFirstError } from '@/lib/scrollToError';
 import { ChoiceGroup, ChoiceOption } from '@/components/forms/ChoiceGroup';
+import { DAILY_RESULT_OPTIONS, FINAL_RESULT_OPTIONS, trainingResultLabel } from '@/lib/trainingResult';
 
 interface TrainingMaterial {
   id: string;
@@ -58,12 +59,6 @@ interface Employee {
 }
 
 const SHIFT_LABEL: Record<'DIA' | 'NOITE', string> = { DIA: 'Diurno', NOITE: 'Noturno' };
-const RESULT_OPTIONS = [
-  { value: 'APROVADO', label: 'Aprovado' },
-  { value: 'APROVADO_COM_RESSALVA', label: 'Aprovado com ressalva' },
-  { value: 'REPROVADO', label: 'Reprovado' },
-] as const;
-const RESULT_LABEL: Record<string, string> = Object.fromEntries(RESULT_OPTIONS.map((o) => [o.value, o.label]));
 
 interface Lookup { id: string; name: string }
 
@@ -245,7 +240,7 @@ export default function TreinamentoPage() {
                 <p className="text-xs text-spot-gray-500 mt-0.5">
                   {e.trainings.length === 0
                     ? 'Nenhum treinamento registrado'
-                    : `${e.trainings.length} treinamento(s) · último: ${RESULT_LABEL[ultimo.result] ?? ultimo.result}`}
+                    : `${e.trainings.length} treinamento(s) · último: ${trainingResultLabel(ultimo.result, ultimo.closure)}`}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
@@ -423,6 +418,8 @@ function TrainingForm({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [contextValues, setContextValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState('');
+  // Apto / Não apto: escolhido só na confirmação do encerramento definitivo.
+  const [finalResult, setFinalResult] = useState('');
   const [needsReinforcement, setNeedsReinforcement] = useState(false);
   const [reinforcementNotes, setReinforcementNotes] = useState('');
   const [positivePoints, setPositivePoints] = useState('');
@@ -456,7 +453,10 @@ function TrainingForm({
   const missingResult = !result;
   const missingNotes = needsReinforcement && !reinforcementNotes.trim();
   const missingCriteria = criteria.filter((c) => !answers[c.id]);
-  const invalid = missingType || missingResult || missingNotes || missingCriteria.length > 0;
+  // O resultado da ficha do dia não vale para o definitivo, que pede Apto /
+  // Não apto na confirmação — por isso fica fora da checagem comum.
+  const invalidFicha = missingType || missingNotes || missingCriteria.length > 0;
+  const invalid = invalidFicha || missingResult;
 
   // Trocar de formulário zera as respostas: os critérios são outros.
   const changeType = (id: string) => {
@@ -471,7 +471,8 @@ function TrainingForm({
    * Quem valida de verdade é a rota; aqui é só o que o treinador escolheu.
    */
   const submit = async (closure: 'DIA' | 'DEFINITIVO') => {
-    if (invalid) {
+    const definitivo = closure === 'DEFINITIVO';
+    if (definitivo ? invalidFicha || !finalResult : invalid) {
       setAttempted(true);
       setConfirmarDefinitivo(false);
       // Sem isto, clicar em "Finalizar" com um item em branco so acendia um
@@ -489,7 +490,7 @@ function TrainingForm({
         body: JSON.stringify({
           employeeId: employee.id,
           trainingTypeId,
-          result,
+          result: definitivo ? finalResult : result,
           answers,
           contextValues,
           needsReinforcement,
@@ -683,9 +684,9 @@ function TrainingForm({
         </div>
 
         <fieldset className="min-w-0 border-0 p-0 m-0" data-erro={attempted && missingResult ? 'true' : undefined}>
-          <legend className="label">Resultado</legend>
+          <legend className="label">Resultado do dia</legend>
           <div className="flex flex-col gap-2">
-            {RESULT_OPTIONS.map((o) => (
+            {DAILY_RESULT_OPTIONS.map((o) => (
               /* min-h-11: a area clicavel era so a altura do texto (~20px).
                  Com o <label> envolvendo o radio, crescer a area aqui torna a
                  linha inteira tocavel. */
@@ -702,6 +703,7 @@ function TrainingForm({
             ))}
           </div>
           {attempted && missingResult && <p className="text-xs text-spot-danger mt-1">Selecione o resultado do treinamento.</p>}
+          <p className="text-xs text-spot-gray-500 mt-1">No encerramento definitivo você marca se o colaborador está Apto ou Não apto.</p>
         </fieldset>
 
         <div>
@@ -771,7 +773,7 @@ function TrainingForm({
                depois recusar por campo em branco faz o treinador clicar duas
                vezes para descobrir o que faltava. */
             onClick={() => {
-              if (invalid) { setAttempted(true); scrollToFirstError(); return; }
+              if (invalidFicha) { setAttempted(true); scrollToFirstError(); return; }
               setConfirmarDefinitivo(true);
             }}
           >
@@ -804,6 +806,24 @@ function TrainingForm({
             <p className="text-xs text-spot-gray-500">
               Depois disso, só o RH ou o Gestor Líder conseguem reabrir.
             </p>
+            <fieldset className="min-w-0 border-0 p-0 m-0">
+              <legend className="label">Resultado final</legend>
+              <div className="flex flex-col gap-2">
+                {FINAL_RESULT_OPTIONS.map((o) => (
+                  <label key={o.value} className="flex items-center gap-2 text-sm min-h-11">
+                    <input
+                      type="radio"
+                      name="finalResult"
+                      value={o.value}
+                      checked={finalResult === o.value}
+                      onChange={(e) => setFinalResult(e.target.value)}
+                      disabled={saving}
+                    />
+                    {o.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             {error && <p role="alert" className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5">{error}</p>}
             <div className="flex flex-col sm:flex-row gap-3">
               <button className="btn-ghost sm:flex-1" onClick={() => setConfirmarDefinitivo(false)} disabled={saving}>
@@ -813,6 +833,7 @@ function TrainingForm({
                 className="btn-secondary sm:flex-1"
                 pending={saving}
                 pendingLabel="Encerrando..."
+                disabled={!finalResult}
                 onClick={() => submit('DEFINITIVO')}
               >
                 Encerrar em definitivo

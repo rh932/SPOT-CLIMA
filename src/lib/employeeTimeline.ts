@@ -1,4 +1,5 @@
 import { COLOR_LABELS, type FeedbackColor } from './feedbackCycle';
+import { trainingResultLabel } from './trainingResult';
 
 /**
  * Linha do tempo do colaborador: junta admissão, avaliações, mudanças de cor e
@@ -69,11 +70,6 @@ export const CONCLUSION_LABEL: Record<string, string> = {
   EXTENDER: 'Estender experiência',
 };
 
-const RESULT_LABEL: Record<string, string> = {
-  APROVADO: 'Aprovado',
-  APROVADO_COM_RESSALVA: 'Aprovado com ressalva',
-  REPROVADO: 'Reprovado',
-};
 
 /** Resultado de uma avaliação numa linha: classificação · conclusão. */
 export function evaluationResult(ev: { classification: string; conclusion: string | null }): string {
@@ -146,7 +142,7 @@ export function buildEmployeeTimeline({
   }
 
   for (const tr of trainings) {
-    const partes = [RESULT_LABEL[tr.result] ?? tr.result];
+    const partes = [trainingResultLabel(tr.result, tr.closure)];
     if (tr.needsReinforcement) partes.push('Precisa de reforço');
     partes.push(tr.closure === 'DEFINITIVO' ? 'Encerrado em definitivo' : 'Treinamento do dia');
     events.push({

@@ -9,6 +9,8 @@
  * média só considera RUIM/MEDIO/BOM/OTIMO e conta os "Não" à parte.
  */
 
+import { trainingResultLabel, type TrainingClosure } from './trainingResult';
+
 export type TrainingRating = 'RUIM' | 'MEDIO' | 'BOM' | 'OTIMO' | 'NAO';
 
 /** Peso só para as notas que formam uma escala de pior a melhor. */
@@ -24,6 +26,7 @@ export interface TrainingRecordInput {
   trainingDate: string | Date;
   result: string;
   needsReinforcement: boolean;
+  closure?: TrainingClosure;
   employee: { id: string; fullName: string } | null;
   trainingType: { id: string; name: string } | null;
   trainer: { id: string; name: string } | null;
@@ -142,11 +145,6 @@ export function buildTrainingReport(records: TrainingRecordInput[]): TrainingRep
   };
 }
 
-const RESULT_LABEL: Record<string, string> = {
-  APROVADO: 'Aprovado',
-  APROVADO_COM_RESSALVA: 'Aprovado com ressalva',
-  REPROVADO: 'Reprovado',
-};
 
 const RATING_LABEL: Record<string, string> = {
   RUIM: 'Ruim', MEDIO: 'Médio', BOM: 'Bom', OTIMO: 'Ótimo', NAO: 'Não',
@@ -171,7 +169,7 @@ export function buildTrainingsCsv(records: TrainingRecordInput[]): string {
     r.employee?.fullName ?? '',
     r.trainingType?.name ?? '',
     r.trainer?.name ?? '',
-    RESULT_LABEL[r.result] ?? r.result,
+    trainingResultLabel(r.result, r.closure),
     r.needsReinforcement ? 'Sim' : 'Não',
     r.answers
       .filter((a) => a.criterion)

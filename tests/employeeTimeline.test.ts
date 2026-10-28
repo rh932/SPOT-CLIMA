@@ -103,7 +103,7 @@ describe('buildEmployeeTimeline', () => {
       admissionDate: at(2026, 1, 2),
       trainings: [treinamento({ closure: 'DEFINITIVO', needsReinforcement: true, result: 'APROVADO_COM_RESSALVA' })],
     });
-    expect(evento.detail).toBe('Aprovado com ressalva · Precisa de reforço · Encerrado em definitivo');
+    expect(evento.detail).toBe('Apto com ressalva · Precisa de reforço · Encerrado em definitivo');
     expect(evento.author).toBe('Carla');
   });
 

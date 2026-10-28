@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { trainingResultLabel } from '@/lib/trainingResult';
 import { apiFetch } from '@/lib/apiClient';
 import { ActionButton, AsyncSection, EmptyState, SkeletonCardList, useConfirm, useToast, ehSemAcesso } from '@/components/async';
 import { useMyPermissions } from '../../useMyPermissions';
@@ -21,11 +22,6 @@ interface TrainingRecord {
   reopenedBy: { id: string; name: string } | null;
 }
 
-const RESULT_LABEL: Record<string, string> = {
-  APROVADO: 'Aprovado',
-  APROVADO_COM_RESSALVA: 'Aprovado com ressalva',
-  REPROVADO: 'Reprovado',
-};
 /*
  * Reaproveita as cinco classes da escala do sistema (`.badge-*` em
  * globals.css): rótulo escrito + ponto na cor, sem fundo pastel. É a mesma
@@ -141,7 +137,7 @@ export default function HistoricoTreinamentosPage() {
                     </span>
                     {t.needsReinforcement && <span className="badge badge-attention">Reforço</span>}
                     <span className={`badge ${RESULT_BADGE[t.result] ?? 'bg-spot-gray-100 text-spot-gray-600'}`}>
-                      {RESULT_LABEL[t.result] ?? t.result}
+                      {trainingResultLabel(t.result, t.closure)}
                     </span>
                   </div>
                 </div>

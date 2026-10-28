@@ -326,6 +326,11 @@ export const trainingSchema = z.object({
 }).refine(
   (d) => !d.needsReinforcement || Boolean(d.reinforcementNotes?.trim()),
   { message: 'Descreva o que precisa de reforço.', path: ['reinforcementNotes'] },
+).refine(
+  // O encerramento definitivo é Apto (APROVADO) ou Não apto (REPROVADO) —
+  // ver src/lib/trainingResult.ts. "Com ressalva" só existe na ficha do dia.
+  (d) => d.closure !== 'DEFINITIVO' || d.result !== 'APROVADO_COM_RESSALVA',
+  { message: 'No encerramento definitivo, marque Apto ou Não apto.', path: ['result'] },
 );
 
 export const probationaryEmployeeSchema = z.object({
