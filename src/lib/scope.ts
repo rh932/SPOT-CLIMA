@@ -36,9 +36,9 @@ export function isInScope(scope: GestorScope, employee: ScopedEmployee): boolean
     && scope.scopedShifts.includes(employee.shift);
 }
 
-/** Só o GESTOR e o GERENTE avaliam. O GESTOR_LIDER é somente-leitura no portal. */
+/** Só o GESTOR e os Gerentes que avaliam (GERENTE e GERENTE_AVALIADOR) avaliam. O GESTOR_LIDER é somente-leitura no portal. */
 export function canEvaluate(role: string): boolean {
-  return role === 'GESTOR' || role === 'GERENTE';
+  return role === 'GESTOR' || role === 'GERENTE' || role === 'GERENTE_AVALIADOR';
 }
 
 /**

@@ -26,7 +26,7 @@ const id = () =>
 // Enums
 // ------------------------------------------------------------------
 
-export const adminRoleEnum = pgEnum('admin_role', ['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE']);
+export const adminRoleEnum = pgEnum('admin_role', ['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR']);
 export const leaderAreaEnum = pgEnum('leader_area', ['COZINHA', 'SALAO', 'ADM', 'DELIVERY']);
 export const surveyStatusEnum = pgEnum('survey_status', ['DRAFT', 'SCHEDULED', 'OPEN', 'CLOSED', 'ARCHIVED']);
 export const questionTypeEnum = pgEnum('question_type', [

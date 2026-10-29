@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     const nextUnitIds = parsed.data.scopedUnitIds !== undefined ? parsed.data.scopedUnitIds : existingUnitIds;
     const nextSectorIds = parsed.data.scopedSectorIds !== undefined ? parsed.data.scopedSectorIds : existingSectorIds;
     const nextShifts = parsed.data.scopedShifts !== undefined ? parsed.data.scopedShifts : existingShifts;
-    if (['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE'].includes(nextRole)
+    if (['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR'].includes(nextRole)
       && (nextUnitIds.length === 0 || nextSectorIds.length === 0 || nextShifts.length === 0)) {
       return NextResponse.json({ error: 'Selecione ao menos uma unidade, um setor e um turno.' }, { status: 400 });
     }

@@ -51,17 +51,17 @@ const SUPERVISORES: Role[] = ['GESTOR_LIDER', 'RH', 'SUPER_ADMIN'];
 const RULES: Record<ActivityType, Rule> = {
   // O Gestor do turno entra: é a equipe dele, e o colega do outro turno pode
   // ter avaliado alguém que ele também acompanha.
-  EVALUATION_SUBMITTED: { permission: 'evaluations.view', roles: ['GESTOR', 'GERENTE', ...SUPERVISORES] },
-  COLOR_CHANGED: { permission: 'evaluations.view', roles: ['GESTOR', 'GERENTE', ...SUPERVISORES] },
-  EMPLOYEE_CREATED: { permission: 'employees.view', roles: ['GESTOR', 'GERENTE', ...SUPERVISORES] },
-  EMPLOYEE_UPDATED: { permission: 'employees.view', roles: ['GESTOR', 'GERENTE', ...SUPERVISORES] },
-  EMPLOYEE_REMOVED: { permission: 'employees.view', roles: ['GESTOR', 'GERENTE', ...SUPERVISORES] },
+  EVALUATION_SUBMITTED: { permission: 'evaluations.view', roles: ['GESTOR', 'GERENTE', 'GERENTE_AVALIADOR', ...SUPERVISORES] },
+  COLOR_CHANGED: { permission: 'evaluations.view', roles: ['GESTOR', 'GERENTE', 'GERENTE_AVALIADOR', ...SUPERVISORES] },
+  EMPLOYEE_CREATED: { permission: 'employees.view', roles: ['GESTOR', 'GERENTE', 'GERENTE_AVALIADOR', ...SUPERVISORES] },
+  EMPLOYEE_UPDATED: { permission: 'employees.view', roles: ['GESTOR', 'GERENTE', 'GERENTE_AVALIADOR', ...SUPERVISORES] },
+  EMPLOYEE_REMOVED: { permission: 'employees.view', roles: ['GESTOR', 'GERENTE', 'GERENTE_AVALIADOR', ...SUPERVISORES] },
   // Treinamento não é assunto do Gestor (ele não tem `trainings.view`), e o
   // Treinador não precisa saber de cada ficha dos colegas.
   TRAINING_CREATED: { permission: 'trainings.view', roles: SUPERVISORES },
   TRAINING_REOPENED: { permission: 'trainings.view', roles: SUPERVISORES },
   // Formulário novo interessa a quem aplica treinamento.
-  TRAINING_TYPE_CREATED: { permission: 'trainings.view', roles: ['TREINADOR', 'GESTOR', 'GERENTE', 'GESTOR_LIDER'] },
+  TRAINING_TYPE_CREATED: { permission: 'trainings.view', roles: ['TREINADOR', 'GERENTE_TREINADOR', 'GESTOR', 'GERENTE', 'GESTOR_LIDER'] },
 };
 
 function temEscopoTotal(role: string): boolean {

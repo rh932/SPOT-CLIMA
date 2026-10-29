@@ -202,7 +202,7 @@ export async function assertTrainingSector(sectorId: string): Promise<void> {
  * outro setor mandado na mão não amplie o que o treinador enxerga.
  */
 export async function assertTrainerSectors(role: string, sectorIds: string[]): Promise<void> {
-  if ((role !== 'TREINADOR' && role !== 'GERENTE') || sectorIds.length === 0) return;
+  if (!['TREINADOR', 'GERENTE', 'GERENTE_TREINADOR'].includes(role) || sectorIds.length === 0) return;
   const validos = await trainingSectorIds([...new Set(sectorIds)]);
   if (validos.length !== new Set(sectorIds).size) {
     throw new ApiError(400, 'O treinamento é só do Salão: o Treinador e o Gerente só podem ser responsáveis por setores marcados como "Treinamento".');

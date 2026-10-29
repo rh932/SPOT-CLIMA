@@ -71,7 +71,7 @@ export const PERMISSIONS: PermissionDefinition[] = [
   { key: 'audit.view', label: 'Auditoria', category: 'Administração' },
 ];
 
-export type Role = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR' | 'GERENTE';
+export type Role = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR' | 'GERENTE' | 'GERENTE_AVALIADOR' | 'GERENTE_TREINADOR';
 
 const ALL_KEYS = PERMISSIONS.map((p) => p.key);
 
@@ -142,6 +142,10 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   ],
   // Treinador: só treinamento. Nada de avaliação de experiência.
   TREINADOR: TREINADOR_KEYS,
+  // Gerente avaliador: só avaliação de experiência da equipe do Salão, sem treinamento.
+  GERENTE_AVALIADOR: GESTAO_KEYS.filter((k) => !k.startsWith('trainings.')),
+  // Gerente treinador: só treinamento do Salão, sem avaliação de experiência.
+  GERENTE_TREINADOR: TREINADOR_KEYS,
 };
 
 export function hasPermission(role: string, key: PermissionKey): boolean {
@@ -160,7 +164,7 @@ export const ADMIN_ROLES: Role[] = ['SUPER_ADMIN', 'RH'];
  * pela mesma porta — o que cada um vê é decidido pelas permissões, não por
  * ter um site separado.
  */
-export const GESTOR_ROLES: Role[] = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE'];
+export const GESTOR_ROLES: Role[] = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR'];
 
 /**
  * Quem consegue ENTRAR no portal da operação.

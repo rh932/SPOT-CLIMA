@@ -6,10 +6,11 @@
  * o começo do sistema — não precisou de coluna nova no cadastro.
  */
 
-export type UserRole = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR' | 'GERENTE';
+export type UserRole = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR' | 'GERENTE' | 'GERENTE_AVALIADOR' | 'GERENTE_TREINADOR';
 
 export const ROLE_LABEL: Record<UserRole, string> = {
   SUPER_ADMIN: 'Super Admin', RH: 'RH', GESTOR: 'Gestor', GESTOR_LIDER: 'Líder', TREINADOR: 'Treinador', GERENTE: 'Gerente',
+  GERENTE_AVALIADOR: 'Gerente avaliador', GERENTE_TREINADOR: 'Gerente treinador',
 };
 
 export type LeaderArea = 'COZINHA' | 'SALAO' | 'ADM' | 'DELIVERY';
@@ -19,10 +20,10 @@ export const LEADER_AREA_LABEL: Record<LeaderArea, string> = {
 };
 
 /** Perfis oferecidos no filtro e no cadastro. O RH e o Treinador foram desligados por ora: Gestor e Líder concluem o treinamento. */
-export const SELECTABLE_ROLES: UserRole[] = ['SUPER_ADMIN', 'GESTOR', 'GERENTE', 'GESTOR_LIDER'];
+export const SELECTABLE_ROLES: UserRole[] = ['SUPER_ADMIN', 'GESTOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR', 'GESTOR_LIDER'];
 
 /** Papéis que trabalham por recorte de unidade/setor/turno e entram pelo portal da operação. */
-export const SCOPED_ROLES: UserRole[] = ['GESTOR', 'GERENTE', 'GESTOR_LIDER', 'TREINADOR'];
+export const SCOPED_ROLES: UserRole[] = ['GESTOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR', 'GESTOR_LIDER', 'TREINADOR'];
 
 interface Lookup { id: string; name: string }
 
@@ -125,7 +126,7 @@ const COMO_ATIVAR_NO_CELULAR = [
  */
 export function accessMessage(u: Pick<AccessUser, 'name' | 'email' | 'role' | 'firstAccessCode'>, origin: string): string {
   const gestor = SCOPED_ROLES.includes(u.role);
-  const oQueFaz = u.role === 'TREINADOR'
+  const oQueFaz = u.role === 'TREINADOR' || u.role === 'GERENTE_TREINADOR'
     ? 'Nele você registra os treinamentos da equipe.'
     : u.role === 'GESTOR_LIDER'
       ? 'Nele você acompanha as avaliações de experiência das equipes e os prazos de cada gestor.'
@@ -140,8 +141,8 @@ export function accessMessage(u: Pick<AccessUser, 'name' | 'email' | 'role' | 'f
   // lembretes): dizer isso antes é o que convence a pessoa a permitir — o
   // medo é de um celular apitando o dia inteiro. Os dias vêm de
   // REMINDER_OFFSETS; o teste trava os dois juntos.
-  const sobreAvisos = u.role === 'TREINADOR'
-    ? 'Sobre os avisos: são poucos. Chegam quando um novo formulário de treinamento é criado. Deixe sempre permitido para não perder nenhum.'
+  const sobreAvisos = u.role === 'TREINADOR' || u.role === 'GERENTE_TREINADOR'
+    ?'Sobre os avisos: são poucos. Chegam quando um novo formulário de treinamento é criado. Deixe sempre permitido para não perder nenhum.'
     : gestor
       ? 'Sobre os avisos: eles não são repetitivos. Cada avaliação da sua equipe gera só 6 lembretes automáticos: 7, 3 e 1 dia antes do prazo, no próprio dia e, se atrasar, 1 e 7 dias depois (o RH pode mandar um lembrete extra, se precisar). Você também é avisado quando alguém da sua equipe é cadastrado ou avaliado. Deixe os avisos sempre permitidos para não perder nenhuma data de avaliação.'
       : 'Sobre os avisos: são poucos. Chegam quando há movimentação nas equipes (avaliação registrada, cadastro ou treinamento). Deixe sempre permitido para acompanhar sem precisar abrir o site.';

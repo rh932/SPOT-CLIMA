@@ -18,8 +18,11 @@ interface Lookup { id: string; name: string; inTraining?: boolean }
  * perfil para Treinador é descartado aqui, em vez de ficar escondido e marcado.
  * A rota de usuários valida o mesmo.
  */
+/** Perfis da família Gerente (e o Treinador antigo) só operam no Salão. */
+const SALAO_ROLES: string[] = ['TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR'];
+
 function setoresDoPerfil(role: string, sectors: Lookup[], ids: string[]): string[] {
-  if (role !== 'TREINADOR' && role !== 'GERENTE') return ids;
+  if (!SALAO_ROLES.includes(role)) return ids;
   return ids.filter((id) => sectors.find((s) => s.id === id)?.inTraining);
 }
 
@@ -93,13 +96,13 @@ function ScopeFields({
         hint="Pode ser vinculado a mais de uma unidade."
       />
       <ScopeCheckboxList
-        label={role === 'TREINADOR' ? 'Setor / grupo que ele treina' : 'Setores'}
-        options={role === 'TREINADOR' || role === 'GERENTE' ? sectors.filter((s) => s.inTraining) : sectors}
+        label={role === 'TREINADOR' || role === 'GERENTE_TREINADOR' ? 'Setor / grupo que ele treina' : 'Setores'}
+        options={SALAO_ROLES.includes(role) ? sectors.filter((s) => s.inTraining) : sectors}
         selected={sectorIds}
         onChange={onSectors}
         todos={role === 'GESTOR_LIDER'}
         emptyText="Nenhum setor cadastrado."
-        hint={role === 'GERENTE'
+        hint={role.startsWith('GERENTE')
           ? 'O Gerente é só do Salão: aparecem apenas os setores de Salão.'
           : role === 'TREINADOR'
           ? 'O treinamento é só do Salão. O treinador vê e treina apenas os colaboradores dos setores marcados aqui (ex.: Bar, Atendimento, Gerente).'
@@ -175,8 +178,10 @@ const ROLE_OPTIONS: { value: UserRole; label: string; hint: string }[] = [
   { value: 'RH', label: 'RH', hint: 'Acesso administrativo completo.' },
   { value: 'SUPER_ADMIN', label: 'Super Admin', hint: 'Acesso completo, incluindo usuários e personalização.' },
   { value: 'GESTOR', label: 'Gestor', hint: 'Avalia a equipe do próprio setor/turno e conclui o treinamento dela.' },
-  { value: 'GERENTE', label: 'Gerente', hint: 'Mesma função do Gestor (avalia e treina a equipe), mas só no Salão.' },
-  { value: 'GESTOR_LIDER', label: 'Líder', hint: 'Enxerga todas as lojas, setores e turnos, sem avaliar; conclui treinamentos.' },
+  { value: 'GERENTE', label: 'Gerente (avalia e treina)', hint: 'Libera: avaliação de experiência e treinamento da equipe do Salão. Não libera setores fora do Salão.' },
+  { value: 'GERENTE_AVALIADOR', label: 'Gerente avaliador', hint: 'Libera: só a avaliação de experiência da equipe do Salão. Não libera treinamento.' },
+  { value: 'GERENTE_TREINADOR', label: 'Gerente treinador', hint: 'Libera: só o treinamento da equipe do Salão. Não libera avaliação de experiência.' },
+  { value: 'GESTOR_LIDER', label: 'Líder', hint: 'Libera: acompanhar avaliações e treinamentos das lojas, setores e turnos marcados (ou da área escolhida), sem avaliar. Conclui treinamentos.' },
 ];
 
 /**
@@ -361,7 +366,7 @@ export function CreateAdminModal({
             {show('scope') && <p className="text-xs text-spot-danger">{errors.scope}</p>}
           </>
         )}
-        {role === 'TREINADOR' && (
+        {(role === 'TREINADOR' || role === 'GERENTE_TREINADOR') && (
           <p className="text-xs text-spot-gray-500 bg-spot-gray-50 border border-spot-gray-200 rounded-btn px-3 py-2">
             O Treinador acessa apenas a área de Treinamento, e só enxerga os colaboradores das lojas, setores e turnos
             marcados acima. Para mudar o setor dele depois, é só editar o usuário.
@@ -468,7 +473,7 @@ export function EditAdminModal({
             {show('scope') && <p className="text-xs text-spot-danger">{errors.scope}</p>}
           </>
         )}
-        {role === 'TREINADOR' && (
+        {(role === 'TREINADOR' || role === 'GERENTE_TREINADOR') && (
           <p className="text-xs text-spot-gray-500 bg-spot-gray-50 border border-spot-gray-200 rounded-btn px-3 py-2">
             O Treinador acessa apenas a área de Treinamento, e só enxerga os colaboradores das lojas, setores e turnos
             marcados acima. Para mudar o setor dele depois, é só editar o usuário.

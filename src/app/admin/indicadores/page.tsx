@@ -20,7 +20,7 @@ const nomeMes = (m: string) => {
   const [y, mm] = m.split('-').map(Number);
   return `${MESES[mm - 1]}/${String(y).slice(2)}`;
 };
-const ROLE: Record<string, string> = { GESTOR: 'Gestor', GERENTE: 'Gerente', GESTOR_LIDER: 'Líder' };
+const ROLE: Record<string, string> = { GESTOR: 'Gestor', GERENTE: 'Gerente', GERENTE_AVALIADOR: 'Gerente avaliador', GESTOR_LIDER: 'Líder' };
 
 export default function IndicadoresPage() {
   const { data, loading, reloading, error, forbidden, reload } = useAsyncData(
