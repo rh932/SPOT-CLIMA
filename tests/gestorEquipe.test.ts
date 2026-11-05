@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   admissoesNoPeriodo, ARQUIVO_APOS_MESES, filtrarEquipe, FILTROS_VAZIOS, filtrosAtivos, limiteArquivo, noArquivo,
-  opcoesDe, pertoDeVencer,
+  opcoesDe, pertoDeVencer, separarArquivoDoTreino,
 } from '@/lib/gestorEquipe';
 
 // 05/11/2026 às 12:00 em São Paulo (15:00 UTC).
@@ -38,6 +38,43 @@ describe('últimas admissões por período', () => {
 
   it('este ano começa em 1º de janeiro', () => {
     expect(admissoesNoPeriodo(pessoas, 'ANO', AGORA).map((p) => p.id)).toEqual(['a', 'b', 'c', 'd']);
+  });
+});
+
+describe('lista de treino e arquivo', () => {
+  const dia = (d: string) => `${d}T00:00:00Z`;
+  const gente = [
+    { id: '1', admissionDate: dia('2026-11-04') },
+    { id: '2', admissionDate: dia('2026-11-02') },
+    { id: '3', admissionDate: dia('2026-10-30') },
+    { id: '4', admissionDate: dia('2026-10-25') },
+    { id: '5', admissionDate: dia('2026-10-20') },
+    { id: 'g', admissionDate: dia('2026-11-03'), criadoPorGerente: true },
+    { id: 'velho', admissionDate: dia('2025-01-10') },
+  ];
+
+  it('só as 4 mais novas ficam na lista; o resto vai para o arquivo, do mais novo ao mais antigo', () => {
+    const { recentes, arquivo } = separarArquivoDoTreino(gente, '30', AGORA);
+    expect(recentes.map((p) => p.id)).toEqual(['1', '2', '3', '4']);
+    expect(arquivo.map((p) => p.id)).toEqual(['g', '5', 'velho']);
+  });
+
+  it('quem foi criado por gerente não conta entre as 4, mesmo sendo recente', () => {
+    const { recentes, arquivo } = separarArquivoDoTreino(gente, '30', AGORA);
+    expect(recentes.some((p) => p.id === 'g')).toBe(false);
+    expect(arquivo.some((p) => p.id === 'g')).toBe(true);
+  });
+
+  it('quem entrou antes do período escolhido vai para o arquivo', () => {
+    // Em 15/12, os 30 dias começam em 15/11: ninguém entrou nesse intervalo.
+    const { recentes, arquivo } = separarArquivoDoTreino(gente, '30', new Date('2026-12-15T15:00:00Z'));
+    expect(recentes).toEqual([]);
+    expect(arquivo).toHaveLength(gente.length);
+  });
+
+  it('ninguém some: lista + arquivo = todos', () => {
+    const { recentes, arquivo } = separarArquivoDoTreino(gente, 'ANO', AGORA);
+    expect(recentes.length + arquivo.length).toBe(gente.length);
   });
 });
 

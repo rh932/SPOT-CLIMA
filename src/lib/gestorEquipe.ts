@@ -60,6 +60,29 @@ export function admissoesNoPeriodo<T extends { admissionDate: string }>(
     .sort((a, b) => new Date(b.admissionDate).getTime() - new Date(a.admissionDate).getTime());
 }
 
+/** Quantas admissões ficam na lista da aba Treinar; todas as outras vão para o Arquivo. */
+export const ULTIMAS_ADMISSOES = 4;
+
+/**
+ * Divide a lista da aba Treinar: as ULTIMAS_ADMISSOES mais novas do período
+ * ficam na lista; o resto — inclusive quem foi cadastrado por um gerente, que
+ * não conta entre as últimas — vai para o Arquivo, também do mais novo ao mais
+ * antigo.
+ */
+export function separarArquivoDoTreino<T extends { id: string; admissionDate: string; criadoPorGerente?: boolean }>(
+  lista: T[],
+  periodo: PeriodoAdmissao,
+  agora: Date = new Date(),
+  quantas: number = ULTIMAS_ADMISSOES,
+): { recentes: T[]; arquivo: T[] } {
+  const recentes = admissoesNoPeriodo(lista.filter((e) => !e.criadoPorGerente), periodo, agora).slice(0, quantas);
+  const naLista = new Set(recentes.map((e) => e.id));
+  const arquivo = lista
+    .filter((e) => !naLista.has(e.id))
+    .sort((a, b) => new Date(b.admissionDate).getTime() - new Date(a.admissionDate).getTime());
+  return { recentes, arquivo };
+}
+
 // ------------------------------------------------------------------
 // Perto de vencer.
 // ------------------------------------------------------------------

@@ -13,8 +13,8 @@ import { DAILY_RESULT_OPTIONS, FINAL_RESULT_OPTIONS, trainingResultLabel } from 
 import { FiltrosEquipeBar } from '../FiltrosEquipeBar';
 import { ColunaPertoDeVencer, type ItemPertoDeVencer } from '../ColunaPertoDeVencer';
 import {
-  FILTROS_VAZIOS, PERIODOS_ADMISSAO, admissoesNoPeriodo, filtrarEquipe, filtrosAtivos, pertoDeVencer,
-  type FiltrosEquipe, type PeriodoAdmissao,
+  FILTROS_VAZIOS, PERIODOS_ADMISSAO, ULTIMAS_ADMISSOES, filtrarEquipe, filtrosAtivos, pertoDeVencer,
+  separarArquivoDoTreino, type FiltrosEquipe, type PeriodoAdmissao,
 } from '@/lib/gestorEquipe';
 
 interface TrainingMaterial {
@@ -64,6 +64,8 @@ interface Employee {
   trainings: EmployeeTraining[];
   /** Fim do contrato de experiência em aberto (ISO); null se já não está em experiência. */
   prazoExperiencia: string | null;
+  /** Cadastrado por um gerente: não conta entre as últimas admissões. */
+  criadoPorGerente: boolean;
 }
 
 const SHIFT_LABEL: Record<'DIA' | 'NOITE', string> = { DIA: 'Diurno', NOITE: 'Noturno' };
@@ -79,72 +81,27 @@ function nomeDaAba(setor: string): string {
   return partes[partes.length - 1].trim() || setor;
 }
 
-/**
- * Últimas admissões da loja, com o período escolhido (30 dias, 90, 6 meses ou o
- * ano). Mostra quatro; o contador diz quantas entraram no período inteiro.
- */
-function UltimasAdmissoes({ employees, onEscolher }: { employees: Employee[]; onEscolher: (e: Employee) => void }) {
-  const [periodo, setPeriodo] = useState<PeriodoAdmissao>('30');
-  const noPeriodo = admissoesNoPeriodo(employees, periodo);
-  const ultimas = noPeriodo.slice(0, 4);
-
+/** Período das últimas admissões: define quem fica na lista de treino (o resto vai para o Arquivo). */
+function SeletorPeriodo({ valor, onChange }: { valor: PeriodoAdmissao; onChange: (p: PeriodoAdmissao) => void }) {
   return (
-    <section aria-labelledby="ultimas-admissoes" className="card flex flex-col gap-3">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 id="ultimas-admissoes" className="font-semibold">Últimas admissões</h2>
-          <p className="text-xs text-spot-gray-500">
-            {noPeriodo.length === 0
-              ? 'Ninguém entrou na loja nesse período.'
-              : `${noPeriodo.length} ${noPeriodo.length === 1 ? 'entrou' : 'entraram'} na loja nesse período.`}
-          </p>
-        </div>
-        <div role="group" aria-label="Período das admissões" className="flex flex-wrap gap-1.5">
-          {PERIODOS_ADMISSAO.map((p) => {
-            const ativo = periodo === p.valor;
-            return (
-              <button
-                key={p.valor}
-                type="button"
-                aria-pressed={ativo}
-                onClick={() => setPeriodo(p.valor)}
-                className={`badge min-h-10 transition ${
-                  ativo ? 'bg-spot-black text-spot-onBlack' : 'bg-spot-gray-100 text-spot-gray-600 hover:bg-spot-gray-200'
-                }`}
-              >
-                {p.rotulo}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {ultimas.length > 0 && (
-        <ul className="flex flex-col divide-y divide-spot-gray-100 border-t border-spot-gray-100">
-          {ultimas.map((e) => (
-            <li key={e.id}>
-              <button
-                type="button"
-                onClick={() => onEscolher(e)}
-                className="group w-full flex items-center justify-between gap-3 py-2.5 text-left hover:bg-spot-white transition-colors"
-              >
-                <span className="min-w-0">
-                  <span className="block font-medium truncate group-hover:underline underline-offset-4 decoration-spot-yellow decoration-2">
-                    {e.fullName}
-                  </span>
-                  <span className="block text-xs text-spot-gray-500 truncate">
-                    {e.roleDescription} · {e.sector?.name} · {e.unit?.name}
-                  </span>
-                </span>
-                <span className="shrink-0 text-xs text-spot-gray-600">
-                  Entrou {new Date(e.admissionDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <div role="group" aria-label="Período das admissões" className="flex flex-wrap gap-1.5">
+      {PERIODOS_ADMISSAO.map((p) => {
+        const ativo = valor === p.valor;
+        return (
+          <button
+            key={p.valor}
+            type="button"
+            aria-pressed={ativo}
+            onClick={() => onChange(p.valor)}
+            className={`badge min-h-10 transition ${
+              ativo ? 'bg-spot-black text-spot-onBlack' : 'bg-spot-gray-100 text-spot-gray-600 hover:bg-spot-gray-200'
+            }`}
+          >
+            {p.rotulo}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -153,6 +110,8 @@ export default function TreinamentoPage() {
   const [selected, setSelected] = useState<Employee | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [aba, setAba] = useState<string | null>(null);
+  const [periodo, setPeriodo] = useState<PeriodoAdmissao>('30');
+  const [arquivoAberto, setArquivoAberto] = useState(false);
   const { mostrar } = useToast();
 
   const { data, loading, reloading, error: loadError, forbidden, reload } = useAsyncData(
@@ -207,6 +166,12 @@ export default function TreinamentoPage() {
   }, [data, buscados]);
   const abaAtual = abas.find((a) => a.id === aba) ?? abas[0] ?? null;
   const filtered = abas.length > 1 && abaAtual ? buscados.filter((e) => e.sector?.id === abaAtual.id) : buscados;
+  // Na lista ficam só as ULTIMAS_ADMISSOES mais novas do período (sem as
+  // cadastradas por gerente); todo o resto — a aba é longa demais — vai para o
+  // Arquivo. Ninguém some: quem está no Arquivo continua treinável e aparece na
+  // pesquisa e na coluna "Perto de vencer".
+  const { recentes, arquivo } = separarArquivoDoTreino(filtered, periodo);
+  const arquivoVisivel = arquivoAberto || filtrosAtivos(filtros) > 0;
 
   if (selected) {
     return (
@@ -229,6 +194,41 @@ export default function TreinamentoPage() {
       />
     );
   }
+
+  /** Linha do colaborador: igual na lista curta e no Arquivo. */
+  const linha = (e: Employee) => {
+    const ultimo = e.trainings[0];
+    return (
+      <button
+        key={e.id}
+        type="button"
+        disabled={types.length === 0}
+        onClick={() => setSelected(e)}
+        className="group w-full flex items-center justify-between gap-4 text-left py-4 border-b border-spot-gray-200 transition-colors hover:bg-spot-white disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        <div className="min-w-0">
+          <p className="font-semibold truncate group-hover:underline underline-offset-4 decoration-spot-yellow decoration-2">{e.fullName}</p>
+          <p className="text-xs text-spot-gray-500 mt-0.5">
+            {e.roleDescription} · {e.sector?.name} · {e.unit?.name} · {SHIFT_LABEL[e.shift]}
+          </p>
+          <p className="text-xs text-spot-gray-500 mt-0.5">
+            Entrou em {new Date(e.admissionDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} ·{' '}
+            {e.trainings.length === 0
+              ? 'nenhum treinamento registrado'
+              : `${e.trainings.length} treinamento(s) · último: ${trainingResultLabel(ultimo.result, ultimo.closure)}`}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {e.trainings.some((t) => t.needsReinforcement) && (
+            <span className="badge badge-attention">Reforço pendente</span>
+          )}
+          {e.trainings.some((t) => t.closure === 'DEFINITIVO') && (
+            <span className="badge bg-spot-black text-spot-onBlack">Encerrado em definitivo</span>
+          )}
+        </div>
+      </button>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -254,8 +254,6 @@ export default function TreinamentoPage() {
       </aside>
 
       <div className="min-w-0 flex flex-col gap-6">
-      {data && <UltimasAdmissoes employees={data.employees} onEscolher={setSelected} />}
-
       {/* Pesquisa e filtros no padrão do admin (ver FiltrosEquipeBar). As abas
           por setor já separam o Salão, então o seletor de setor fica de fora. */}
       <FiltrosEquipeBar valor={filtros} onChange={setFiltros} pessoas={data?.employees ?? []} comSetor={false} />
@@ -314,39 +312,55 @@ export default function TreinamentoPage() {
           </EmptyState>
         }
       >
-      <div className="[&>*:last-child]:border-b-0 border-t border-spot-gray-300">
-        {filtered.map((e, i) => {
-          const ultimo = e.trainings[0];
-          return (
-            <button
-              key={e.id}
-              type="button"
-              disabled={types.length === 0}
-              onClick={() => setSelected(e)}
-              className="group w-full flex items-center justify-between gap-4 text-left py-4 border-b border-spot-gray-200 transition-colors hover:bg-spot-white disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <div className="min-w-0">
-                <p className="font-semibold truncate group-hover:underline underline-offset-4 decoration-spot-yellow decoration-2">{e.fullName}</p>
-                <p className="text-xs text-spot-gray-500 mt-0.5">
-                  {e.roleDescription} · {e.sector?.name} · {e.unit?.name} · {SHIFT_LABEL[e.shift]}
-                </p>
-                <p className="text-xs text-spot-gray-500 mt-0.5">
-                  {e.trainings.length === 0
-                    ? 'Nenhum treinamento registrado'
-                    : `${e.trainings.length} treinamento(s) · último: ${trainingResultLabel(ultimo.result, ultimo.closure)}`}
-                </p>
+      <div className="flex flex-col gap-8">
+        <section aria-labelledby="ultimas-admissoes" className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 id="ultimas-admissoes" className="font-semibold">Últimas {ULTIMAS_ADMISSOES} admissões</h2>
+              <p className="text-xs text-spot-gray-500">As mais novas do período ficam aqui; as demais estão no Arquivo.</p>
+            </div>
+            <SeletorPeriodo valor={periodo} onChange={setPeriodo} />
+          </div>
+          {recentes.length === 0 ? (
+            <p className="text-sm text-spot-gray-500 border-t border-spot-gray-300 pt-3">
+              Ninguém entrou nesse período{arquivo.length > 0 ? '. Todos estão no Arquivo, logo abaixo.' : '.'}
+            </p>
+          ) : (
+            <div className="[&>*:last-child]:border-b-0 border-t border-spot-gray-300">
+              {recentes.map(linha)}
+            </div>
+          )}
+        </section>
+
+        {arquivo.length > 0 && (
+          <section aria-labelledby="arquivo-treino" className="border-t-2 border-spot-gray-300 pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 id="arquivo-treino" className="font-sans text-xl font-extrabold tracking-tight leading-tight text-spot-gray-800">
+                  Arquivo <span className="text-spot-gray-500 font-normal">({arquivo.length})</span>
+                </h2>
+                <p className="text-sm text-spot-gray-500">Os demais colaboradores. Continuam treináveis.</p>
               </div>
-              <div className="flex flex-col items-end gap-1 shrink-0">
-                {e.trainings.some((t) => t.needsReinforcement) && (
-                  <span className="badge badge-attention">Reforço pendente</span>
-                )}
-                {e.trainings.some((t) => t.closure === 'DEFINITIVO') && (
-                  <span className="badge bg-spot-black text-spot-onBlack">Encerrado em definitivo</span>
-                )}
+              {/* Com busca ou filtro ligado o Arquivo abre sozinho: é onde a pessoa procurada costuma estar. */}
+              {filtrosAtivos(filtros) === 0 && (
+                <button
+                  type="button"
+                  className="btn-ghost py-2 px-4"
+                  aria-expanded={arquivoAberto}
+                  aria-controls="lista-arquivo-treino"
+                  onClick={() => setArquivoAberto((v) => !v)}
+                >
+                  {arquivoAberto ? 'Recolher' : 'Mostrar arquivo'}
+                </button>
+              )}
+            </div>
+            {arquivoVisivel && (
+              <div id="lista-arquivo-treino" className="mt-4 [&>*:last-child]:border-b-0 border-t border-spot-gray-300">
+                {arquivo.map(linha)}
               </div>
-            </button>
-          );
-        })}
+            )}
+          </section>
+        )}
       </div>
       </AsyncSection>
       </div>

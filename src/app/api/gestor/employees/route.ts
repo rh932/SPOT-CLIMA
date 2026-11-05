@@ -16,15 +16,7 @@ import { secondOpinionFor } from '@/lib/secondOpinion';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
 
-/**
- * Lista de colaboradores do portal da operação, servindo os três papéis.
- *
- * O que vem junto depende da permissão de quem pediu, decidido no servidor:
- * quem não tem `evaluations.view` não recebe as avaliações nem os prazos de
- * ciclo; quem não tem `trainings.view` não recebe os treinamentos. Não é a
- * tela que esconde — o dado nem sai daqui.
- */
-/** Campos de ciclo que não saem para quem não avalia (ver a consulta acima). */
+/** Campos de ciclo que não saem para quem não avalia (ver a consulta abaixo). */
 const CAMPOS_DE_CICLO = ['status', 'isApprentice', 'period1DueDate', 'period2DueDate', 'currentColor', 'nextFeedbackDueDate'];
 
 function semCamposDeCiclo(campos: Record<string, unknown>): Record<string, unknown> {
@@ -39,6 +31,17 @@ function prazoDaExperiencia(campos: Record<string, unknown>): string | null {
   return null;
 }
 
+/** Perfis de gerente: quem foi cadastrado por eles fica de fora das "últimas admissões" da aba Treinar. */
+const PAPEIS_DE_GERENTE = ['GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR'];
+
+/**
+ * Lista de colaboradores do portal da operação, servindo os três papéis.
+ *
+ * O que vem junto depende da permissão de quem pediu, decidido no servidor:
+ * quem não tem `evaluations.view` não recebe as avaliações nem os prazos de
+ * ciclo; quem não tem `trainings.view` não recebe os treinamentos. Não é a
+ * tela que esconde — o dado nem sai daqui.
+ */
 export async function GET(req: NextRequest) {
   try {
     const session = await requireGestor();
@@ -85,6 +88,9 @@ export async function GET(req: NextRequest) {
       with: {
         sector: { columns: { id: true, name: true, usesColorCycle: true } },
         unit: { columns: { id: true, name: true } },
+        // Só o perfil de quem cadastrou: vira o booleano `criadoPorGerente`
+        // abaixo, e o próprio objeto não sai na resposta.
+        createdBy: { columns: { role: true } },
         ...(verAvaliacoes
           ? {
             evaluations: {
@@ -124,13 +130,14 @@ export async function GET(req: NextRequest) {
       // Vencimento do contrato de experiência em aberto: é o que a aba de
       // treinamento usa para "perto de vencer", e não depende de ver o ciclo.
       const prazoExperiencia = prazoDaExperiencia(campos);
-      const { terminationDate, ...resto } = campos;
-      if (!verAvaliacoes) return { ...semCamposDeCiclo(resto), prazoExperiencia };
+      const { terminationDate, createdBy, ...resto } = campos;
+      const criadoPorGerente = PAPEIS_DE_GERENTE.includes((createdBy as { role?: string } | null)?.role ?? '');
+      if (!verAvaliacoes) return { ...semCamposDeCiclo(resto), prazoExperiencia, criadoPorGerente };
       const evs = (campos.evaluations ?? []) as Parameters<typeof secondOpinionFor>[1];
       const segunda = avalia
         ? secondOpinionFor({ isApprentice: campos.isApprentice as boolean | undefined, terminationDate: terminationDate as Date | null | undefined }, evs, session.adminId)
         : null;
-      return { ...resto, prazoExperiencia, secondOpinion: segunda ? { period: segunda.period, until: segunda.until } : null };
+      return { ...resto, prazoExperiencia, criadoPorGerente, secondOpinion: segunda ? { period: segunda.period, until: segunda.until } : null };
     });
 
     return NextResponse.json({
