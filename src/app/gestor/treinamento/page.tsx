@@ -10,6 +10,12 @@ import {
 import { scrollToFirstError } from '@/lib/scrollToError';
 import { ChoiceGroup, ChoiceOption } from '@/components/forms/ChoiceGroup';
 import { DAILY_RESULT_OPTIONS, FINAL_RESULT_OPTIONS, trainingResultLabel } from '@/lib/trainingResult';
+import { FiltrosEquipeBar } from '../FiltrosEquipeBar';
+import { ColunaPertoDeVencer, type ItemPertoDeVencer } from '../ColunaPertoDeVencer';
+import {
+  FILTROS_VAZIOS, PERIODOS_ADMISSAO, admissoesNoPeriodo, filtrarEquipe, filtrosAtivos, pertoDeVencer,
+  type FiltrosEquipe, type PeriodoAdmissao,
+} from '@/lib/gestorEquipe';
 
 interface TrainingMaterial {
   id: string;
@@ -56,6 +62,8 @@ interface Employee {
   sector: { id: string; name: string } | null;
   unit: { name: string } | null;
   trainings: EmployeeTraining[];
+  /** Fim do contrato de experiência em aberto (ISO); null se já não está em experiência. */
+  prazoExperiencia: string | null;
 }
 
 const SHIFT_LABEL: Record<'DIA' | 'NOITE', string> = { DIA: 'Diurno', NOITE: 'Noturno' };
@@ -71,8 +79,77 @@ function nomeDaAba(setor: string): string {
   return partes[partes.length - 1].trim() || setor;
 }
 
+/**
+ * Últimas admissões da loja, com o período escolhido (30 dias, 90, 6 meses ou o
+ * ano). Mostra quatro; o contador diz quantas entraram no período inteiro.
+ */
+function UltimasAdmissoes({ employees, onEscolher }: { employees: Employee[]; onEscolher: (e: Employee) => void }) {
+  const [periodo, setPeriodo] = useState<PeriodoAdmissao>('30');
+  const noPeriodo = admissoesNoPeriodo(employees, periodo);
+  const ultimas = noPeriodo.slice(0, 4);
+
+  return (
+    <section aria-labelledby="ultimas-admissoes" className="card flex flex-col gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="ultimas-admissoes" className="font-semibold">Últimas admissões</h2>
+          <p className="text-xs text-spot-gray-500">
+            {noPeriodo.length === 0
+              ? 'Ninguém entrou na loja nesse período.'
+              : `${noPeriodo.length} ${noPeriodo.length === 1 ? 'entrou' : 'entraram'} na loja nesse período.`}
+          </p>
+        </div>
+        <div role="group" aria-label="Período das admissões" className="flex flex-wrap gap-1.5">
+          {PERIODOS_ADMISSAO.map((p) => {
+            const ativo = periodo === p.valor;
+            return (
+              <button
+                key={p.valor}
+                type="button"
+                aria-pressed={ativo}
+                onClick={() => setPeriodo(p.valor)}
+                className={`badge min-h-10 transition ${
+                  ativo ? 'bg-spot-black text-spot-onBlack' : 'bg-spot-gray-100 text-spot-gray-600 hover:bg-spot-gray-200'
+                }`}
+              >
+                {p.rotulo}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {ultimas.length > 0 && (
+        <ul className="flex flex-col divide-y divide-spot-gray-100 border-t border-spot-gray-100">
+          {ultimas.map((e) => (
+            <li key={e.id}>
+              <button
+                type="button"
+                onClick={() => onEscolher(e)}
+                className="group w-full flex items-center justify-between gap-3 py-2.5 text-left hover:bg-spot-white transition-colors"
+              >
+                <span className="min-w-0">
+                  <span className="block font-medium truncate group-hover:underline underline-offset-4 decoration-spot-yellow decoration-2">
+                    {e.fullName}
+                  </span>
+                  <span className="block text-xs text-spot-gray-500 truncate">
+                    {e.roleDescription} · {e.sector?.name} · {e.unit?.name}
+                  </span>
+                </span>
+                <span className="shrink-0 text-xs text-spot-gray-600">
+                  Entrou {new Date(e.admissionDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export default function TreinamentoPage() {
-  const [query, setQuery] = useState('');
+  const [filtros, setFiltros] = useState<FiltrosEquipe>(FILTROS_VAZIOS);
   const [selected, setSelected] = useState<Employee | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [aba, setAba] = useState<string | null>(null);
@@ -93,15 +170,26 @@ export default function TreinamentoPage() {
   );
   const types = data?.types ?? [];
 
-  const buscados = useMemo(() => {
-    const employees = data?.employees ?? [];
-    const q = query.trim().toLowerCase();
-    if (!q) return employees;
-    return employees.filter((e) =>
-      e.fullName.toLowerCase().includes(q)
-      || e.roleDescription.toLowerCase().includes(q)
-      || (e.sector?.name ?? '').toLowerCase().includes(q));
-  }, [data, query]);
+  const buscados = useMemo(
+    () => filtrarEquipe(data?.employees ?? [], filtros),
+    [data, filtros],
+  );
+
+  // Coluna "perto de vencer": o fim do contrato de experiência em até uma semana
+  // (ou já passado). Segue os filtros de pesquisa, não a aba de setor.
+  const pertoVencer: ItemPertoDeVencer[] = useMemo(
+    () => filtrarEquipe(data?.employees ?? [], filtros)
+      .filter((e) => pertoDeVencer(e.prazoExperiencia))
+      .sort((a, b) => new Date(a.prazoExperiencia!).getTime() - new Date(b.prazoExperiencia!).getTime())
+      .map((e) => ({
+        id: e.id,
+        nome: e.fullName,
+        detalhe: `${e.sector?.name ?? ''} · ${e.unit?.name ?? ''}`,
+        prazo: new Date(e.prazoExperiencia!),
+        onClick: () => setSelected(e),
+      })),
+    [data, filtros],
+  );
 
   /*
    * Uma aba por setor do treinamento que o treinador enxerga (ex.: Atendimento,
@@ -152,20 +240,25 @@ export default function TreinamentoPage() {
         <button className="btn-primary" onClick={() => setShowCreate(true)}>+ Cadastrar colaborador</button>
       </div>
 
-      {/* O placeholder era o UNICO rotulo: some no primeiro caractere digitado
-          e, para quem usa leitor de tela, o campo virava "edicao de texto" sem
-          dizer que e a busca. O rotulo fica visualmente escondido porque o
-          placeholder ja cumpre o papel visual. */}
-      <label className="block">
-        <span className="sr-only">Buscar colaborador por nome, cargo ou setor</span>
-        <input
-          type="search"
-          className="input"
-          placeholder="Buscar por nome, cargo ou setor..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </label>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
+      {/* Só aparece depois da primeira carga: antes, "Ninguém perto de vencer"
+          afirmaria algo que ainda não se sabe. */}
+      <aside className="order-first lg:order-last">
+        {data && (
+          <ColunaPertoDeVencer
+            id="treino-perto-vencer"
+            itens={pertoVencer}
+            vazio={filtrosAtivos(filtros) > 0 ? 'Nenhum contrato perto de vencer nesta busca.' : 'Ninguém perto de vencer.'}
+          />
+        )}
+      </aside>
+
+      <div className="min-w-0 flex flex-col gap-6">
+      {data && <UltimasAdmissoes employees={data.employees} onEscolher={setSelected} />}
+
+      {/* Pesquisa e filtros no padrão do admin (ver FiltrosEquipeBar). As abas
+          por setor já separam o Salão, então o seletor de setor fica de fora. */}
+      <FiltrosEquipeBar valor={filtros} onChange={setFiltros} pessoas={data?.employees ?? []} comSetor={false} />
 
       {showCreate && (
         <CreateEmployeeModal
@@ -215,7 +308,7 @@ export default function TreinamentoPage() {
         empty={filtered.length === 0}
         emptyState={
           <EmptyState>
-            {query
+            {filtrosAtivos(filtros) > 0
               ? `Nenhum colaborador encontrado para esta busca${abas.length > 1 && abaAtual ? ` em ${abaAtual.nome}` : ''}.`
               : 'Nenhum colaborador dos setores do treinamento cadastrado ainda.'}
           </EmptyState>
@@ -256,6 +349,8 @@ export default function TreinamentoPage() {
         })}
       </div>
       </AsyncSection>
+      </div>
+      </div>
     </div>
   );
 }

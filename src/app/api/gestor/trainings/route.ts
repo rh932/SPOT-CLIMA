@@ -3,10 +3,12 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
-import { and, desc, eq, inArray } from 'drizzle-orm';
-import { requireGestor, requirePermission, handleApiError, assertTrainingSector, trainingSectorIds } from '@/lib/apiAuth';
+import { and, desc, eq, gte, inArray, lt } from 'drizzle-orm';
+import { requireGestor, requirePermission, handleApiError, assertTrainingSector } from '@/lib/apiAuth';
 import { hasPermission } from '@/lib/permissions';
-import { hasCompleteScope, isInScope } from '@/lib/scope';
+import { isInScope } from '@/lib/scope';
+import { idsNoEscopoDoTreino } from '@/lib/trainingScope';
+import { limiteArquivo } from '@/lib/gestorEquipe';
 import { trainingSchema } from '@/lib/validation';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
@@ -36,41 +38,44 @@ export async function GET() {
     // Só o Salão (sectors.inTraining) e só o escopo atual de quem pede —
     // inclusive para o Treinador: se o ADMIN trocar o setor dele, os
     // treinamentos do setor antigo deixam de aparecer para ele.
-    const setoresTreino = await trainingSectorIds(session.scopedSectorIds);
-    const escopo = hasCompleteScope(session) && setoresTreino.length > 0
-      ? await db.query.probationaryEmployees.findMany({
-        where: and(
-          inArray(schema.probationaryEmployees.unitId, session.scopedUnitIds),
-          inArray(schema.probationaryEmployees.sectorId, setoresTreino),
-          inArray(schema.probationaryEmployees.shift, session.scopedShifts as ('DIA' | 'NOITE')[]),
-        ),
-        columns: { id: true },
-      })
-      : [];
-    const idsNoEscopo = escopo.map((e) => e.id);
+    const idsNoEscopo = await idsNoEscopoDoTreino(session);
 
     // Sem ninguém no escopo, não há histórico a mostrar — e um inArray vazio
     // no Drizzle traria a tabela inteira.
     if (idsNoEscopo.length === 0) {
-      return NextResponse.json({ trainings: [] });
+      return NextResponse.json({ trainings: [], arquivo: [] });
     }
 
-    const rows = await db.query.trainings.findMany({
-      where: registraTreinamento
-        ? and(eq(schema.trainings.trainerAdminId, session.adminId), inArray(schema.trainings.employeeId, idsNoEscopo))
-        : inArray(schema.trainings.employeeId, idsNoEscopo),
-      orderBy: desc(schema.trainings.trainingDate),
-      limit: 200,
-      with: {
-        employee: { columns: { id: true, fullName: true, roleDescription: true } },
-        trainingType: { columns: { id: true, name: true, positiveLabel: true, negativeLabel: true } },
-        trainer: { columns: { id: true, name: true } },
-        reopenedBy: { columns: { id: true, name: true } },
-        answers: { with: { criterion: { columns: { id: true, label: true, hint: true, order: true } } } },
-      },
-    });
+    const recorte = registraTreinamento
+      ? and(eq(schema.trainings.trainerAdminId, session.adminId), inArray(schema.trainings.employeeId, idsNoEscopo))
+      : inArray(schema.trainings.employeeId, idsNoEscopo);
+    const comCadastro = {
+      employee: { columns: { id: true, fullName: true, roleDescription: true } },
+      trainingType: { columns: { id: true, name: true, positiveLabel: true, negativeLabel: true } },
+      trainer: { columns: { id: true, name: true } },
+      reopenedBy: { columns: { id: true, name: true } },
+      answers: { with: { criterion: { columns: { id: true, label: true, hint: true, order: true } } } },
+    } as const;
 
-    return NextResponse.json({ trainings: rows });
+    // Dois conjuntos: o recente (lista) e o arquivo (mais de ARQUIVO_APOS_MESES
+    // meses). O arquivo não tem limite porque é dele que se apaga — a conta
+    // só fica pequena se o arquivo for esvaziado de tempos em tempos.
+    const corte = limiteArquivo();
+    const [recentes, arquivo] = await Promise.all([
+      db.query.trainings.findMany({
+        where: and(recorte, gte(schema.trainings.trainingDate, corte)),
+        orderBy: desc(schema.trainings.trainingDate),
+        limit: 200,
+        with: comCadastro,
+      }),
+      db.query.trainings.findMany({
+        where: and(recorte, lt(schema.trainings.trainingDate, corte)),
+        orderBy: desc(schema.trainings.trainingDate),
+        with: comCadastro,
+      }),
+    ]);
+
+    return NextResponse.json({ trainings: recentes, arquivo });
   } catch (err) {
     return handleApiError(err);
   }

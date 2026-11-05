@@ -24,6 +24,21 @@ import { notifyActivity } from '@/lib/notify';
  * ciclo; quem não tem `trainings.view` não recebe os treinamentos. Não é a
  * tela que esconde — o dado nem sai daqui.
  */
+/** Campos de ciclo que não saem para quem não avalia (ver a consulta acima). */
+const CAMPOS_DE_CICLO = ['status', 'isApprentice', 'period1DueDate', 'period2DueDate', 'currentColor', 'nextFeedbackDueDate'];
+
+function semCamposDeCiclo(campos: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(campos).filter(([k]) => !CAMPOS_DE_CICLO.includes(k)));
+}
+
+/** Fim do contrato de experiência em aberto (ISO), ou null. Aprendiz e efetivado não têm. */
+function prazoDaExperiencia(campos: Record<string, unknown>): string | null {
+  if (campos.isApprentice) return null;
+  if (campos.status === 'AWAITING_PERIOD_1') return (campos.period1DueDate as Date).toISOString();
+  if (campos.status === 'AWAITING_PERIOD_2') return (campos.period2DueDate as Date).toISOString();
+  return null;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await requireGestor();
@@ -56,17 +71,15 @@ export async function GET(req: NextRequest) {
       orderBy: desc(schema.probationaryEmployees.createdAt),
       columns: {
         id: true, fullName: true, roleDescription: true, shift: true, admissionDate: true,
-        // Ciclo e prazos são da avaliação de experiência: só para quem a enxerga.
+        // Quem só treina precisa do status e dos prazos de experiência para
+        // calcular `prazoExperiencia` (abaixo), mas esses campos não saem na
+        // resposta dele — só a data do fim do contrato, quando há um.
+        ...(verAvaliacoes || verTreinamentos
+          ? { status: true, isApprentice: true, period1DueDate: true, period2DueDate: true }
+          : {}),
+        // Ciclo de cores e rescisão são da avaliação: só para quem a enxerga.
         ...(verAvaliacoes
-          ? {
-            status: true,
-            isApprentice: true,
-            period1DueDate: true,
-            period2DueDate: true,
-            currentColor: true,
-            nextFeedbackDueDate: true,
-            terminationDate: true,
-          }
+          ? { currentColor: true, nextFeedbackDueDate: true, terminationDate: true }
           : {}),
       },
       with: {
@@ -107,11 +120,17 @@ export async function GET(req: NextRequest) {
     // A data do desligamento só serve a essa conta e não sai daqui.
     const avalia = canEvaluate(session.role);
     const employees = rows.map((row) => {
-      const { terminationDate, ...resto } = row as typeof row & { terminationDate?: Date | null };
-      if (!verAvaliacoes) return resto;
-      const evs = (row as typeof row & { evaluations?: Parameters<typeof secondOpinionFor>[1] }).evaluations ?? [];
-      const segunda = avalia ? secondOpinionFor({ isApprentice: (row as { isApprentice?: boolean }).isApprentice, terminationDate }, evs, session.adminId) : null;
-      return { ...resto, secondOpinion: segunda ? { period: segunda.period, until: segunda.until } : null };
+      const campos = row as unknown as Record<string, unknown>;
+      // Vencimento do contrato de experiência em aberto: é o que a aba de
+      // treinamento usa para "perto de vencer", e não depende de ver o ciclo.
+      const prazoExperiencia = prazoDaExperiencia(campos);
+      const { terminationDate, ...resto } = campos;
+      if (!verAvaliacoes) return { ...semCamposDeCiclo(resto), prazoExperiencia };
+      const evs = (campos.evaluations ?? []) as Parameters<typeof secondOpinionFor>[1];
+      const segunda = avalia
+        ? secondOpinionFor({ isApprentice: campos.isApprentice as boolean | undefined, terminationDate: terminationDate as Date | null | undefined }, evs, session.adminId)
+        : null;
+      return { ...resto, prazoExperiencia, secondOpinion: segunda ? { period: segunda.period, until: segunda.until } : null };
     });
 
     return NextResponse.json({
