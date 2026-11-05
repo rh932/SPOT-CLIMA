@@ -36,7 +36,7 @@ const GRUPOS: { titulo: string; itens: { href: string; label: string; icone: Nom
     titulo: 'Pessoas',
     itens: [
       { href: '/admin/employees', label: 'Avaliação de Experiência', icone: 'pessoa' },
-      { href: '/admin/evaluations', label: 'Histórico de Avaliações', icone: 'historico' },
+      { href: '/admin/evaluations', label: 'Histórico de Avaliações e Feedbacks', icone: 'historico' },
       { href: '/admin/indicadores', label: 'Indicadores da Experiência', icone: 'indicador' },
       { href: '/admin/trainings', label: 'Treinamentos', icone: 'treino' },
       { href: '/admin/trainings/report', label: 'Relatório de Treinamentos', icone: 'relatorio' },
@@ -46,6 +46,7 @@ const GRUPOS: { titulo: string; itens: { href: string; label: string; icone: Nom
   {
     titulo: 'Cadastro',
     itens: [
+      { href: '/admin/cadastrar', label: 'Cadastrar Funcionário', icone: 'pessoa' },
       { href: '/admin/sectors', label: 'Setores', icone: 'setor' },
       { href: '/admin/units', label: 'Unidades', icone: 'unidade' },
       { href: '/admin/dimensions', label: 'Dimensões', icone: 'dimensao' },

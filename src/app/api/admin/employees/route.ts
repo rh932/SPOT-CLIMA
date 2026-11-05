@@ -3,10 +3,11 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { requireAdmin, requirePermission, handleApiError, assertEvaluationSector } from '@/lib/apiAuth';
 import { probationaryEmployeeSchema } from '@/lib/validation';
-import { computeDueDates } from '@/lib/probation';
+import { cycleFieldsFor, findDuplicate } from '@/lib/employeeCreate';
+import { withFeedbackCycle } from '@/lib/feedbackParticipation';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
 
@@ -32,7 +33,7 @@ export async function GET() {
         },
       },
     });
-    return NextResponse.json({ employees: rows });
+    return NextResponse.json({ employees: rows.map((r) => withFeedbackCycle(r)) });
   } catch (err) {
     return handleApiError(err);
   }
@@ -48,7 +49,21 @@ export async function POST(req: NextRequest) {
     await assertEvaluationSector(parsed.data.sectorId);
 
     const admissionDate = new Date(parsed.data.admissionDate);
-    const { period1DueDate, period2DueDate } = computeDueDates(admissionDate);
+    const track = parsed.data.track ?? 'NOVO';
+
+    // Cadastro único: homônimo na mesma unidade só entra com confirmação explícita.
+    if (!parsed.data.allowDuplicate) {
+      const mesmaUnidade = await db.query.probationaryEmployees.findMany({
+        where: eq(schema.probationaryEmployees.unitId, parsed.data.unitId),
+        columns: { id: true, fullName: true, unitId: true },
+      });
+      if (findDuplicate(mesmaUnidade, parsed.data)) {
+        return NextResponse.json(
+          { error: 'Já existe um colaborador com este nome nesta unidade. Confirme se é outra pessoa para cadastrar mesmo assim.', duplicate: true },
+          { status: 409 },
+        );
+      }
+    }
 
     const [row] = await db
       .insert(schema.probationaryEmployees)
@@ -59,16 +74,13 @@ export async function POST(req: NextRequest) {
         sectorId: parsed.data.sectorId,
         unitId: parsed.data.unitId,
         shift: parsed.data.shift,
-        // Aprendiz não entra na fila de 45/90: fica em contrato desde o cadastro.
-        isApprentice: parsed.data.isApprentice ?? false,
-        ...(parsed.data.isApprentice ? { status: 'HIRED' as const } : {}),
-        period1DueDate,
-        period2DueDate,
+        // Aprendiz e colaborador ativo não entram na fila de 45/90.
+        ...cycleFieldsFor(track, admissionDate, parsed.data.isApprentice ?? false),
         createdById: session.adminId,
       })
       .returning();
 
-    await logAudit({ adminId: session.adminId, action: 'employee.create', entityType: 'ProbationaryEmployee', entityId: row.id, req });
+    await logAudit({ adminId: session.adminId, action: 'employee.create', entityType: 'ProbationaryEmployee', entityId: row.id, metadata: { trilha: track }, req });
     await notifyActivity({ type: 'EMPLOYEE_CREATED', employee: row }, session.adminId);
     return NextResponse.json({ employee: row }, { status: 201 });
   } catch (err) {

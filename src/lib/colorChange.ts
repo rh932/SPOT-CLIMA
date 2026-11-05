@@ -1,3 +1,4 @@
+import { usesFeedbackCycle } from './feedbackParticipation';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
@@ -50,7 +51,7 @@ export async function changeEmployeeColor({
   }
   // O projeto de cores é do Salão: classificar quem está fora dele criaria uma
   // data de feedback que ninguém acompanha.
-  if (!employee.sector?.usesColorCycle) {
+  if (!usesFeedbackCycle(employee.sector?.usesColorCycle, employee.track)) {
     throw new ApiError(
       409,
       `O setor ${employee.sector?.name ?? 'deste colaborador'} não participa do projeto de cores.`,
@@ -62,7 +63,7 @@ export async function changeEmployeeColor({
     .select({ period: schema.performanceEvaluations.period })
     .from(schema.performanceEvaluations)
     .where(eq(schema.performanceEvaluations.employeeId, employee.id));
-  if (!colorUnlocked({ currentColor: employee.currentColor, evaluations: periodos })) {
+  if (!colorUnlocked({ currentColor: employee.currentColor, track: employee.track, evaluations: periodos })) {
     throw new ApiError(409, COR_BLOQUEADA_MSG);
   }
   if (color === employee.currentColor) {

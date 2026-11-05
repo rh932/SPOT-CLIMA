@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { withFeedbackCycle } from '@/lib/feedbackParticipation';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
@@ -28,7 +29,7 @@ export async function GET(_req: NextRequest, props: { params: Promise<{ id: stri
       with: { evaluator: { columns: { id: true, name: true } } },
     });
 
-    return NextResponse.json({ employee, evaluations });
+    return NextResponse.json({ employee: withFeedbackCycle(employee), evaluations });
   } catch (err) {
     return handleApiError(err);
   }

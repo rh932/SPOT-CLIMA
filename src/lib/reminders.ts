@@ -1,3 +1,4 @@
+import { usesFeedbackCycle } from './feedbackParticipation';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
@@ -33,7 +34,7 @@ export interface ReminderPlan {
 export async function buildReminderRows(mode: 'rotina' | 'agora', now: Date = new Date()): Promise<ReminderPlan> {
   const columns = {
     id: true, fullName: true, unitId: true, sectorId: true, shift: true,
-    status: true, period1DueDate: true, period2DueDate: true, nextFeedbackDueDate: true,
+    status: true, track: true, period1DueDate: true, period2DueDate: true, nextFeedbackDueDate: true,
   } as const;
 
   const [emExperiencia, todosHired, efetivadosSemCor] = await Promise.all([
@@ -74,10 +75,10 @@ export async function buildReminderRows(mode: 'rotina' | 'agora', now: Date = ne
       },
     }),
   ]);
-  const noCiclo = todosHired.filter((e) => e.sector?.usesColorCycle);
+  const noCiclo = todosHired.filter((e) => usesFeedbackCycle(e.sector?.usesColorCycle, e.track));
   const faltaSegunda = efetivadosSemCor.filter((e) => awaitsSecondEvaluation({
-    status: e.status, isApprentice: false, currentColor: null,
-    usesColorCycle: Boolean(e.sector?.usesColorCycle), evaluations: e.evaluations,
+    status: e.status, isApprentice: false, currentColor: null, track: e.track,
+    usesColorCycle: usesFeedbackCycle(e.sector?.usesColorCycle, e.track), evaluations: e.evaluations,
   }));
 
   const candidatos = [

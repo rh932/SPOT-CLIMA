@@ -25,6 +25,7 @@ interface Employee {
   currentColor: FeedbackColor | null;
   nextFeedbackDueDate: string | null;
   isApprentice?: boolean;
+  track?: 'NOVO' | 'ATIVO';
   sector: { name: string; usesColorCycle: boolean } | null;
   unit: { name: string } | null;
 }
@@ -187,6 +188,7 @@ function EvaluateForm() {
       status: employee.status,
       isApprentice: employee.isApprentice,
       currentColor: employee.currentColor,
+      track: employee.track,
       usesColorCycle: employee.sector?.usesColorCycle ?? false,
       evaluations: historico,
     }) ?? 'FEEDBACK';

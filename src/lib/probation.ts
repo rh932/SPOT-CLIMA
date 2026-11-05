@@ -21,6 +21,8 @@ export interface DueDateFields {
   period1DueDate: string;
   period2DueDate: string;
   isApprentice?: boolean;
+  /** Trilha: ATIVO só participa do feedback (ver feedbackParticipation.ts). */
+  track?: 'NOVO' | 'ATIVO';
 }
 
 const STATUS_LABELS: Record<DueDateFields['status'], string> = {

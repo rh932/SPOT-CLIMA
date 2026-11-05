@@ -20,6 +20,8 @@ export interface ColorUnlockInput {
   isApprentice?: boolean | null;
   currentColor: string | null;
   usesColorCycle: boolean;
+  /** ATIVO já está na operação: não tem experiência a cumprir, então a cor já vale. */
+  track?: 'NOVO' | 'ATIVO' | null;
   evaluations: { period: PeriodoAvaliacao }[];
 }
 
@@ -30,8 +32,9 @@ export interface ColorUnlockInput {
  * - ou já está no ciclo de feedback (tem cor ou um feedback registrado) — quem
  *   já foi classificado não perde a cor por causa da regra nova.
  */
-export function colorUnlocked(e: Pick<ColorUnlockInput, 'currentColor' | 'evaluations'>): boolean {
+export function colorUnlocked(e: Pick<ColorUnlockInput, 'currentColor' | 'evaluations' | 'track'>): boolean {
   if (e.currentColor) return true;
+  if (e.track === 'ATIVO') return true;
   return e.evaluations.some((ev) => ev.period === 'SECOND' || ev.period === 'FEEDBACK');
 }
 

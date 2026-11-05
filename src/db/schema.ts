@@ -48,6 +48,10 @@ export const employeeStatusEnum = pgEnum('employee_status', [
 // Turno do funcionário em experiência — decide qual gestor (diurno/noturno)
 // do setor/unidade fica responsável por avaliá-lo.
 export const shiftEnum = pgEnum('shift', ['DIA', 'NOITE']);
+// Trilha do colaborador. NOVO: recém-admitido, segue treinamento, experiência e
+// feedback. ATIVO: já faz parte da operação — só participa do feedback, sem
+// treinamento de integração nem avaliação de experiência.
+export const employeeTrackEnum = pgEnum('employee_track', ['NOVO', 'ATIVO']);
 // FIRST/SECOND são os dois ciclos da experiência (45 e 90 dias) e acontecem
 // no máximo uma vez cada. FEEDBACK é o ciclo permanente que começa depois da
 // avaliação de 90 dias e se repete para sempre, na cadência da cor.
@@ -619,6 +623,7 @@ export const probationaryEmployees = pgTable('probationary_employees', {
   // Jovem aprendiz tem contrato de aprendizagem, não de experiência: aparece
   // na lista e nos filtros, mas não tem prazo de 45/90, lembrete nem avaliação.
   isApprentice: boolean('is_apprentice').notNull().default(false),
+  track: employeeTrackEnum('track').notNull().default('NOVO'),
   // Desligamento registrado pelo RH (status TERMINATED). Nulos para quem saiu
   // por uma avaliação com conclusão "Demitir" antes deste registro existir.
   terminationReason: terminationReasonEnum('termination_reason'),

@@ -32,14 +32,20 @@ import type { PermissionKey } from '@/lib/permissions';
  * distinguir um item do outro — e na faixa de abas do celular roubavam largura
  * do único elemento que informa, que é o rótulo.
  */
-const NAV: { href: string; label: string; short: string; permission: PermissionKey }[] = [
-  { href: '/gestor', label: 'Avaliação de Experiência', short: 'Experiência', permission: 'evaluations.view' },
-  { href: '/gestor/feedback', label: 'Feedback', short: 'Feedback', permission: 'evaluations.view' },
-  { href: '/gestor/pendencias', label: 'Pendências', short: 'Pendências', permission: 'evaluations.view' },
-  { href: '/gestor/proximas', label: 'Próximas avaliações', short: 'Próximas', permission: 'evaluations.view' },
-  { href: '/gestor/treinamento', label: 'Treinamento', short: 'Treinar', permission: 'trainings.view' },
-  { href: '/gestor/historico', label: 'Histórico de avaliações', short: 'Histórico', permission: 'evaluations.history.view' },
-  { href: '/gestor/treinamento/historico', label: 'Histórico de treinamentos', short: 'Treinos feitos', permission: 'trainings.history.view' },
+/*
+ * `permission` ausente = aba para qualquer pessoa com acesso ao painel. O
+ * passo a passo fica assim: todo mundo precisa conseguir achá-lo.
+ */
+const NAV: { href: string; label: string; short: string; permission?: PermissionKey; grupo?: string }[] = [
+  { href: '/gestor/cadastrar', label: 'Cadastrar Funcionário', short: 'Cadastrar', permission: 'employees.create', grupo: 'Cadastro' },
+  { href: '/gestor', label: 'Avaliação de Experiência', short: 'Experiência', permission: 'evaluations.view', grupo: 'Avaliação e feedback' },
+  { href: '/gestor/feedback', label: 'Feedback', short: 'Feedback', permission: 'evaluations.view', grupo: 'Avaliação e feedback' },
+  { href: '/gestor/pendencias', label: 'Pendências', short: 'Pendências', permission: 'evaluations.view', grupo: 'Avaliação e feedback' },
+  { href: '/gestor/proximas', label: 'Próximas avaliações', short: 'Próximas', permission: 'evaluations.view', grupo: 'Avaliação e feedback' },
+  { href: '/gestor/historico', label: 'Histórico de Avaliações e Feedbacks', short: 'Histórico', permission: 'evaluations.history.view', grupo: 'Avaliação e feedback' },
+  { href: '/gestor/treinamento', label: 'Gestão de Treinamentos', short: 'Treinar', permission: 'trainings.view', grupo: 'Treinamento' },
+  { href: '/gestor/treinamento/historico', label: 'Histórico de Treinamentos', short: 'Treinos feitos', permission: 'trainings.history.view', grupo: 'Treinamento' },
+  { href: '/gestor/guia', label: 'Passo a passo do painel', short: 'Passo a passo' },
 ];
 
 /**
@@ -80,7 +86,7 @@ export function GestorChrome({ children }: { children: React.ReactNode }) {
 
   // Enquanto as permissões não chegam, não mostro item nenhum — melhor um
   // menu vazio por um instante do que piscar opções que somem em seguida.
-  const visibleNav = loadingPerms ? [] : NAV.filter((item) => can(item.permission));
+  const visibleNav = loadingPerms ? [] : NAV.filter((item) => !item.permission || can(item.permission));
 
   /** Estado do menu quando não há itens para mostrar — nunca uma lista muda. */
   const navFallback = (className: string) => {
@@ -182,9 +188,14 @@ export function GestorChrome({ children }: { children: React.ReactNode }) {
           <LayoutGroup id="menu-lateral">
           <nav className="flex-1 py-4 flex flex-col">
             {visibleNav.length === 0 && navFallback('px-3 py-2.5 text-sm text-spot-sidebarText/75')}
-            {visibleNav.map((item) => (
+            {visibleNav.map((item, i) => (
+              <div key={item.href}>
+                {!item.grupo && i > 0 && <div aria-hidden className="mx-5 my-3 border-t border-white/10" />}
+                {/* Título do grupo: só aparece quando há algum item visível dele (o menu já vem filtrado por permissão). */}
+                {item.grupo && item.grupo !== visibleNav[i - 1]?.grupo && (
+                  <p className={`px-5 pb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-spot-sidebarText/55 ${i > 0 ? 'pt-4' : ''}`}>{item.grupo}</p>
+                )}
               <Link
-                key={item.href}
                 href={item.href}
                 aria-current={ativo === item.href ? 'page' : undefined}
                 className={`relative isolate flex items-center min-h-11 pl-5 pr-3 text-sm transition-colors ${
@@ -198,6 +209,7 @@ export function GestorChrome({ children }: { children: React.ReactNode }) {
                 )}
                 {item.label}
               </Link>
+              </div>
             ))}
           </nav>
           </LayoutGroup>

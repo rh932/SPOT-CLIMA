@@ -14,6 +14,8 @@ export interface GestorEmployee extends DueDateFields {
   shift: 'DIA' | 'NOITE';
   currentColor: FeedbackColor | null;
   nextFeedbackDueDate: string | null;
+  /** Gestores/gerentes que avaliam este colaborador (escopo); só vem para quem vê avaliações. */
+  responsaveis?: string[];
   sector: { name: string; usesColorCycle: boolean } | null;
   unit: { name: string } | null;
   evaluations: {
@@ -66,6 +68,7 @@ export function awaitsSecond(e: GestorEmployee): boolean {
     status: e.status,
     isApprentice: e.isApprentice,
     currentColor: e.currentColor,
+    track: e.track,
     usesColorCycle: Boolean(e.sector?.usesColorCycle),
     evaluations: e.evaluations ?? [],
   });

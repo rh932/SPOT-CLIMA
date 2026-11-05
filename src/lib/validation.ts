@@ -343,6 +343,10 @@ export const probationaryEmployeeSchema = z.object({
   unitId: idSchema,
   shift: z.enum(['DIA', 'NOITE']),
   isApprentice: z.boolean().optional(),
+  // NOVO (padrão): treinamento + experiência + feedback. ATIVO: só feedback.
+  track: z.enum(['NOVO', 'ATIVO']).optional(),
+  // Só o admin honra isto: confirma o cadastro de um homônimo na mesma unidade.
+  allowDuplicate: z.boolean().optional(),
 });
 
 /**
@@ -370,6 +374,9 @@ export const terminationSchema = z.object({
  */
 export const trainerEmployeeSchema = probationaryEmployeeSchema.extend({
   admissionDate: z.string().datetime().optional(),
+}).refine((d) => d.track !== 'ATIVO' || Boolean(d.admissionDate), {
+  message: 'Informe a data de admissão do colaborador ativo.',
+  path: ['admissionDate'],
 });
 
 const subAnswerValue = z.enum(['SIM', 'NAO', 'TALVEZ', 'REGULAR']);

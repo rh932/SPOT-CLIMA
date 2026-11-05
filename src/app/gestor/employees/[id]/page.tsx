@@ -40,6 +40,7 @@ interface Employee {
   shift: 'DIA' | 'NOITE';
   status: 'AWAITING_PERIOD_1' | 'AWAITING_PERIOD_2' | 'HIRED' | 'TERMINATED';
   isApprentice?: boolean;
+  track?: 'NOVO' | 'ATIVO';
   period1DueDate: string;
   period2DueDate: string;
   currentColor: FeedbackColor | null;
@@ -138,7 +139,7 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
   // Efetivado na 1ª avaliação num setor de cores: a 2ª avaliação de
   // experiência continua devida, e a cor só é liberada depois dela.
   const corInput = {
-    status: e.status, isApprentice: e.isApprentice, currentColor: e.currentColor,
+    status: e.status, isApprentice: e.isApprentice, currentColor: e.currentColor, track: e.track,
     usesColorCycle: usaCores, evaluations: data.evaluations,
   };
   const faltaSegunda = awaitsSecondEvaluation(corInput);

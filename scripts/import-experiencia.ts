@@ -341,7 +341,10 @@ async function main() {
       return achadas[0].id;
     };
     const setor = (t: SectorTag) => {
-      const achados = sectors.filter((s) => sectorTagFrom(s.name) === t);
+      let achados = sectors.filter((s) => sectorTagFrom(s.name) === t);
+      // A administração tem subsetores ("Administração - Financeiro", "- RH" ...).
+      // A planilha só diz ADM: quem vale é o setor geral, sem o sufixo.
+      if (achados.length > 1) achados = achados.filter((s) => !s.name.includes(' - '));
       if (achados.length !== 1) throw new Error(`Setor ${t}: ${achados.length} cadastros casam (${sectors.map((s) => s.name).join(', ')}).`);
       return achados[0].id;
     };

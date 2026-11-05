@@ -87,8 +87,9 @@ describe('TREINADOR', () => {
   it('não é um Gestor com menos opções — as listas são independentes', () => {
     const treinador = DEFAULT_ROLE_PERMISSIONS.TREINADOR;
     const gestor = DEFAULT_ROLE_PERMISSIONS.GESTOR;
-    // O treinador tem permissões que o gestor não tem, e vice-versa.
-    expect(treinador.some((k) => !gestor.includes(k))).toBe(true);
+    // Desde que todo gestor também cadastra, a lista do treinador cabe dentro da do
+    // gestor — mas a do gestor tem avaliação, que a do treinador nunca terá.
+    expect(treinador.some((k) => k.startsWith('evaluations.'))).toBe(false);
     expect(gestor.some((k) => !treinador.includes(k))).toBe(true);
   });
 });
@@ -161,5 +162,26 @@ describe('GERENTE', () => {
     expect(hasPermission('GERENTE', 'evaluations.create')).toBe(true);
     expect(hasPermission('GERENTE', 'trainings.create')).toBe(true);
     expect(hasPermission('GERENTE', 'users.manage')).toBe(false);
+  });
+});
+
+describe('cadastro por todos os perfis de gestão', () => {
+  it('gestor, gerentes e líder cadastram; o treinador segue cadastrando', () => {
+    for (const role of ['GESTOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR', 'GESTOR_LIDER', 'TREINADOR']) {
+      expect(hasPermission(role, 'employees.create')).toBe(true);
+    }
+  });
+
+  it('ampliar o cadastro não deu ao treinador nenhum acesso de avaliação ou administração', () => {
+    for (const role of ['TREINADOR', 'GERENTE_TREINADOR']) {
+      for (const key of ['evaluations.view', 'evaluations.create', 'evaluations.history.view', 'employees.summary.view', 'employees.edit', 'employees.delete', 'reports.view'] as const) {
+        expect(hasPermission(role, key)).toBe(false);
+      }
+    }
+  });
+
+  it('o gestor comum ainda não edita nem exclui funcionário', () => {
+    expect(hasPermission('GESTOR', 'employees.edit')).toBe(false);
+    expect(hasPermission('GESTOR', 'employees.delete')).toBe(false);
   });
 });

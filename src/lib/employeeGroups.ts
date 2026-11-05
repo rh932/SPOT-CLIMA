@@ -20,6 +20,7 @@ export interface GroupableEmployee extends DueDateFields {
 /** Opcionais: quando vêm, a lista reconhece quem ainda deve a 2ª avaliação. */
 interface CorFields {
   currentColor?: string | null;
+  track?: 'NOVO' | 'ATIVO';
   sector?: { usesColorCycle?: boolean } | null;
   evaluations?: { period: PeriodoAvaliacao }[];
 }
@@ -34,6 +35,7 @@ export function faseDo(e: Pick<DueDateFields, 'status' | 'isApprentice'> & CorFi
       status: e.status,
       isApprentice: e.isApprentice,
       currentColor: e.currentColor ?? null,
+      track: e.track,
       usesColorCycle: Boolean(e.sector?.usesColorCycle),
       evaluations: e.evaluations,
     });

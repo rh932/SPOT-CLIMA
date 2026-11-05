@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
-import { and, inArray, desc, ilike } from 'drizzle-orm';
+import { and, inArray, desc, ilike, eq } from 'drizzle-orm';
 import {
   requireGestor, requirePermission, handleApiError, ApiError, assertEvaluationSector,
   assertTrainingSector, trainingSectorIds,
@@ -11,13 +11,15 @@ import {
 import { hasCompleteScope, isInScope, canEvaluate } from '@/lib/scope';
 import { hasPermission, permissionsFor } from '@/lib/permissions';
 import { trainerEmployeeSchema } from '@/lib/validation';
-import { computeDueDates } from '@/lib/probation';
+import { cycleFieldsFor, findDuplicate } from '@/lib/employeeCreate';
 import { secondOpinionFor } from '@/lib/secondOpinion';
+import { withFeedbackCycle } from '@/lib/feedbackParticipation';
 import { logAudit } from '@/lib/audit';
-import { notifyActivity } from '@/lib/notify';
+import { notifyActivity, loadNotifiableAdmins } from '@/lib/notify';
+import { shouldNotify } from '@/lib/notificationTargets';
 
 /** Campos de ciclo que não saem para quem não avalia (ver a consulta abaixo). */
-const CAMPOS_DE_CICLO = ['status', 'isApprentice', 'period1DueDate', 'period2DueDate', 'currentColor', 'nextFeedbackDueDate'];
+const CAMPOS_DE_CICLO = ['status', 'track', 'isApprentice', 'period1DueDate', 'period2DueDate', 'currentColor', 'nextFeedbackDueDate'];
 
 function semCamposDeCiclo(campos: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(campos).filter(([k]) => !CAMPOS_DE_CICLO.includes(k)));
@@ -78,7 +80,7 @@ export async function GET(req: NextRequest) {
         // calcular `prazoExperiencia` (abaixo), mas esses campos não saem na
         // resposta dele — só a data do fim do contrato, quando há um.
         ...(verAvaliacoes || verTreinamentos
-          ? { status: true, isApprentice: true, period1DueDate: true, period2DueDate: true }
+          ? { status: true, track: true, isApprentice: true, period1DueDate: true, period2DueDate: true }
           : {}),
         // Ciclo de cores e rescisão são da avaliação: só para quem a enxerga.
         ...(verAvaliacoes
@@ -115,7 +117,11 @@ export async function GET(req: NextRequest) {
                 needsReinforcement: true,
                 closure: true,
               },
-              with: { trainingType: { columns: { id: true, name: true } } },
+              with: {
+                trainingType: { columns: { id: true, name: true } },
+                // Quem treinou: alimenta o filtro por treinador responsável.
+                trainer: { columns: { id: true, name: true } },
+              },
             },
           }
           : {}),
@@ -125,6 +131,11 @@ export async function GET(req: NextRequest) {
     // Segunda resposta aberta para quem está olhando (setor com dois gestores).
     // A data do desligamento só serve a essa conta e não sai daqui.
     const avalia = canEvaluate(session.role);
+    // Gestores/gerentes que avaliam cada colaborador (escopo de unidade, setor e turno):
+    // é o "gerente responsável" dos filtros. Só para quem enxerga avaliação.
+    const quemAvalia = verAvaliacoes
+      ? (await loadNotifiableAdmins()).filter((a) => canEvaluate(a.role))
+      : [];
     const employees = rows.map((row) => {
       const campos = row as unknown as Record<string, unknown>;
       // Vencimento do contrato de experiência em aberto: é o que a aba de
@@ -133,11 +144,16 @@ export async function GET(req: NextRequest) {
       const { terminationDate, createdBy, ...resto } = campos;
       const criadoPorGerente = PAPEIS_DE_GERENTE.includes((createdBy as { role?: string } | null)?.role ?? '');
       if (!verAvaliacoes) return { ...semCamposDeCiclo(resto), prazoExperiencia, criadoPorGerente };
+      // Para a tela, `sector.usesColorCycle` responde se ESTE colaborador está no ciclo de feedback.
+      const comCiclo = withFeedbackCycle(resto as { track?: 'NOVO' | 'ATIVO'; sector?: { usesColorCycle: boolean } | null });
       const evs = (campos.evaluations ?? []) as Parameters<typeof secondOpinionFor>[1];
       const segunda = avalia
         ? secondOpinionFor({ isApprentice: campos.isApprentice as boolean | undefined, terminationDate: terminationDate as Date | null | undefined }, evs, session.adminId)
         : null;
-      return { ...resto, prazoExperiencia, criadoPorGerente, secondOpinion: segunda ? { period: segunda.period, until: segunda.until } : null };
+      const responsaveis = quemAvalia
+        .filter((a) => shouldNotify(a, { unitId: row.unit.id, sectorId: row.sector.id, shift: row.shift }))
+        .map((a) => a.name);
+      return { ...comCiclo, prazoExperiencia, criadoPorGerente, responsaveis, secondOpinion: segunda ? { period: segunda.period, until: segunda.until } : null };
     });
 
     return NextResponse.json({
@@ -151,8 +167,8 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * Cadastro de colaborador pelo portal da operação — hoje é o Treinador quem
- * tem `employees.create`. Só dentro do próprio escopo, validado aqui: mandar
+ * Cadastro de colaborador pelo portal da operação — Gestor, Gerente, Líder e
+ * Treinador têm `employees.create`. Só dentro do próprio escopo, validado aqui: mandar
  * ids de outra unidade/setor/turno na mão não passa.
  */
 export async function POST(req: NextRequest) {
@@ -176,14 +192,33 @@ export async function POST(req: NextRequest) {
       );
     }
     await assertEvaluationSector(parsed.data.sectorId);
-    // O cadastro pelo portal é o do treinamento — só setores do Salão.
-    await assertTrainingSector(parsed.data.sectorId);
+    // Quem avalia (gestor, gerente, líder) cadastra em qualquer setor do seu
+    // escopo. Quem só treina continua preso aos setores do Salão (treinamento):
+    // um colaborador de outro setor ficaria invisível para ele.
+    const avalia = hasPermission(session.role, 'evaluations.view');
+    if (!avalia) await assertTrainingSector(parsed.data.sectorId);
+
+    const track = parsed.data.track ?? 'NOVO';
+    if (track === 'ATIVO' && !avalia) {
+      throw new ApiError(403, 'Seu perfil cadastra apenas colaboradores novos, para treinamento.');
+    }
+
+    // Cadastro único: o mesmo nome na mesma unidade não entra duas vezes.
+    const mesmaUnidade = await db.query.probationaryEmployees.findMany({
+      where: eq(schema.probationaryEmployees.unitId, parsed.data.unitId),
+      columns: { id: true, fullName: true, unitId: true },
+    });
+    if (findDuplicate(mesmaUnidade, parsed.data)) {
+      return NextResponse.json(
+        { error: 'Já existe um colaborador com este nome nesta unidade. Procure pelo nome antes de cadastrar de novo.' },
+        { status: 409 },
+      );
+    }
 
     // Sem data informada (cadastro do treinador), a admissão é hoje: é o
     // cenário real dele — a pessoa chegou e vai ser treinada agora. Se entrou
     // antes, o RH ajusta no painel e os prazos de 45/90 são recalculados.
     const admissionDate = parsed.data.admissionDate ? new Date(parsed.data.admissionDate) : new Date();
-    const { period1DueDate, period2DueDate } = computeDueDates(admissionDate);
 
     const [row] = await db
       .insert(schema.probationaryEmployees)
@@ -194,8 +229,7 @@ export async function POST(req: NextRequest) {
         sectorId: parsed.data.sectorId,
         unitId: parsed.data.unitId,
         shift: parsed.data.shift,
-        period1DueDate,
-        period2DueDate,
+        ...cycleFieldsFor(track, admissionDate),
         createdById: session.adminId,
       })
       .returning();
@@ -205,7 +239,7 @@ export async function POST(req: NextRequest) {
       action: 'employee.create',
       entityType: 'ProbationaryEmployee',
       entityId: row.id,
-      metadata: { origem: 'portal-operacao', papel: session.role },
+      metadata: { origem: 'portal-operacao', papel: session.role, trilha: track },
       req,
     });
     await notifyActivity({ type: 'EMPLOYEE_CREATED', employee: row }, session.adminId);

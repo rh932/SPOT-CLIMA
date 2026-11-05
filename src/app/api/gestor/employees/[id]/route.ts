@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { withFeedbackCycle } from '@/lib/feedbackParticipation';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
@@ -72,7 +73,7 @@ export async function GET(_req: NextRequest, props: { params: Promise<{ id: stri
     // (GET /api/gestor/employees): sem situação, cor, prazos de 45/90 nem quem
     // cadastrou — antes o detalhe entregava tudo o que a lista escondia.
     const employeeOut = podeVerAvaliacoes
-      ? { ...cadastro, terminationReason, terminationDate, terminationNotes }
+      ? withFeedbackCycle({ ...cadastro, terminationReason, terminationDate, terminationNotes })
       : {
         id: employee.id,
         fullName: employee.fullName,

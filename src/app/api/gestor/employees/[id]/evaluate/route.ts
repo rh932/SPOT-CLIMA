@@ -12,6 +12,7 @@ import { nextFeedbackDate, type FeedbackColor } from '@/lib/feedbackCycle';
 import { statusFromEvaluations } from '@/lib/termination';
 import { secondOpinionFor, SEGUNDA_RESPOSTA_DIAS } from '@/lib/secondOpinion';
 import { nextEvaluationPeriod, type ColorUnlockInput } from '@/lib/colorUnlock';
+import { usesFeedbackCycle } from '@/lib/feedbackParticipation';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
 
@@ -53,7 +54,8 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     // as avaliações de 45 e 90 dias normalmente, efetiva sem cor e não entra
     // no ciclo permanente de feedback. Quem decide isso é o cadastro do setor
     // (sectors.usesColorCycle), lido aqui no servidor — a tela não é a fonte.
-    const usaCores = employee.sector?.usesColorCycle ?? false;
+    // Colaborador ATIVO participa do feedback em qualquer setor (feedbackParticipation.ts).
+    const usaCores = usesFeedbackCycle(employee.sector?.usesColorCycle, employee.track);
 
     if (employee.isApprentice) {
       throw new ApiError(409, 'Jovem aprendiz tem contrato de aprendizagem e não passa pela avaliação de experiência.');
@@ -94,6 +96,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         isApprentice: employee.isApprentice,
         currentColor: employee.currentColor,
         usesColorCycle: usaCores,
+        track: employee.track,
         evaluations: anteriores,
       });
     if (period === 'FEEDBACK' && !usaCores) {

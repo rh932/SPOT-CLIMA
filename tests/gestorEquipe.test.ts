@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   admissoesNoPeriodo, ARQUIVO_APOS_MESES, filtrarEquipe, FILTROS_VAZIOS, filtrosAtivos, limiteArquivo, noArquivo,
-  opcoesDe, pertoDeVencer, separarArquivoDoTreino,
+  opcoesDe, ordenarEquipe, pertoDeVencer, separarArquivoDoTreino, statusDoTreinamento,
 } from '@/lib/gestorEquipe';
 
 // 05/11/2026 às 12:00 em São Paulo (15:00 UTC).
@@ -111,10 +111,54 @@ describe('filtros de pesquisa da equipe', () => {
 
   it('conta os filtros ativos', () => {
     expect(filtrosAtivos(FILTROS_VAZIOS)).toBe(0);
-    expect(filtrosAtivos({ busca: ' ', unidade: 'JK', setor: '', turno: 'DIA' })).toBe(2);
+    expect(filtrosAtivos({ ...FILTROS_VAZIOS, busca: ' ', unidade: 'JK', turno: 'DIA' })).toBe(2);
+    // período de admissão conta como um filtro só; ordenar não conta.
+    expect(filtrosAtivos({ ...FILTROS_VAZIOS, admissaoDe: '2026-01-01', admissaoAte: '2026-02-01', ordem: 'NOME' })).toBe(1);
+  });
+
+  it('combina situação, etapa, responsável e período de admissão', () => {
+    const lista = [
+      { fullName: 'Ana', roleDescription: 'x', shift: 'DIA' as const, admissionDate: '2026-01-10T12:00:00.000Z', sector: { name: 'Salão' }, unit: { name: 'JK' }, st: 'PENDENTE', et: 'SEGUNDA', resp: ['Carla'] },
+      { fullName: 'Bia', roleDescription: 'x', shift: 'DIA' as const, admissionDate: '2026-03-10T12:00:00.000Z', sector: { name: 'Salão' }, unit: { name: 'JK' }, st: 'PENDENTE', et: 'PRIMEIRA', resp: ['Carla'] },
+      { fullName: 'Caio', roleDescription: 'x', shift: 'DIA' as const, admissionDate: '2026-03-12T12:00:00.000Z', sector: { name: 'Salão' }, unit: { name: 'Paulista' }, st: 'ATRASADA', et: 'SEGUNDA', resp: ['Dora'] },
+    ];
+    const extras = { statusDe: (e: (typeof lista)[number]) => e.st, etapaDe: (e: (typeof lista)[number]) => e.et, responsaveisDe: (e: (typeof lista)[number]) => e.resp };
+    // "JK, segunda avaliação pendente"
+    expect(filtrarEquipe(lista, { ...FILTROS_VAZIOS, unidade: 'JK', etapa: 'SEGUNDA', status: 'PENDENTE' }, extras).map((e) => e.fullName)).toEqual(['Ana']);
+    expect(filtrarEquipe(lista, { ...FILTROS_VAZIOS, responsavel: 'Dora' }, extras).map((e) => e.fullName)).toEqual(['Caio']);
+    expect(filtrarEquipe(lista, { ...FILTROS_VAZIOS, admissaoDe: '2026-03-01', admissaoAte: '2026-03-10' }, extras).map((e) => e.fullName)).toEqual(['Bia']);
+    expect(filtrarEquipe(lista, { ...FILTROS_VAZIOS, admissaoDe: '2026-03-11' }, extras).map((e) => e.fullName)).toEqual(['Caio']);
+  });
+
+  it('ordena por nome, admissão e setor sem alterar a lista original', () => {
+    const lista = [
+      { fullName: 'Élio', roleDescription: '', shift: 'DIA' as const, admissionDate: '2026-02-01T12:00:00.000Z', sector: { name: 'Salão - Bar' }, unit: null },
+      { fullName: 'Ana', roleDescription: '', shift: 'DIA' as const, admissionDate: '2026-03-01T12:00:00.000Z', sector: { name: 'Salão - Atendimento' }, unit: null },
+    ];
+    expect(ordenarEquipe(lista, 'NOME').map((e) => e.fullName)).toEqual(['Ana', 'Élio']);
+    expect(ordenarEquipe(lista, 'ADMISSAO_ASC').map((e) => e.fullName)).toEqual(['Élio', 'Ana']);
+    expect(ordenarEquipe(lista, 'SETOR').map((e) => e.fullName)).toEqual(['Ana', 'Élio']);
+    expect(ordenarEquipe(lista, '')).toBe(lista);
+    expect(lista[0].fullName).toBe('Élio');
   });
 
   it('opções de seletor: distintas, ordenadas, sem vazios', () => {
     expect(opcoesDe(['JK', null, 'Paulista', 'JK', undefined])).toEqual(['JK', 'Paulista'].sort((a, b) => a.localeCompare(b, 'pt-BR')));
+  });
+});
+
+describe('statusDoTreinamento', () => {
+  const t = (id: string, closure: string, reforco = false) => ({ trainingTypeId: id, closure, needsReinforcement: reforco });
+  it('não iniciado, em andamento, pendente e concluído', () => {
+    expect(statusDoTreinamento([], ['a', 'b'])).toBe('NAO_INICIADO');
+    expect(statusDoTreinamento([t('a', 'DIA')], ['a', 'b'])).toBe('EM_ANDAMENTO');
+    expect(statusDoTreinamento([t('a', 'DIA', true)], ['a', 'b'])).toBe('PENDENTE');
+    expect(statusDoTreinamento([t('a', 'DEFINITIVO'), t('b', 'DEFINITIVO')], ['a', 'b'])).toBe('CONCLUIDO');
+  });
+  it('um tipo encerrado não basta quando há outros', () => {
+    expect(statusDoTreinamento([t('a', 'DEFINITIVO')], ['a', 'b'])).toBe('EM_ANDAMENTO');
+  });
+  it('sem tipos cadastrados nunca conclui', () => {
+    expect(statusDoTreinamento([t('a', 'DEFINITIVO')], [])).toBe('EM_ANDAMENTO');
   });
 });

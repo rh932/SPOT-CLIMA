@@ -5,6 +5,7 @@ import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { requireGestor, requirePermission, handleApiError } from '@/lib/apiAuth';
+import { hasPermission } from '@/lib/permissions';
 
 /**
  * Listas para o formulário de cadastro do treinador. As unidades e turnos
@@ -14,6 +15,9 @@ export async function GET() {
   try {
     const session = await requireGestor();
     requirePermission(session, 'employees.create');
+
+    // Quem avalia cadastra em qualquer setor do escopo; quem só treina, só no Salão.
+    const avalia = hasPermission(session.role, 'evaluations.view');
 
     const [sectors, units] = await Promise.all([
       session.scopedSectorIds.length
@@ -38,7 +42,7 @@ export async function GET() {
         : Promise.resolve([]),
     ]);
 
-    return NextResponse.json({ sectors, units, shifts: session.scopedShifts });
+    return NextResponse.json({ sectors, units, shifts: session.scopedShifts, canChooseTrack: avalia });
   } catch (err) {
     return handleApiError(err);
   }

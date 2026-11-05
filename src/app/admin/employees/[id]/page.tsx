@@ -12,15 +12,19 @@ import {
   COLOR_OPTIONS, COLOR_LABELS, COLOR_INTERVAL_DAYS, feedbackStatusBadge, type FeedbackColor,
 } from '@/lib/feedbackCycle';
 import { awaitsSecondEvaluation, colorUnlocked } from '@/lib/colorUnlock';
-import { ErrorState, LiveStatus, Skeleton, SkeletonCardList, ForbiddenState, ehSemAcesso } from '@/components/async';
+import { ErrorState, LiveStatus, Skeleton, SkeletonCardList, ForbiddenState, ehSemAcesso, useToast } from '@/components/async';
+import { EditEmployeeModal } from '@/components/admin/EditEmployeeModal';
 
 interface Employee extends DueDateFields {
   id: string;
   fullName: string;
   admissionDate: string;
   roleDescription: string;
+  sectorId: string;
+  unitId: string;
   shift: 'DIA' | 'NOITE';
   currentColor: FeedbackColor | null;
+  track?: 'NOVO' | 'ATIVO';
   nextFeedbackDueDate: string | null;
   sector: { name: string; usesColorCycle: boolean } | null;
   unit: { name: string } | null;
@@ -55,7 +59,8 @@ export default function EmployeeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadForbidden, setLoadForbidden] = useState(false);
-  const [editandoAdmissao, setEditandoAdmissao] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const { mostrar } = useToast();
 
   const load = useCallback(() =>
     Promise.all([
@@ -94,7 +99,7 @@ export default function EmployeeDetailPage() {
   // A cor só é liberada depois da 2ª avaliação de experiência (colorUnlock.ts).
   // Efetivado na 1ª avaliação num setor de cores ainda deve a 2ª.
   const corInput = {
-    status: employee.status, isApprentice: employee.isApprentice, currentColor: employee.currentColor,
+    status: employee.status, isApprentice: employee.isApprentice, currentColor: employee.currentColor, track: employee.track,
     usesColorCycle: Boolean(employee.sector?.usesColorCycle), evaluations,
   };
   const corLiberada = colorUnlocked(corInput);
@@ -125,29 +130,29 @@ export default function EmployeeDetailPage() {
           </p>
         )}
 
-        {/* Corrigir a admissão só faz sentido antes da primeira avaliação — a
-            rota recusa depois disso, porque os prazos de 45/90 já valeram.
-            É o conserto de quem foi cadastrado pelo treinador, cuja tela não
-            pergunta a data e grava o dia do cadastro. */}
-        {evaluations.length === 0 && employee.status !== 'TERMINATED' && (
-          editandoAdmissao ? (
-            <AdmissionDateForm
-              employeeId={employee.id}
-              current={employee.admissionDate}
-              onClose={() => setEditandoAdmissao(false)}
-              onSaved={async () => { setEditandoAdmissao(false); await load(); }}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditandoAdmissao(true)}
-              className="text-xs text-spot-gray-500 underline underline-offset-2 hover:text-spot-gray-900 transition mt-2"
-            >
-              Corrigir data de admissão
-            </button>
-          )
-        )}
+        {/* Conserta cadastro feito errado. A admissão só muda antes da 1ª
+            avaliação (o modal avisa e a rota recusa depois disso). */}
+        <button
+          type="button"
+          className="btn-ghost text-sm self-start py-2 px-4 mt-3"
+          onClick={() => setEditando(true)}
+        >
+          Editar cadastro
+        </button>
       </div>
+
+      {editando && (
+        <EditEmployeeModal
+          employee={employee}
+          hasEvaluations={evaluations.length > 0}
+          onClose={() => setEditando(false)}
+          onSaved={async () => {
+            setEditando(false);
+            mostrar('Cadastro atualizado.');
+            await load();
+          }}
+        />
+      )}
 
       {/* O projeto de cores é do Salão: em setor fora do ciclo este bloco nem
           existe — lá o colaborador é efetivado sem cor e sem próximo feedback.
@@ -339,52 +344,6 @@ function ColorChangeForm({
         <button type="button" className="btn-ghost text-sm py-2 px-4" onClick={close} disabled={saving}>Cancelar</button>
         <button type="button" className="btn-primary text-sm py-2 px-4" onClick={submit} disabled={saving}>
           {saving ? 'Salvando...' : 'Salvar classificação'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Correção da data de admissão, com os prazos de 45 e 90 dias recalculados
- * pela rota. Aparece só enquanto não há avaliação registrada.
- */
-function AdmissionDateForm({
-  employeeId, current, onClose, onSaved,
-}: { employeeId: string; current: string; onClose: () => void; onSaved: () => Promise<void> }) {
-  const [value, setValue] = useState(new Date(current).toISOString().slice(0, 10));
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const salvar = async () => {
-    if (!value) { setError('Informe a data.'); return; }
-    setSaving(true);
-    setError(null);
-    try {
-      await apiFetch(`/api/admin/employees/${employeeId}`, {
-        method: 'PATCH',
-        // T12:00 evita que o fuso jogue a data para o dia anterior ao virar UTC.
-        body: JSON.stringify({ admissionDate: new Date(`${value}T12:00:00`).toISOString() }),
-      });
-      await onSaved();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Não foi possível alterar a data.');
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="mt-3 card flex flex-col gap-3 max-w-md">
-      <div>
-        <label className="label" htmlFor="admissao">Data de admissão</label>
-        <input id="admissao" type="date" className="input" value={value} onChange={(e) => setValue(e.target.value)} />
-        <p className="text-xs text-spot-gray-500 mt-1">Os prazos de 45 e 90 dias são recalculados a partir dela.</p>
-      </div>
-      {error && <p className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5">{error}</p>}
-      <div className="flex gap-3">
-        <button type="button" className="btn-ghost flex-1" onClick={onClose} disabled={saving}>Cancelar</button>
-        <button type="button" className="btn-primary flex-1" onClick={salvar} disabled={saving}>
-          {saving ? 'Salvando...' : 'Salvar'}
         </button>
       </div>
     </div>

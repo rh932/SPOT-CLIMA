@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { usesFeedbackCycle } from '@/lib/feedbackParticipation';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
@@ -33,7 +34,7 @@ export async function GET() {
         isNotNull(schema.probationaryEmployees.nextFeedbackDueDate),
       ),
       orderBy: asc(schema.probationaryEmployees.nextFeedbackDueDate),
-      columns: { id: true, fullName: true, currentColor: true, nextFeedbackDueDate: true },
+      columns: { id: true, fullName: true, track: true, currentColor: true, nextFeedbackDueDate: true },
       with: {
         sector: { columns: { name: true, usesColorCycle: true } },
         unit: { columns: { name: true } },
@@ -44,7 +45,7 @@ export async function GET() {
     const items = rows
       // Mesmo filtro do cron: setor fora do projeto de cores não tem ciclo de
       // feedback, mesmo que o colaborador tenha ficado com uma data antiga.
-      .filter((employee) => employee.sector?.usesColorCycle)
+      .filter((employee) => usesFeedbackCycle(employee.sector?.usesColorCycle, employee.track))
       .map((employee) => {
         const due = employee.nextFeedbackDueDate!;
         return {

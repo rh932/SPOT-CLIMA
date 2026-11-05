@@ -78,6 +78,8 @@ const ALL_KEYS = PERMISSIONS.map((p) => p.key);
 /** Avaliação de experiência da própria equipe — base do Gestor. */
 const GESTAO_KEYS: PermissionKey[] = [
   'employees.view',
+  // Todo gestor/gerente cadastra a própria equipe — dentro do escopo, que a rota valida.
+  'employees.create',
   'employees.summary.view',
   // Reclassificar fora da avaliação: o gestor percebe a mudança de postura no
   // meio do ciclo e ajusta a cadência sem esperar o próximo feedback.
@@ -123,6 +125,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
    */
   GESTOR_LIDER: [
     'employees.view',
+    'employees.create',
     'employees.summary.view',
     // Ele não avalia, mas corrige: é quem conserta uma cor errada sem
     // depender do RH.

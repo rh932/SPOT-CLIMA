@@ -10,11 +10,13 @@ import {
 import { scrollToFirstError } from '@/lib/scrollToError';
 import { ChoiceGroup, ChoiceOption } from '@/components/forms/ChoiceGroup';
 import { DAILY_RESULT_OPTIONS, FINAL_RESULT_OPTIONS, trainingResultLabel } from '@/lib/trainingResult';
+import { useMyPermissions } from '../useMyPermissions';
 import { FiltrosEquipeBar } from '../FiltrosEquipeBar';
 import { ColunaPertoDeVencer, type ItemPertoDeVencer } from '../ColunaPertoDeVencer';
 import {
   FILTROS_VAZIOS, PERIODOS_ADMISSAO, ULTIMAS_ADMISSOES, filtrarEquipe, filtrosAtivos, pertoDeVencer,
-  separarArquivoDoTreino, type FiltrosEquipe, type PeriodoAdmissao,
+  separarArquivoDoTreino, ordenarEquipe, statusDoTreinamento, STATUS_TREINAMENTO,
+  type ExtrasFiltro, type FiltrosEquipe, type PeriodoAdmissao,
 } from '@/lib/gestorEquipe';
 
 interface TrainingMaterial {
@@ -52,6 +54,7 @@ interface EmployeeTraining {
   needsReinforcement: boolean;
   closure: 'DIA' | 'DEFINITIVO';
   trainingType: { id: string; name: string } | null;
+  trainer: { id: string; name: string } | null;
 }
 interface Employee {
   id: string;
@@ -113,6 +116,8 @@ export default function TreinamentoPage() {
   const [periodo, setPeriodo] = useState<PeriodoAdmissao>('30');
   const [arquivoAberto, setArquivoAberto] = useState(false);
   const { mostrar } = useToast();
+  // Cadastro é só para quem tem `employees.create` (a rota recusa os demais).
+  const { can } = useMyPermissions();
 
   const { data, loading, reloading, error: loadError, forbidden, reload } = useAsyncData(
     async (signal) => {
@@ -127,17 +132,24 @@ export default function TreinamentoPage() {
     [],
     { mensagemPadrao: 'Erro ao carregar os colaboradores.' },
   );
-  const types = data?.types ?? [];
+  const types = useMemo(() => data?.types ?? [], [data]);
 
+  // Filtros combinados sobre a lista do banco: situação do treinamento e
+  // treinador responsável (quem registrou os treinamentos do colaborador).
+  const tipoIds = useMemo(() => types.map((t) => t.id), [types]);
+  const extras = useMemo<ExtrasFiltro<Employee>>(() => ({
+    statusDe: (e) => statusDoTreinamento(e.trainings, tipoIds),
+    responsaveisDe: (e) => [...new Set(e.trainings.map((t) => t.trainer?.name).filter((n): n is string => Boolean(n)))],
+  }), [tipoIds]);
   const buscados = useMemo(
-    () => filtrarEquipe(data?.employees ?? [], filtros),
-    [data, filtros],
+    () => ordenarEquipe(filtrarEquipe(data?.employees ?? [], filtros, extras), filtros.ordem, extras),
+    [data, filtros, extras],
   );
 
   // Coluna "perto de vencer": o fim do contrato de experiência em até uma semana
   // (ou já passado). Segue os filtros de pesquisa, não a aba de setor.
   const pertoVencer: ItemPertoDeVencer[] = useMemo(
-    () => filtrarEquipe(data?.employees ?? [], filtros)
+    () => filtrarEquipe(data?.employees ?? [], filtros, extras)
       .filter((e) => pertoDeVencer(e.prazoExperiencia))
       .sort((a, b) => new Date(a.prazoExperiencia!).getTime() - new Date(b.prazoExperiencia!).getTime())
       .map((e) => ({
@@ -147,7 +159,7 @@ export default function TreinamentoPage() {
         prazo: new Date(e.prazoExperiencia!),
         onClick: () => setSelected(e),
       })),
-    [data, filtros],
+    [data, filtros, extras],
   );
 
   /*
@@ -172,6 +184,13 @@ export default function TreinamentoPage() {
   // pesquisa e na coluna "Perto de vencer".
   const { recentes, arquivo } = separarArquivoDoTreino(filtered, periodo);
   const arquivoVisivel = arquivoAberto || filtrosAtivos(filtros) > 0;
+  // Com situação, treinador, período ou ordenação escolhidos, a lista deixa de ser
+  // "últimas admissões + arquivo" e vira o resultado da consulta, separado em quem
+  // ainda está em treinamento e quem já concluiu.
+  const consulta = filtros.ordem !== '' || filtros.status !== '' || filtros.responsavel !== ''
+    || filtros.admissaoDe !== '' || filtros.admissaoAte !== '';
+  const concluidos = consulta ? filtered.filter((e) => statusDoTreinamento(e.trainings, tipoIds) === 'CONCLUIDO') : [];
+  const emTreinamento = consulta ? filtered.filter((e) => statusDoTreinamento(e.trainings, tipoIds) !== 'CONCLUIDO') : [];
 
   if (selected) {
     return (
@@ -237,7 +256,9 @@ export default function TreinamentoPage() {
           <h1 className="titulo-pagina">Treinar colaborador</h1>
           <p className="text-spot-gray-500 text-sm">Escolha quem você vai treinar agora.</p>
         </div>
-        <button className="btn-primary" onClick={() => setShowCreate(true)}>+ Cadastrar colaborador</button>
+        {can('employees.create') && (
+          <button className="btn-primary" onClick={() => setShowCreate(true)}>+ Cadastrar colaborador</button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
@@ -256,7 +277,20 @@ export default function TreinamentoPage() {
       <div className="min-w-0 flex flex-col gap-6">
       {/* Pesquisa e filtros no padrão do admin (ver FiltrosEquipeBar). As abas
           por setor já separam o Salão, então o seletor de setor fica de fora. */}
-      <FiltrosEquipeBar valor={filtros} onChange={setFiltros} pessoas={data?.employees ?? []} comSetor={false} />
+      <FiltrosEquipeBar
+        valor={filtros}
+        onChange={setFiltros}
+        pessoas={data?.employees ?? []}
+        comSetor={false}
+        statusOpcoes={STATUS_TREINAMENTO}
+        rotuloStatus="Status do treinamento"
+        responsaveis={(data?.employees ?? []).flatMap((e) => e.trainings.map((t) => t.trainer?.name ?? ''))}
+        rotuloResponsavel="Treinador"
+        comPeriodo
+        comOrdem
+        encontrados={filtered.length}
+        totalGeral={(data?.employees ?? []).length}
+      />
 
       {showCreate && (
         <CreateEmployeeModal
@@ -312,6 +346,22 @@ export default function TreinamentoPage() {
           </EmptyState>
         }
       >
+      {consulta ? (
+        <div className="flex flex-col gap-8">
+          <section aria-labelledby="em-treinamento" className="flex flex-col gap-3">
+            <h2 id="em-treinamento" className="font-semibold">Em treinamento <span className="text-spot-gray-500 font-normal">({emTreinamento.length})</span></h2>
+            {emTreinamento.length === 0
+              ? <p className="text-sm text-spot-gray-500 border-t border-spot-gray-300 pt-3">Ninguém em treinamento nesta busca.</p>
+              : <div className="[&>*:last-child]:border-b-0 border-t border-spot-gray-300">{emTreinamento.map(linha)}</div>}
+          </section>
+          <section aria-labelledby="concluidos-treino" className="flex flex-col gap-3 border-t-2 border-spot-gray-300 pt-4">
+            <h2 id="concluidos-treino" className="font-semibold">Concluíram o treinamento <span className="text-spot-gray-500 font-normal">({concluidos.length})</span></h2>
+            {concluidos.length === 0
+              ? <p className="text-sm text-spot-gray-500 border-t border-spot-gray-300 pt-3">Ninguém concluiu nesta busca.</p>
+              : <div className="[&>*:last-child]:border-b-0 border-t border-spot-gray-300">{concluidos.map(linha)}</div>}
+          </section>
+        </div>
+      ) : (
       <div className="flex flex-col gap-8">
         <section aria-labelledby="ultimas-admissoes" className="flex flex-col gap-3">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -362,6 +412,7 @@ export default function TreinamentoPage() {
           </section>
         )}
       </div>
+      )}
       </AsyncSection>
       </div>
       </div>
