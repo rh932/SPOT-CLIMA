@@ -13,6 +13,7 @@ import { statusFromEvaluations } from '@/lib/termination';
 import { secondOpinionFor, SEGUNDA_RESPOSTA_DIAS } from '@/lib/secondOpinion';
 import { nextEvaluationPeriod, type ColorUnlockInput } from '@/lib/colorUnlock';
 import { usesFeedbackCycle } from '@/lib/feedbackParticipation';
+import { unidadeUsaRoteiroPdi } from '@/data/roteiroPdi';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
 
@@ -43,7 +44,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
     const employee = await db.query.probationaryEmployees.findFirst({
       where: eq(schema.probationaryEmployees.id, params.id),
-      with: { sector: { columns: { id: true, name: true, usesColorCycle: true } } },
+      with: {
+        sector: { columns: { id: true, name: true, usesColorCycle: true } },
+        unit: { columns: { name: true } },
+      },
     });
     if (!employee) throw new ApiError(404, 'Funcionário não encontrado.');
     if (!isInScope(session, employee)) {
@@ -101,6 +105,20 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       });
     if (period === 'FEEDBACK' && !usaCores) {
       throw new ApiError(409, 'O setor deste colaborador não participa do ciclo de feedback por cores.');
+    }
+
+    // Feedback de Paulista e JK é o roteiro PDI, que substitui as 4 dimensões da
+    // ficha padrão. Quem decide é a unidade do colaborador no banco, não o
+    // corpo da requisição.
+    const usaRoteiro = period === 'FEEDBACK' && unidadeUsaRoteiroPdi(employee.unit?.name);
+    if (usaRoteiro && !data.roteiro) {
+      return NextResponse.json({ error: 'O feedback desta unidade é feito pelo roteiro (PDI): dê uma nota para cada item.' }, { status: 400 });
+    }
+    if (!usaRoteiro && data.roteiro) {
+      return NextResponse.json({ error: 'O roteiro PDI só se aplica ao feedback das unidades Paulista e JK.' }, { status: 400 });
+    }
+    if (!usaRoteiro && !data.flexibilityRating) {
+      return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
     }
 
     // Conclusão só existe na experiência; cor só a partir do momento em que o
@@ -176,14 +194,15 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         evaluationDate,
         dueDateAtEvaluation,
         evaluatorAdminId: session.adminId,
-        flexibilityRating: data.flexibilityRating,
-        flexibilitySubAnswers: data.flexibilitySubAnswers,
-        interestRating: data.interestRating,
-        interestSubAnswers: data.interestSubAnswers,
-        relationshipRating: data.relationshipRating,
-        relationshipSubAnswers: data.relationshipSubAnswers,
-        learningRating: data.learningRating,
-        learningSubAnswers: data.learningSubAnswers,
+        flexibilityRating: data.flexibilityRating ?? null,
+        flexibilitySubAnswers: data.flexibilitySubAnswers ?? null,
+        interestRating: data.interestRating ?? null,
+        interestSubAnswers: data.interestSubAnswers ?? null,
+        relationshipRating: data.relationshipRating ?? null,
+        relationshipSubAnswers: data.relationshipSubAnswers ?? null,
+        learningRating: data.learningRating ?? null,
+        learningSubAnswers: data.learningSubAnswers ?? null,
+        roteiro: data.roteiro ?? null,
         favorableAspects: data.favorableAspects,
         unfavorableAspects: data.unfavorableAspects,
         classification: data.classification,
@@ -266,7 +285,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       entityType: 'PerformanceEvaluation',
       entityId: evaluation.id,
       metadata: {
-        employeeId: employee.id, period, cycleNumber, conclusion: data.conclusion ?? null, color,
+        employeeId: employee.id, period, cycleNumber, conclusion: data.conclusion ?? null, color, ...(usaRoteiro ? { roteiroPdi: true } : {}),
         ...(segunda ? { secondOpinion: true, firstConclusion: segunda.first.conclusion, conclusoesDiferentes } : {}),
       },
       req,

@@ -669,16 +669,20 @@ export const performanceEvaluations = pgTable('performance_evaluations', {
   // Identidade da resposta no Forms (carimbo + colaborador): é o que deixa o
   // importador rodar de novo sem duplicar avaliação.
   externalId: text('external_id'),
-  // Uma coluna de nota por dimensão (fixas, sempre as 4 mesmas) em vez de um
+  // Uma coluna de nota por dimensão (fixas, as mesmas 4; nulas quando a avaliação
+  // é o roteiro PDI) em vez de um
   // array/jsonb único — permite agregação direta (AVG por dimensão) em SQL.
-  flexibilityRating: evaluationRatingEnum('flexibility_rating').notNull(),
-  flexibilitySubAnswers: jsonb('flexibility_sub_answers').notNull(),
-  interestRating: evaluationRatingEnum('interest_rating').notNull(),
-  interestSubAnswers: jsonb('interest_sub_answers').notNull(),
-  relationshipRating: evaluationRatingEnum('relationship_rating').notNull(),
-  relationshipSubAnswers: jsonb('relationship_sub_answers').notNull(),
-  learningRating: evaluationRatingEnum('learning_rating').notNull(),
-  learningSubAnswers: jsonb('learning_sub_answers').notNull(),
+  flexibilityRating: evaluationRatingEnum('flexibility_rating'),
+  flexibilitySubAnswers: jsonb('flexibility_sub_answers'),
+  interestRating: evaluationRatingEnum('interest_rating'),
+  interestSubAnswers: jsonb('interest_sub_answers'),
+  relationshipRating: evaluationRatingEnum('relationship_rating'),
+  relationshipSubAnswers: jsonb('relationship_sub_answers'),
+  learningRating: evaluationRatingEnum('learning_rating'),
+  learningSubAnswers: jsonb('learning_sub_answers'),
+  // Roteiro de feedback (PDI) de Paulista e JK: no feedback dessas unidades ele
+  // ocupa o lugar das 4 dimensões acima, que ficam nulas. Ver data/roteiroPdi.ts.
+  roteiro: jsonb('roteiro'),
   favorableAspects: text('favorable_aspects').notNull(),
   unfavorableAspects: text('unfavorable_aspects').notNull(),
   classification: evaluationClassificationEnum('classification').notNull(),

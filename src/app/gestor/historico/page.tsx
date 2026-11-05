@@ -16,6 +16,7 @@ import {
   tipoDoRegistro, type FiltrosHistorico,
 } from '@/lib/historicoAvaliacoes';
 import { AsyncSection, RefreshingBar, SkeletonCardList } from '@/components/async';
+import { BarraFiltros, CampoSelect, ROTULO_FILTRO } from '@/components/ui/BarraFiltros';
 
 type EvaluationPeriod = GestorEmployee['evaluations'][number]['period'];
 
@@ -41,8 +42,6 @@ function periodLabel(row: HistoryRow): string {
   if (row.period !== 'FEEDBACK') return PERIOD_LABEL[row.period];
   return `${row.cycleNumber}º feedback`;
 }
-
-const ROTULO = 'font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500';
 
 /**
  * Registro permanente das avaliações de experiência e dos feedbacks do escopo.
@@ -107,88 +106,59 @@ export default function HistoricoPage() {
       />
 
       {employees.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <label className="block">
-            <span className="sr-only">Buscar colaborador no histórico</span>
-            <input
-              type="search"
-              className="input"
-              placeholder="Buscar colaborador..."
-              value={f.busca}
-              onChange={(e) => set({ busca: e.target.value })}
-            />
-          </label>
-
-          <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
-            {unidades.length > 1 && (
-              <label className="block min-w-0">
-                <span className={ROTULO}>Unidade</span>
-                <select className="input mt-1 !w-auto text-sm" value={f.unidade} onChange={(e) => set({ unidade: e.target.value })}>
-                  <option value="">Todas</option>
-                  {unidades.map((u) => <option key={u} value={u}>{u}</option>)}
-                </select>
+        <BarraFiltros
+          busca={f.busca}
+          onBusca={(busca) => set({ busca })}
+          placeholder="Buscar colaborador..."
+          rotuloBusca="Buscar colaborador no histórico"
+          ativos={ativos - (f.busca.trim() !== '' ? 1 : 0)}
+          onLimpar={() => setF(FILTROS_HISTORICO_VAZIOS)}
+          totalResultados={encontrados}
+          resumo={verPendentes
+            ? `${encontrados} ${encontrados === 1 ? 'colaborador ainda não recebeu' : 'colaboradores ainda não receberam'} feedback`
+            : `${encontrados} ${encontrados === 1 ? 'registro encontrado' : 'registros encontrados'}${ativos > 0 ? ` de ${todas.length}` : ''}`}
+        >
+          {unidades.length > 1 && (
+            <CampoSelect rotulo="Unidade" valor={f.unidade} onChange={(unidade) => set({ unidade })}>
+              <option value="">Todas</option>
+              {unidades.map((u) => <option key={u} value={u}>{u}</option>)}
+            </CampoSelect>
+          )}
+          {setores.length > 1 && (
+            <CampoSelect rotulo="Setor" valor={f.setor} onChange={(setor) => set({ setor })}>
+              <option value="">Todos</option>
+              {setores.map((s) => <option key={s} value={s}>{s}</option>)}
+            </CampoSelect>
+          )}
+          <CampoSelect rotulo="Situação" valor={f.status} onChange={(status) => set({ status: status as FiltrosHistorico['status'] })}>
+            <option value="">Todas</option>
+            <option value="REALIZADO">Realizado</option>
+            <option value="PENDENTE">Pendente (sem feedback)</option>
+          </CampoSelect>
+          <CampoSelect rotulo="Tipo de registro" valor={f.tipo} onChange={(tipo) => set({ tipo: tipo as FiltrosHistorico['tipo'] })} disabled={verPendentes}>
+            <option value="">Todos</option>
+            {TIPOS_REGISTRO.map((t) => <option key={t.valor} value={t.valor}>{t.rotulo}</option>)}
+          </CampoSelect>
+          {(responsaveis.length > 0 || f.responsavel) && (
+            <CampoSelect rotulo="Responsável" valor={f.responsavel} onChange={(responsavel) => set({ responsavel })}>
+              <option value="">Todos</option>
+              {responsaveis.map((n) => <option key={n} value={n}>{n}</option>)}
+            </CampoSelect>
+          )}
+          <fieldset className="min-w-0" disabled={verPendentes}>
+            <legend className={`${ROTULO_FILTRO} mb-1`}>Realizado entre</legend>
+            <div className="grid grid-cols-2 gap-2">
+              <label>
+                <span className="sr-only">Realizado a partir de</span>
+                <input type="date" className="input w-full" value={f.de} max={f.ate || undefined} onChange={(e) => set({ de: e.target.value })} />
               </label>
-            )}
-            {setores.length > 1 && (
-              <label className="block min-w-0">
-                <span className={ROTULO}>Setor</span>
-                <select className="input mt-1 !w-auto text-sm" value={f.setor} onChange={(e) => set({ setor: e.target.value })}>
-                  <option value="">Todos</option>
-                  {setores.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+              <label>
+                <span className="sr-only">Realizado até</span>
+                <input type="date" className="input w-full" value={f.ate} min={f.de || undefined} onChange={(e) => set({ ate: e.target.value })} />
               </label>
-            )}
-            <label className="block min-w-0">
-              <span className={ROTULO}>Tipo de registro</span>
-              <select className="input mt-1 !w-auto text-sm" value={f.tipo} onChange={(e) => set({ tipo: e.target.value as FiltrosHistorico['tipo'] })} disabled={verPendentes}>
-                <option value="">Todos</option>
-                {TIPOS_REGISTRO.map((t) => <option key={t.valor} value={t.valor}>{t.rotulo}</option>)}
-              </select>
-            </label>
-            <label className="block min-w-0">
-              <span className={ROTULO}>Situação</span>
-              <select className="input mt-1 !w-auto text-sm" value={f.status} onChange={(e) => set({ status: e.target.value as FiltrosHistorico['status'] })}>
-                <option value="">Todas</option>
-                <option value="REALIZADO">Realizado</option>
-                <option value="PENDENTE">Pendente (sem feedback)</option>
-              </select>
-            </label>
-            {(responsaveis.length > 0 || f.responsavel) && (
-              <label className="block min-w-0">
-                <span className={ROTULO}>Responsável</span>
-                <select className="input mt-1 !w-auto text-sm" value={f.responsavel} onChange={(e) => set({ responsavel: e.target.value })}>
-                  <option value="">Todos</option>
-                  {responsaveis.map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-              </label>
-            )}
-            <fieldset className="min-w-0" disabled={verPendentes}>
-              <legend className={`${ROTULO} mb-1`}>Realizado entre</legend>
-              <div className="flex items-center gap-2">
-                <label>
-                  <span className="sr-only">Realizado a partir de</span>
-                  <input type="date" className="input !w-auto text-sm" value={f.de} max={f.ate || undefined} onChange={(e) => set({ de: e.target.value })} />
-                </label>
-                <span aria-hidden className="text-spot-gray-500 text-sm">até</span>
-                <label>
-                  <span className="sr-only">Realizado até</span>
-                  <input type="date" className="input !w-auto text-sm" value={f.ate} min={f.de || undefined} onChange={(e) => set({ ate: e.target.value })} />
-                </label>
-              </div>
-            </fieldset>
-            {ativos > 0 && (
-              <button type="button" className="btn-ghost text-xs py-1.5 px-3 min-h-10" onClick={() => setF(FILTROS_HISTORICO_VAZIOS)}>
-                Limpar filtros ({ativos})
-              </button>
-            )}
-          </div>
-
-          <p role="status" aria-live="polite" className="text-xs text-spot-gray-600">
-            {verPendentes
-              ? `${encontrados} ${encontrados === 1 ? 'colaborador ainda não recebeu' : 'colaboradores ainda não receberam'} feedback`
-              : `${encontrados} ${encontrados === 1 ? 'registro encontrado' : 'registros encontrados'}${ativos > 0 ? ` de ${todas.length}` : ''}`}
-          </p>
-        </div>
+            </div>
+          </fieldset>
+        </BarraFiltros>
       )}
 
       <RefreshingBar visible={reloading} />

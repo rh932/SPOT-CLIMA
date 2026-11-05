@@ -7,6 +7,10 @@ import {
   EVALUATION_DIMENSIONS, CLASSIFICATION_OPTIONS, CONCLUSION_OPTIONS,
   type RatingOption, type SubAnswerOption,
 } from '@/data/evaluationBank';
+import { RoteiroPdiForm } from '@/components/gestor/RoteiroPdiForm';
+import {
+  CHAVES_ROTEIRO, unidadeUsaRoteiroPdi, dataRevisaoPdi, type PilarRoteiro, type PlanoRoteiro,
+} from '@/data/roteiroPdi';
 import { EvaluationDimensionCard } from '@/components/gestor/EvaluationDimensionCard';
 import { COLOR_OPTIONS, COLOR_INTERVAL_DAYS, COLOR_LABELS, nextFeedbackDate, type FeedbackColor } from '@/lib/feedbackCycle';
 import { ActionButton, ErrorState, SkeletonForm, LiveStatus, useToast, ForbiddenState, ehSemAcesso } from '@/components/async';
@@ -79,6 +83,10 @@ function EvaluateForm() {
   const [evaluationDate, setEvaluationDate] = useState(() => saoPauloIsoDate());
   const [ratings, setRatings] = useState<Ratings>(emptyRatings());
   const [subAnswers, setSubAnswers] = useState<SubAnswers>(emptySubAnswers());
+  // Roteiro PDI (feedback de Paulista e JK): no lugar das 4 dimensões.
+  const [notasRoteiro, setNotasRoteiro] = useState<Record<string, RatingOption | null>>({});
+  const [obsRoteiro, setObsRoteiro] = useState<Partial<Record<PilarRoteiro['key'], string>>>({});
+  const [planoRoteiro, setPlanoRoteiro] = useState<PlanoRoteiro>({ competencias: [], pratica: '', mentoria: '', estudo: '' });
   const [favorableAspects, setFavorableAspects] = useState('');
   const [unfavorableAspects, setUnfavorableAspects] = useState('');
   const [classification, setClassification] = useState('');
@@ -212,7 +220,9 @@ function EvaluateForm() {
   const needsColor = usaCores && (isFeedback || (period === 'SECOND' && conclusion === 'EFETIVAR' && (!segunda || !employee.currentColor)));
   const previewNextDate = color ? nextFeedbackDate(new Date(evaluationDate + 'T00:00:00'), color) : null;
 
-  const dimensionsIncomplete = EVALUATION_DIMENSIONS.filter(
+  const usaRoteiro = isFeedback && unidadeUsaRoteiroPdi(employee.unit?.name);
+  const roteiroIncompleto = usaRoteiro && CHAVES_ROTEIRO.some((k) => !notasRoteiro[k]);
+  const dimensionsIncomplete = usaRoteiro ? [] : EVALUATION_DIMENSIONS.filter(
     (d) => !ratings[d.key] || d.subQuestions.some((sq) => !subAnswers[d.key][sq.key]),
   );
   const finalIncomplete =
@@ -221,7 +231,7 @@ function EvaluateForm() {
     !classification ||
     (!isFeedback && !conclusion) ||
     (needsColor && !color);
-  const invalid = dimensionsIncomplete.length > 0 || finalIncomplete;
+  const invalid = dimensionsIncomplete.length > 0 || roteiroIncompleto || finalIncomplete;
 
   const submit = async () => {
     if (invalid) {
@@ -252,9 +262,26 @@ function EvaluateForm() {
       if (developmentPoints.trim()) payload.developmentPoints = developmentPoints.trim();
       if (guidance.trim()) payload.guidance = guidance.trim();
       if (trainingNeeds.trim()) payload.trainingNeeds = trainingNeeds.trim();
-      for (const d of EVALUATION_DIMENSIONS) {
-        payload[`${d.key}Rating`] = ratings[d.key];
-        payload[`${d.key}SubAnswers`] = subAnswers[d.key];
+      if (usaRoteiro) {
+        const observacoes = Object.fromEntries(
+          Object.entries(obsRoteiro).map(([k, v]) => [k, (v ?? '').trim()]).filter(([, v]) => v),
+        );
+        payload.roteiro = {
+          versao: 1,
+          notas: notasRoteiro,
+          plano: {
+            competencias: planoRoteiro.competencias,
+            pratica: planoRoteiro.pratica.trim(),
+            mentoria: planoRoteiro.mentoria.trim(),
+            estudo: planoRoteiro.estudo.trim(),
+          },
+          ...(Object.keys(observacoes).length > 0 ? { observacoes } : {}),
+        };
+      } else {
+        for (const d of EVALUATION_DIMENSIONS) {
+          payload[`${d.key}Rating`] = ratings[d.key];
+          payload[`${d.key}SubAnswers`] = subAnswers[d.key];
+        }
       }
       await apiFetch(`/api/gestor/employees/${employee.id}/evaluate`, { method: 'POST', body: JSON.stringify(payload) });
       // Confirma e SEGURA o estado de envio: a navegação do App Router ainda
@@ -321,7 +348,21 @@ function EvaluateForm() {
         </label>
       </div>
 
-      {EVALUATION_DIMENSIONS.map((d) => (
+      {usaRoteiro && (
+        <RoteiroPdiForm
+          notas={notasRoteiro}
+          onNota={(k, v) => setNotasRoteiro((prev) => ({ ...prev, [k]: v }))}
+          observacoes={obsRoteiro}
+          onObservacao={(p, t) => setObsRoteiro((prev) => ({ ...prev, [p]: t }))}
+          plano={planoRoteiro}
+          onPlano={setPlanoRoteiro}
+          revisaoEm={evaluationDate ? new Date(dataRevisaoPdi(evaluationDate) + 'T12:00:00').toLocaleDateString('pt-BR') : null}
+          mostrarErro={attempted}
+          primeiroNome={employee.fullName.split(' ')[0]}
+        />
+      )}
+
+      {!usaRoteiro && EVALUATION_DIMENSIONS.map((d) => (
         <div
           key={d.key}
           data-erro={
@@ -473,6 +514,7 @@ function EvaluateForm() {
         <p role="alert" className="text-sm text-spot-gray-800 bg-spot-white border-l-[3px] border-spot-warning px-3 py-2.5">
           Faltam campos obrigatórios
           {dimensionsIncomplete.length > 0 && ` em ${dimensionsIncomplete.length} dimensão(ões)`}
+          {roteiroIncompleto && ' no roteiro (falta nota em algum item)'}
           . A tela levou você até o primeiro deles.
         </p>
       )}

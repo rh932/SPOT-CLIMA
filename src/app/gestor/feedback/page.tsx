@@ -95,10 +95,11 @@ export default function FeedbackPage() {
           </aside>
 
           <div className="min-w-0 flex flex-col gap-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Compacto no celular: números menores e sem a frase de apoio, para a lista aparecer sem rolar. */}
+            <div className="grid grid-cols-4 gap-x-3 [&_.stat-valor]:!text-3xl sm:[&_.stat-valor]:!text-5xl [&_.stat-valor]:!mt-1.5 [&_.stat-rotulo]:!text-[9px] sm:[&_.stat-rotulo]:!text-[10px] [&_.stat-apoio]:hidden sm:[&_.stat-apoio]:block">
               <StatCard label="No ciclo" value={String(resumo.total)} sub="colaboradores" />
               <StatCard label="Vencidos" value={String(resumo.vencidos)} sub="feedback para fazer" destaque />
-              <StatCard label="Nunca receberam" value={String(resumo.nuncaReceberam)} sub="sem nenhum feedback" />
+              <StatCard label="Sem feedback" value={String(resumo.nuncaReceberam)} sub="sem nenhum feedback" />
               <StatCard label="Neste mês" value={String(resumo.noMes)} sub="receberam feedback" />
             </div>
 

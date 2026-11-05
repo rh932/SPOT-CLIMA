@@ -8,6 +8,8 @@ import {
 import { deliveredOnTime } from '@/lib/probation';
 import { COLOR_OPTIONS, COLOR_LABELS, type FeedbackColor } from '@/lib/feedbackCycle';
 import { StarRating } from '@/components/StarRating';
+import { RoteiroResumo } from '@/components/RoteiroResumo';
+import { PILARES_ROTEIRO, notaDoPilar, type RoteiroGravado } from '@/data/roteiroPdi';
 
 /**
  * Uma avaliação registrada, com tudo o que foi preenchido nela — notas, textos,
@@ -41,6 +43,8 @@ export interface EvaluationRecord {
 
 export function EvaluationCard({ ev }: { ev: EvaluationRecord }) {
   const [showAll, setShowAll] = useState(false);
+  // Feedback de Paulista/JK: o roteiro PDI ocupa o lugar das 4 dimensões.
+  const roteiro = (ev.roteiro ?? null) as RoteiroGravado | null;
 
   return (
     <div className="card flex flex-col gap-3">
@@ -71,12 +75,19 @@ export function EvaluationCard({ ev }: { ev: EvaluationRecord }) {
       })()}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-        {EVALUATION_DIMENSIONS.map((d) => (
-          <div key={d.key} className="flex items-center justify-between gap-3 border-b border-spot-gray-100 pb-1">
-            <span className="text-spot-gray-600">{d.name}</span>
-            <StarRating rating={ev[`${d.key}Rating`] as RatingOption} />
-          </div>
-        ))}
+        {roteiro
+          ? PILARES_ROTEIRO.map((p) => (
+            <div key={p.key} className="flex items-center justify-between gap-3 border-b border-spot-gray-100 pb-1">
+              <span className="text-spot-gray-600">{p.nome}</span>
+              <StarRating rating={notaDoPilar(roteiro.notas, p)!} />
+            </div>
+          ))
+          : EVALUATION_DIMENSIONS.map((d) => (
+            <div key={d.key} className="flex items-center justify-between gap-3 border-b border-spot-gray-100 pb-1">
+              <span className="text-spot-gray-600">{d.name}</span>
+              <StarRating rating={ev[`${d.key}Rating`] as RatingOption} />
+            </div>
+          ))}
       </div>
 
       <div className="text-sm">
@@ -136,7 +147,8 @@ export function EvaluationCard({ ev }: { ev: EvaluationRecord }) {
 
       {showAll && (
         <div className="flex flex-col gap-4 border-t border-spot-gray-100 pt-4 animate-fadeIn">
-          {EVALUATION_DIMENSIONS.map((d) => {
+          {roteiro && <RoteiroResumo roteiro={roteiro} />}
+          {!roteiro && EVALUATION_DIMENSIONS.map((d) => {
             const subAnswers = (ev[`${d.key}SubAnswers`] ?? {}) as Record<string, SubAnswerOption>;
             return (
               <div key={d.key} className="flex flex-col gap-2">

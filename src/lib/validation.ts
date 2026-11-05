@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { TERMINATION_REASONS } from './termination';
 import { saoPauloDay } from './probation';
 import { MIN_ANONYMITY_THRESHOLD, MAX_ANONYMITY_THRESHOLD } from './anonymity';
+import { CHAVES_ROTEIRO, CHAVES_COMPETENCIAS } from '@/data/roteiroPdi';
 
 /** Id gerado pelo sistema (cuid2). Teto de tamanho para nada arbitrário chegar ao banco. */
 const idSchema = z.string().min(1).max(64);
@@ -382,19 +383,33 @@ export const trainerEmployeeSchema = probationaryEmployeeSchema.extend({
 const subAnswerValue = z.enum(['SIM', 'NAO', 'TALVEZ', 'REGULAR']);
 const ratingValue = z.enum(['OTIMO', 'BOM', 'REGULAR', 'RUIM']);
 
-function subAnswerCountRefinement(data: {
-  flexibilitySubAnswers: Record<string, string>;
-  interestSubAnswers: Record<string, string>;
-  relationshipSubAnswers: Record<string, string>;
-  learningSubAnswers: Record<string, string>;
-}): boolean {
-  return (
-    Object.keys(data.flexibilitySubAnswers).length === 4 &&
-    Object.keys(data.interestSubAnswers).length === 3 &&
-    Object.keys(data.relationshipSubAnswers).length === 2 &&
-    Object.keys(data.learningSubAnswers).length === 2
-  );
-}
+const DIMENSOES = ['flexibility', 'interest', 'relationship', 'learning'] as const;
+const QTD_SUBPERGUNTAS: Record<(typeof DIMENSOES)[number], number> = { flexibility: 4, interest: 3, relationship: 2, learning: 2 };
+
+/**
+ * Roteiro de feedback (PDI) de Paulista e JK: uma nota por item do roteiro e o
+ * plano 70/20/10. A lista de itens é fixa (data/roteiroPdi.ts) — chave
+ * desconhecida ou item sem nota é recusado.
+ */
+const roteiroSchema = z.object({
+  versao: z.literal(1),
+  notas: z.record(z.string().max(40), ratingValue),
+  plano: z.object({
+    competencias: z.array(z.string().max(40)).max(CHAVES_COMPETENCIAS.length),
+    pratica: z.string().trim().max(3000),
+    mentoria: z.string().trim().max(3000),
+    estudo: z.string().trim().max(3000),
+  }),
+  observacoes: z.record(z.string().max(20), z.string().trim().max(3000)).optional(),
+}).superRefine((r, ctx) => {
+  const chaves = Object.keys(r.notas);
+  if (chaves.length !== CHAVES_ROTEIRO.length || CHAVES_ROTEIRO.some((k) => !(k in r.notas))) {
+    ctx.addIssue({ code: 'custom', message: 'Dê uma nota para cada item do roteiro.', path: ['notas'] });
+  }
+  if (r.plano.competencias.some((c) => !CHAVES_COMPETENCIAS.includes(c))) {
+    ctx.addIssue({ code: 'custom', message: 'Competência desconhecida.', path: ['plano', 'competencias'] });
+  }
+});
 
 const feedbackColorValue = z.enum(['VERMELHO', 'AMARELO', 'VERDE']);
 
@@ -417,14 +432,14 @@ export const colorChangeSchema = z.object({
 export const evaluationSubmissionSchema = z.object({
   evaluationDate: z.string().datetime(),
   dueDateAtEvaluation: z.string().datetime(),
-  flexibilityRating: ratingValue,
-  flexibilitySubAnswers: z.record(z.string().max(64), subAnswerValue),
-  interestRating: ratingValue,
-  interestSubAnswers: z.record(z.string().max(64), subAnswerValue),
-  relationshipRating: ratingValue,
-  relationshipSubAnswers: z.record(z.string().max(64), subAnswerValue),
-  learningRating: ratingValue,
-  learningSubAnswers: z.record(z.string().max(64), subAnswerValue),
+  flexibilityRating: ratingValue.optional(),
+  flexibilitySubAnswers: z.record(z.string().max(64), subAnswerValue).optional(),
+  interestRating: ratingValue.optional(),
+  interestSubAnswers: z.record(z.string().max(64), subAnswerValue).optional(),
+  relationshipRating: ratingValue.optional(),
+  relationshipSubAnswers: z.record(z.string().max(64), subAnswerValue).optional(),
+  learningRating: ratingValue.optional(),
+  learningSubAnswers: z.record(z.string().max(64), subAnswerValue).optional(),
   favorableAspects: z.string().min(3).max(3000),
   unfavorableAspects: z.string().min(3).max(3000),
   classification: z.enum(['FRACO', 'ALGUMAS_POSSIBILIDADES', 'OTIMAS_PERSPECTIVAS', 'EXCELENTE_AQUISICAO']),
@@ -436,9 +451,20 @@ export const evaluationSubmissionSchema = z.object({
   trainingNeeds: z.string().max(3000).optional(),
   /** 2ª resposta do período que outro gestor acabou de avaliar (setor com dois gestores). O período é decidido no servidor. */
   secondOpinion: z.boolean().optional(),
-}).refine(subAnswerCountRefinement, {
-  message: 'Todas as sub-perguntas de cada dimensão são obrigatórias.',
-  path: ['flexibilitySubAnswers'],
+  /** Roteiro PDI (Paulista e JK) no lugar das 4 dimensões. Quem exige um ou outro é a rota, pela unidade. */
+  roteiro: roteiroSchema.optional(),
+}).superRefine((d, ctx) => {
+  const temDimensao = DIMENSOES.some((k) => d[`${k}Rating`] !== undefined || d[`${k}SubAnswers`] !== undefined);
+  if (d.roteiro) {
+    if (temDimensao) ctx.addIssue({ code: 'custom', message: 'Roteiro e dimensões não se misturam.', path: ['roteiro'] });
+    return;
+  }
+  for (const k of DIMENSOES) {
+    const subs = d[`${k}SubAnswers`];
+    if (!d[`${k}Rating`] || !subs || Object.keys(subs).length !== QTD_SUBPERGUNTAS[k]) {
+      ctx.addIssue({ code: 'custom', message: 'Todas as sub-perguntas de cada dimensão são obrigatórias.', path: [`${k}SubAnswers`] });
+    }
+  }
 });
 
 /**
