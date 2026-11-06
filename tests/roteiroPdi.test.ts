@@ -72,3 +72,21 @@ describe('evaluationSubmissionSchema com roteiro', () => {
     expect(evaluationSubmissionSchema.safeParse({ ...base, ...dims, interestSubAnswers: { q1: 'SIM' } }).success).toBe(false);
   });
 });
+
+import { setorAvaliaUniforme } from '../src/data/uniforme';
+
+describe('setorAvaliaUniforme', () => {
+  it('vale para os três grupos do Salão', () => {
+    for (const s of ['Salão - Atendimento', 'Salão - Bar', 'Salão - Gerente', 'SALAO']) expect(setorAvaliaUniforme(s)).toBe(true);
+  });
+  it('não vale para os outros setores', () => {
+    for (const s of ['Cozinha', 'Delivery', 'Administração - RH', null, undefined, '']) expect(setorAvaliaUniforme(s)).toBe(false);
+  });
+});
+
+describe('uniforme na validação', () => {
+  it('aceita nota e observação opcional', () => {
+    expect(evaluationSubmissionSchema.safeParse({ ...base, roteiro: roteiro(), uniformRating: 'BOM', uniformNotes: 'Avental manchado' }).success).toBe(true);
+    expect(evaluationSubmissionSchema.safeParse({ ...base, roteiro: roteiro(), uniformRating: 'MAU' }).success).toBe(false);
+  });
+});

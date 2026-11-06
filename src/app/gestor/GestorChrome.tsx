@@ -43,6 +43,7 @@ const NAV: { href: string; label: string; short: string; permission?: Permission
   { href: '/gestor/pendencias', label: 'Pendências', short: 'Pendências', permission: 'evaluations.view', grupo: 'Avaliação e feedback' },
   { href: '/gestor/proximas', label: 'Próximas avaliações', short: 'Próximas', permission: 'evaluations.view', grupo: 'Avaliação e feedback' },
   { href: '/gestor/historico', label: 'Histórico de Avaliações e Feedbacks', short: 'Histórico', permission: 'evaluations.history.view', grupo: 'Avaliação e feedback' },
+  { href: '/gestor/questionarios', label: 'Questionários do setor', short: 'Questionários', permission: 'questionnaires.manage', grupo: 'Avaliação e feedback' },
   { href: '/gestor/treinamento', label: 'Gestão de Treinamentos', short: 'Treinar', permission: 'trainings.view', grupo: 'Treinamento' },
   { href: '/gestor/treinamento/historico', label: 'Histórico de Treinamentos', short: 'Treinos feitos', permission: 'trainings.history.view', grupo: 'Treinamento' },
   { href: '/gestor/guia', label: 'Passo a passo do painel', short: 'Passo a passo' },

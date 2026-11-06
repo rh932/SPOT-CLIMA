@@ -45,7 +45,7 @@ interface Employee {
   period2DueDate: string;
   currentColor: FeedbackColor | null;
   nextFeedbackDueDate: string | null;
-  sector: { id: string; name: string; usesColorCycle: boolean } | null;
+  sector: { id: string; name: string; usesColorCycle: boolean; usesFeedback?: boolean } | null;
   unit: { id: string; name: string } | null;
 }
 
@@ -136,6 +136,8 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
 
   const { employee: e, canEvaluate, canChangeColor, canDelete } = data;
   const usaCores = e.sector?.usesColorCycle ?? false;
+  // Feedback sem cores: o setor faz, mas não há data agendada — o gestor registra quando quiser.
+  const feedbackAvulso = !usaCores && Boolean(e.sector?.usesFeedback) && e.status === 'HIRED' && !e.isApprentice;
   // Efetivado na 1ª avaliação num setor de cores: a 2ª avaliação de
   // experiência continua devida, e a cor só é liberada depois dela.
   const corInput = {
@@ -205,7 +207,9 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
                 ? 'Jovem aprendiz: contrato de aprendizagem, sem avaliação de experiência nem ciclo de feedback.'
               : usaCores
                 ? 'Sem próximo feedback agendado.'
-                : `Efetivado. O setor ${e.sector?.name ?? ''} não participa do projeto de cores, então não há ciclo de feedback.`}
+                : feedbackAvulso
+                  ? 'O feedback deste setor é avulso: registre quando fizer sentido, sem data marcada.'
+                  : `Efetivado. O setor ${e.sector?.name ?? ''} não faz feedback. O RH pode incluí-lo em Setores.`}
           </p>
         )}
 
@@ -213,6 +217,9 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
           <Link href={`/gestor/employees/${e.id}/evaluate`} className="btn-primary w-full">
             {emExperiencia ? 'Fazer a avaliação' : 'Registrar o feedback'}
           </Link>
+        )}
+        {canEvaluate && feedbackAvulso && !prazoAberto && (
+          <Link href={`/gestor/employees/${e.id}/evaluate`} className="btn-primary w-full">Registrar o feedback</Link>
         )}
         {!canEvaluate && prazoAberto && e.status !== 'TERMINATED' && (
           <p className="text-xs text-spot-gray-500">Quem preenche a avaliação é o gestor responsável pelo turno.</p>

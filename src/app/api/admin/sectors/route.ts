@@ -30,11 +30,14 @@ export async function POST(req: NextRequest) {
 
     // Setor que começa com "Salão" já nasce no ciclo de cores — regra do
     // restaurante. Continua editável depois, na própria tela de Setores.
+    const usesColorCycle = defaultUsesColorCycle(parsed.data.name, parsed.data.usesColorCycle);
     const [row] = await db
       .insert(schema.sectors)
       .values({
         ...parsed.data,
-        usesColorCycle: defaultUsesColorCycle(parsed.data.name, parsed.data.usesColorCycle),
+        usesColorCycle,
+        // Cores nascem do feedback: quem usa cores sempre faz feedback.
+        usesFeedback: usesColorCycle || Boolean(parsed.data.usesFeedback),
         inTraining: defaultInTraining(parsed.data.name, parsed.data.inTraining),
       })
       .returning();

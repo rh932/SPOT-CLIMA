@@ -1,31 +1,36 @@
 /**
- * Quem participa do ciclo permanente de feedback — lógica pura.
+ * Quem participa do feedback e das cores — lógica pura.
  *
- * Regra do projeto (nov/2026): TODO colaborador cadastrado participa do
- * feedback. O ciclo de cores nasceu como exclusivo dos setores marcados em
- * `sectors.usesColorCycle` (o Salão). O colaborador ATIVO (já na operação, sem
- * treinamento nem experiência) participa em QUALQUER setor: o que decide é a
- * trilha dele, não o setor.
+ * Regra do projeto (nov/2026): é o SETOR que opta (tela de Setores):
+ *  - `usesFeedback`: faz feedback dos colaboradores já efetivados, quando o gestor
+ *    quiser (sem data agendada nem aviso).
+ *  - `usesColorCycle`: além disso, classifica por cor e agenda o próximo feedback
+ *    (🔴45 / 🟡120 / 🟢180 dias). Quem usa cores sempre faz feedback.
  *
- * O colaborador NOVO continua seguindo a chave do setor — estender o feedback
- * a todos os novos de todos os setores é uma decisão do RH, tomada nesta função
- * quando vier (um lugar só).
+ * A trilha do colaborador (NOVO/ATIVO) deixou de decidir: antes o ATIVO participava
+ * em qualquer setor; a migração 0029 ligou as chaves dos setores que já tinham ATIVO.
  */
 
 export type Trilha = 'NOVO' | 'ATIVO' | null | undefined;
 
-export function usesFeedbackCycle(sectorUsesColorCycle: boolean | null | undefined, track: Trilha): boolean {
-  return track === 'ATIVO' || Boolean(sectorUsesColorCycle);
+interface SetorChaves { usesColorCycle?: boolean | null; usesFeedback?: boolean | null }
+
+/** O colaborador entra no ciclo de CORES (classificação + data do próximo feedback)? */
+export function usesFeedbackCycle(sectorUsesColorCycle: boolean | null | undefined, _track?: Trilha): boolean {
+  return Boolean(sectorUsesColorCycle);
+}
+
+/** O setor faz feedback (com ou sem cores)? */
+export function sectorDoesFeedback(sector: SetorChaves | null | undefined): boolean {
+  return Boolean(sector?.usesFeedback || sector?.usesColorCycle);
 }
 
 /**
- * Devolve o colaborador com `sector.usesColorCycle` já respondendo "este
- * colaborador participa do ciclo de feedback?". As telas e a lógica de
- * `colorUnlock` leem só esse campo; assim a trilha entra sem espalhar a regra
- * por cada componente. Só vale para o payload dos portais — o cadastro do
- * setor (tela de Setores) continua mostrando a chave real.
+ * Mantido por compatibilidade com as rotas/telas que chamam: devolve o colaborador
+ * com `sector.usesFeedback` já consolidado (cores implicam feedback).
  */
-export function withFeedbackCycle<S extends { usesColorCycle: boolean }, T extends { track?: Trilha; sector?: S | null }>(e: T): T {
-  if (!e.sector || e.sector.usesColorCycle || e.track !== 'ATIVO') return e;
-  return { ...e, sector: { ...e.sector, usesColorCycle: true } };
+export function withFeedbackCycle<S extends { usesColorCycle: boolean; usesFeedback?: boolean }, T extends { track?: Trilha; sector?: S | null }>(e: T): T {
+  if (!e.sector) return e;
+  const usesFeedback = sectorDoesFeedback(e.sector);
+  return usesFeedback === Boolean(e.sector.usesFeedback) ? e : { ...e, sector: { ...e.sector, usesFeedback } };
 }

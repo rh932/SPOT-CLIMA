@@ -181,6 +181,7 @@ const ROLE_OPTIONS: { value: UserRole; label: string; hint: string }[] = [
   { value: 'GERENTE', label: 'Gerente (avalia e treina)', hint: 'Libera: avaliação de experiência e treinamento da equipe do Salão. Não libera setores fora do Salão.' },
   { value: 'GERENTE_AVALIADOR', label: 'Gerente avaliador', hint: 'Libera: só a avaliação de experiência da equipe do Salão. Não libera treinamento.' },
   { value: 'GERENTE_TREINADOR', label: 'Gerente treinador', hint: 'Libera: só o treinamento da equipe do Salão. Não libera avaliação de experiência.' },
+  { value: 'PJ', label: 'PJ (comanda a área)', hint: 'Avalia e acompanha a área dele e cria perguntas nos questionários do setor. As perguntas só valem depois que o RH aprova.' },
   { value: 'GESTOR_LIDER', label: 'Líder', hint: 'Libera: acompanhar avaliações e treinamentos das lojas, setores e turnos marcados (ou da área escolhida), sem avaliar. Conclui treinamentos.' },
 ];
 

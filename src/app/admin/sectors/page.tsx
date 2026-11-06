@@ -8,7 +8,7 @@ import {
 } from '@/components/async';
 
 interface Sector {
-  id: string; name: string; order: number; active: boolean; usesColorCycle: boolean;
+  id: string; name: string; order: number; active: boolean; usesColorCycle: boolean; usesFeedback: boolean;
   inSurvey: boolean; inEvaluation: boolean; inTraining: boolean;
 }
 
@@ -88,6 +88,26 @@ export default function SectorsPage() {
    * desligada faz 45 e 90 dias normalmente, mas efetiva sem cor e não entra no
    * ciclo de feedback nem nos avisos.
    */
+  const toggleFeedback = async (s: Sector) => {
+    if (s.usesFeedback && !(await confirmar({
+      titulo: `Desligar o feedback em "${s.name}"?`,
+      texto: s.usesColorCycle
+        ? 'O setor também sai do projeto de cores (cores dependem do feedback). Os feedbacks e cores já registrados continuam no histórico.'
+        : 'Os gestores deste setor deixam de poder registrar feedback. O que já foi registrado continua no histórico.',
+      acao: 'Desligar',
+    }))) return;
+    const anterior = sectors;
+    const ligar = !s.usesFeedback;
+    setData({ sectors: sectors.map((x) => (x.id === s.id ? { ...x, usesFeedback: ligar, usesColorCycle: ligar ? x.usesColorCycle : false } : x)) });
+    const ok = await acao.run(async () => {
+      await apiFetch(`/api/admin/sectors/${s.id}`, { method: 'PATCH', body: JSON.stringify({ usesFeedback: ligar }) });
+      return true;
+    }, `feedback:${s.id}`);
+    if (!ok) { setData({ sectors: anterior }); return; }
+    mostrar(ligar ? `"${s.name}" passou a fazer feedback.` : `"${s.name}" deixou de fazer feedback.`);
+    await reload();
+  };
+
   const toggleColorCycle = async (s: Sector) => {
     if (s.usesColorCycle && !(await confirmar({
       titulo: `Desligar o projeto de cores em "${s.name}"?`,
@@ -96,7 +116,7 @@ export default function SectorsPage() {
     }))) return;
 
     const anterior = sectors;
-    setData({ sectors: sectors.map((x) => (x.id === s.id ? { ...x, usesColorCycle: !x.usesColorCycle } : x)) });
+    setData({ sectors: sectors.map((x) => (x.id === s.id ? { ...x, usesColorCycle: !x.usesColorCycle, usesFeedback: x.usesFeedback || !x.usesColorCycle } : x)) });
     const ok = await acao.run(async () => {
       await apiFetch(`/api/admin/sectors/${s.id}`, {
         method: 'PATCH',
@@ -193,6 +213,9 @@ export default function SectorsPage() {
               <span className={`flex items-center gap-2 flex-wrap ${s.active ? '' : 'text-spot-gray-500 line-through'}`}>
                 {s.name}
                 {!s.active && <span className="badge bg-spot-gray-100 text-spot-gray-500 no-underline">Inativo</span>}
+                {(s.usesFeedback || s.usesColorCycle) && (
+                  <span className="badge bg-spot-gray-100 text-spot-gray-700 no-underline">Feedback</span>
+                )}
                 {s.usesColorCycle && (
                   <span className="badge bg-spot-gray-100 text-spot-gray-700 no-underline">Ciclo de cores</span>
                 )}
@@ -203,7 +226,7 @@ export default function SectorsPage() {
                   <span className="badge bg-spot-gray-100 text-spot-gray-700 no-underline">{USO_LABEL[usoDe(s)]}</span>
                 )}
               </span>
-              <div className="flex gap-2 shrink-0 flex-wrap items-center">
+              <div className="flex gap-2 flex-wrap items-center min-w-0 max-w-full">
                 <select
                   className="input w-auto sm:text-xs"
                   value={usoDe(s)}
@@ -213,6 +236,20 @@ export default function SectorsPage() {
                 >
                   {(Object.keys(USO_LABEL) as Uso[]).map((u) => <option key={u} value={u}>{USO_LABEL[u]}</option>)}
                 </select>
+                <ActionButton
+                  className="btn-ghost text-xs py-1.5 px-3"
+                  pending={acao.isPending(`feedback:${s.id}`)}
+                  pendingLabel="Salvando..."
+                  onClick={() => toggleFeedback(s)}
+                  aria-label={
+                    s.usesFeedback || s.usesColorCycle
+                      ? `Tirar "${s.name}" do feedback — os gestores deixam de registrar feedback`
+                      : `Incluir "${s.name}" no feedback — os gestores passam a registrar feedback dos efetivados`
+                  }
+                  title="Feedback dos colaboradores efetivados, sem data fixa"
+                >
+                  {s.usesFeedback || s.usesColorCycle ? 'Tirar do feedback' : 'Incluir no feedback'}
+                </ActionButton>
                 <ActionButton
                   className="btn-ghost text-xs py-1.5 px-3"
                   pending={acao.isPending(`cores:${s.id}`)}

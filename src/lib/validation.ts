@@ -60,6 +60,8 @@ export const sectorSchema = z.object({
   active: z.boolean().optional(),
   /** Participa do ciclo de cores (45/120/180) — ver sectors.usesColorCycle. */
   usesColorCycle: z.boolean().optional(),
+  /** Faz feedback dos efetivados (com ou sem cores) — ver sectors.usesFeedback. */
+  usesFeedback: z.boolean().optional(),
   /** Onde o setor aparece — ver sectors.inSurvey / sectors.inEvaluation. */
   inSurvey: z.boolean().optional(),
   inEvaluation: z.boolean().optional(),
@@ -264,12 +266,12 @@ export const createAdminSchema = z.object({
   name: z.string().min(2).max(160),
   email: emailSchema,
   password: accountPasswordSchema,
-  role: z.enum(['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR']),
+  role: z.enum(['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR', 'PJ']),
   ...adminScopeFields,
 }).refine(
   // Gestor, Líder e Treinador operam por recorte (unidade + setor + turno).
   // Papéis administrativos enxergam tudo e não têm escopo.
-  (d) => !['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR'].includes(d.role)
+  (d) => !['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR', 'PJ'].includes(d.role)
     || ((d.scopedUnitIds?.length ?? 0) > 0 && (d.scopedSectorIds?.length ?? 0) > 0 && (d.scopedShifts?.length ?? 0) > 0),
   { message: 'Selecione ao menos uma unidade, um setor e um turno.', path: ['scopedUnitIds'] },
 );
@@ -280,7 +282,7 @@ export const updateAdminSchema = z.object({
   name: z.string().min(2).max(160).optional(),
   email: emailSchema.optional(),
   password: accountPasswordSchema.optional(),
-  role: z.enum(['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR']).optional(),
+  role: z.enum(['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR', 'PJ']).optional(),
   active: z.boolean().optional(),
   ...adminScopeFields,
 });
@@ -451,8 +453,13 @@ export const evaluationSubmissionSchema = z.object({
   trainingNeeds: z.string().max(3000).optional(),
   /** 2ª resposta do período que outro gestor acabou de avaliar (setor com dois gestores). O período é decidido no servidor. */
   secondOpinion: z.boolean().optional(),
+  /** Uniforme: obrigatório no feedback dos setores do Salão (quem exige é a rota). */
+  uniformRating: ratingValue.optional(),
+  uniformNotes: z.string().trim().max(3000).optional(),
   /** Roteiro PDI (Paulista e JK) no lugar das 4 dimensões. Quem exige um ou outro é a rota, pela unidade. */
   roteiro: roteiroSchema.optional(),
+  /** Respostas das perguntas extras do setor, por id da pergunta. Quem confere é a rota (lib/questionnaire.ts). */
+  customAnswers: z.record(z.string().max(64), z.string().trim().max(3000)).optional(),
 }).superRefine((d, ctx) => {
   const temDimensao = DIMENSOES.some((k) => d[`${k}Rating`] !== undefined || d[`${k}SubAnswers`] !== undefined);
   if (d.roteiro) {
@@ -504,4 +511,30 @@ export const pushSubscriptionSchema = z.object({
 
 export const pushUnsubscribeSchema = z.object({
   endpoint: z.string().url().max(1000),
+});
+
+
+// ------------------------------------------------------------------
+// Questionários por setor (perguntas extras criadas pelo PJ, aprovadas pelo RH)
+// ------------------------------------------------------------------
+
+export const questionnaireQuestionSchema = z.object({
+  sectorId: idSchema,
+  form: z.enum(['DESEMPENHO', 'FEEDBACK']),
+  text: z.string().trim().min(5, 'Escreva a pergunta com pelo menos 5 letras.').max(300),
+  type: z.enum(['NOTA', 'SIM_NAO', 'TEXTO']),
+  required: z.boolean().optional(),
+});
+
+export const questionnaireQuestionUpdateSchema = z.object({
+  text: z.string().trim().min(5).max(300).optional(),
+  type: z.enum(['NOTA', 'SIM_NAO', 'TEXTO']).optional(),
+  required: z.boolean().optional(),
+  order: z.number().int().min(0).max(999).optional(),
+});
+
+/** Ações do ciclo: o PJ envia/retira; o RH aprova/reprova/arquiva (a rota confere quem pode). */
+export const questionnaireActionSchema = z.object({
+  action: z.enum(['SUBMIT', 'WITHDRAW', 'APPROVE', 'REJECT', 'ARCHIVE']),
+  note: z.string().trim().max(500).optional(),
 });

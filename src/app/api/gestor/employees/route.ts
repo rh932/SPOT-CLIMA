@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
           : {}),
       },
       with: {
-        sector: { columns: { id: true, name: true, usesColorCycle: true } },
+        sector: { columns: { id: true, name: true, usesColorCycle: true, usesFeedback: true } },
         unit: { columns: { id: true, name: true } },
         // Só o perfil de quem cadastrou: vira o booleano `criadoPorGerente`
         // abaixo, e o próprio objeto não sai na resposta.
@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
       const criadoPorGerente = PAPEIS_DE_GERENTE.includes((createdBy as { role?: string } | null)?.role ?? '');
       if (!verAvaliacoes) return { ...semCamposDeCiclo(resto), prazoExperiencia, criadoPorGerente };
       // Para a tela, `sector.usesColorCycle` responde se ESTE colaborador está no ciclo de feedback.
-      const comCiclo = withFeedbackCycle(resto as { track?: 'NOVO' | 'ATIVO'; sector?: { usesColorCycle: boolean } | null });
+      const comCiclo = withFeedbackCycle(resto as { track?: 'NOVO' | 'ATIVO'; sector?: { usesColorCycle: boolean; usesFeedback?: boolean } | null });
       const evs = (campos.evaluations ?? []) as Parameters<typeof secondOpinionFor>[1];
       const segunda = avalia
         ? secondOpinionFor({ isApprentice: campos.isApprentice as boolean | undefined, terminationDate: terminationDate as Date | null | undefined }, evs, session.adminId)

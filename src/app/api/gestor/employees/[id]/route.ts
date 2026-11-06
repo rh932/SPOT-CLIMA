@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { withFeedbackCycle } from '@/lib/feedbackParticipation';
+import { liveQuestionsFor } from '@/lib/questionnaireService';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
@@ -82,7 +83,7 @@ export async function GET(_req: NextRequest, props: { params: Promise<{ id: stri
         admissionDate: employee.admissionDate,
         sectorId: employee.sectorId,
         unitId: employee.unitId,
-        sector: { id: employee.sector.id, name: employee.sector.name, usesColorCycle: employee.sector.usesColorCycle },
+        sector: { id: employee.sector.id, name: employee.sector.name, usesColorCycle: employee.sector.usesColorCycle, usesFeedback: employee.sector.usesFeedback },
         unit: { id: employee.unit.id, name: employee.unit.name },
       };
 
@@ -95,8 +96,14 @@ export async function GET(_req: NextRequest, props: { params: Promise<{ id: stri
       ? evaluations.find((e) => e.period === segunda.period && new Date(e.evaluationDate).getTime() === new Date(segunda.first.evaluationDate).getTime())
       : null;
 
+    // Perguntas extras aprovadas do setor (aba Questionários): a tela de avaliar monta o formulário com elas.
+    const customQuestions = podeVerAvaliacoes && canEvaluate(session.role)
+      ? await liveQuestionsFor(employee.sectorId)
+      : { DESEMPENHO: [], FEEDBACK: [] };
+
     return NextResponse.json({
       employee: employeeOut,
+      customQuestions,
       secondOpinion: segunda
         ? {
           period: segunda.period,

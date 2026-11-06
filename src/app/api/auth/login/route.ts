@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
     GERENTE: 'Avaliações e Treinamentos',
     GERENTE_AVALIADOR: 'Avaliações e Treinamentos',
     GERENTE_TREINADOR: 'Avaliações e Treinamentos',
+    PJ: 'Avaliações e Treinamentos',
   };
   if (!PORTAL_ROLES[parsed.data.portal].includes(conta.role)) {
     await logAudit({ adminId: conta.id, action: 'login.wrong_portal', metadata: { portal: parsed.data.portal }, req });

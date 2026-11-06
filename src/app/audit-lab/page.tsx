@@ -36,6 +36,8 @@ import GestorEmployeePage from '../gestor/employees/[id]/page';
 import AdminOverviewPage from '../admin/page';
 import AdminResultsPage from '../admin/results/page';
 import AdminCommentsPage from '../admin/comments/page';
+import QuestionariosGestorPage from '../gestor/questionarios/page';
+import QuestionariosAdminPage from '../admin/questionarios/page';
 import { AdminChrome } from '../admin/AdminChrome';
 import { GestorChrome } from '../gestor/GestorChrome';
 import { QuestionListEditor } from '@/components/admin/QuestionListEditor';
@@ -99,6 +101,8 @@ const TELAS: Record<string, () => React.JSX.Element> = {
   resultados: AdminResultsPage as () => React.JSX.Element,
   comentarios: AdminCommentsPage as () => React.JSX.Element,
   perguntas: PerguntasBancada,
+  questionariosgestor: QuestionariosGestorPage as () => React.JSX.Element,
+  questionariosrh: QuestionariosAdminPage as () => React.JSX.Element,
 };
 
 /** `?chrome=admin|gestor` monta a tela dentro do menu real do portal. */

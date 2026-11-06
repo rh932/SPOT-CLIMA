@@ -8,6 +8,7 @@ import {
 import { deliveredOnTime } from '@/lib/probation';
 import { COLOR_OPTIONS, COLOR_LABELS, type FeedbackColor } from '@/lib/feedbackCycle';
 import { StarRating } from '@/components/StarRating';
+import { answerLabel, type AnsweredQuestion } from '@/lib/questionnaire';
 import { RoteiroResumo } from '@/components/RoteiroResumo';
 import { PILARES_ROTEIRO, notaDoPilar, type RoteiroGravado } from '@/data/roteiroPdi';
 
@@ -34,6 +35,10 @@ export interface EvaluationRecord {
   developmentPoints: string | null;
   guidance: string | null;
   trainingNeeds: string | null;
+  uniformRating?: RatingOption | null;
+  uniformNotes?: string | null;
+  /** Perguntas extras do setor, com o texto gravado no dia da avaliação. */
+  customAnswers?: AnsweredQuestion[] | null;
   evaluator: { name: string } | null;
   evaluatorName: string | null;
   source: 'SISTEMA' | 'FORMS';
@@ -89,6 +94,28 @@ export function EvaluationCard({ ev }: { ev: EvaluationRecord }) {
             </div>
           ))}
       </div>
+
+      {ev.uniformRating && (
+        <div className="text-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-spot-gray-100 pb-1">
+            <span className="text-spot-gray-600">Uniforme</span>
+            <StarRating rating={ev.uniformRating} showLabel />
+          </div>
+          {ev.uniformNotes && <p className="mt-1">{ev.uniformNotes}</p>}
+        </div>
+      )}
+
+      {ev.customAnswers && ev.customAnswers.length > 0 && (
+        <div className="text-sm flex flex-col gap-1.5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">Perguntas do setor</p>
+          {ev.customAnswers.map((a) => (
+            <div key={a.id} className="border-b border-spot-gray-100 pb-1.5">
+              <p className="text-spot-gray-600 break-words">{a.text}</p>
+              <p className="font-semibold break-words">{answerLabel(a)}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="text-sm">
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500 mb-1">Aspectos mais favoráveis</p>

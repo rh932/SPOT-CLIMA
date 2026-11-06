@@ -20,6 +20,22 @@ async function main() {
       where: eq(schema.trainingTypes.name, form.typeName),
     });
 
+    // Tipo que ainda tem o nome antigo: renomeia (mantém id, critérios e os
+    // treinamentos já registrados) em vez de criar um segundo tipo.
+    if (!type) {
+      for (const antigo of form.formerNames ?? []) {
+        const velho = await db.query.trainingTypes.findFirst({ where: eq(schema.trainingTypes.name, antigo) });
+        if (velho) {
+          [type] = await db.update(schema.trainingTypes)
+            .set({ name: form.typeName })
+            .where(eq(schema.trainingTypes.id, velho.id))
+            .returning();
+          console.log(`Tipo renomeado: ${antigo} -> ${form.typeName}`);
+          break;
+        }
+      }
+    }
+
     const typeValues = {
       contextFields: form.contextFields,
       ratingOptions: form.ratingOptions,

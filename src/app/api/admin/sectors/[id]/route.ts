@@ -22,9 +22,12 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     // mesma regra da criação. Alterações que não mexem no nome (ativar,
     // reordenar) não tocam na chave, e marcar/desmarcar o ciclo direto na tela
     // sempre vence.
-    const values = parsed.data.name !== undefined
+    const values: Partial<typeof schema.sectors.$inferInsert> = parsed.data.name !== undefined
       ? { ...parsed.data, usesColorCycle: defaultUsesColorCycle(parsed.data.name, parsed.data.usesColorCycle) }
-      : parsed.data;
+      : { ...parsed.data };
+    // Cores nascem do feedback: ligar as cores liga o feedback; desligar o feedback desliga as cores.
+    if (values.usesColorCycle === true) values.usesFeedback = true;
+    if (values.usesFeedback === false) values.usesColorCycle = false;
 
     const [row] = await db.update(schema.sectors).set(values).where(eq(schema.sectors.id, params.id)).returning();
     if (!row) return NextResponse.json({ error: 'Setor não encontrado.' }, { status: 404 });

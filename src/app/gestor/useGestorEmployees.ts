@@ -16,7 +16,7 @@ export interface GestorEmployee extends DueDateFields {
   nextFeedbackDueDate: string | null;
   /** Gestores/gerentes que avaliam este colaborador (escopo); só vem para quem vê avaliações. */
   responsaveis?: string[];
-  sector: { name: string; usesColorCycle: boolean } | null;
+  sector: { name: string; usesColorCycle: boolean; usesFeedback?: boolean } | null;
   unit: { name: string } | null;
   evaluations: {
     id: string;
@@ -130,9 +130,17 @@ export function isExperience(e: GestorEmployee): boolean {
   return e.status === 'AWAITING_PERIOD_1' || e.status === 'AWAITING_PERIOD_2';
 }
 
-/** Efetivado no ciclo de cores, já sem avaliação de experiência em aberto. */
+/**
+ * Efetivado num setor que faz feedback SEM cores: o gestor registra quando quiser,
+ * sem data agendada, então não entra em prazos nem em Pendências.
+ */
+export function isFeedbackAvulso(e: GestorEmployee): boolean {
+  return e.status === 'HIRED' && !e.isApprentice && Boolean(e.sector?.usesFeedback) && !e.sector?.usesColorCycle;
+}
+
+/** Efetivado que faz feedback (no ciclo de cores ou avulso), já sem avaliação de experiência em aberto. */
 export function isFeedback(e: GestorEmployee): boolean {
-  return isFeedbackCycle(e) && !awaitsSecond(e);
+  return (isFeedbackCycle(e) && !awaitsSecond(e)) || isFeedbackAvulso(e);
 }
 
 /** A avaliação de experiência já subiu para o gestor preencher. */

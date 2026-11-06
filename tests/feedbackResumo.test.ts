@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { resumoFeedback, jaRecebeuFeedback } from '../src/lib/feedbackResumo';
-import { usesFeedbackCycle, withFeedbackCycle } from '../src/lib/feedbackParticipation';
+import { usesFeedbackCycle, withFeedbackCycle, sectorDoesFeedback } from '../src/lib/feedbackParticipation';
 import { colorUnlocked, awaitsSecondEvaluation, nextEvaluationPeriod } from '../src/lib/colorUnlock';
 import { cycleFieldsFor } from '../src/lib/employeeCreate';
 
@@ -31,18 +31,27 @@ describe('resumoFeedback', () => {
 });
 
 describe('participação no feedback', () => {
-  it('ATIVO participa em qualquer setor; NOVO segue a chave do setor', () => {
-    expect(usesFeedbackCycle(false, 'ATIVO')).toBe(true);
+  it('o setor decide: a trilha do colaborador não liga o ciclo de cores sozinha', () => {
+    expect(usesFeedbackCycle(false, 'ATIVO')).toBe(false);
     expect(usesFeedbackCycle(false, 'NOVO')).toBe(false);
     expect(usesFeedbackCycle(true, 'NOVO')).toBe(true);
+    expect(usesFeedbackCycle(true, 'ATIVO')).toBe(true);
   });
 
-  it('withFeedbackCycle liga a chave só para ATIVO e não muda o original', () => {
-    const sector = { name: 'Cozinha', usesColorCycle: false };
-    const ativo = withFeedbackCycle({ track: 'ATIVO' as const, sector });
-    expect(ativo.sector.usesColorCycle).toBe(true);
-    expect(sector.usesColorCycle).toBe(false);
-    expect(withFeedbackCycle({ track: 'NOVO' as const, sector }).sector.usesColorCycle).toBe(false);
+  it('feedback e cores são escolhas separadas, e cores implicam feedback', () => {
+    expect(sectorDoesFeedback({ usesFeedback: true, usesColorCycle: false })).toBe(true);
+    expect(sectorDoesFeedback({ usesFeedback: false, usesColorCycle: true })).toBe(true);
+    expect(sectorDoesFeedback({ usesFeedback: false, usesColorCycle: false })).toBe(false);
+    expect(sectorDoesFeedback(null)).toBe(false);
+  });
+
+  it('withFeedbackCycle consolida usesFeedback (cores implicam feedback) sem mudar o original', () => {
+    const sector = { name: 'Salão', usesColorCycle: true, usesFeedback: false };
+    const out = withFeedbackCycle({ track: 'NOVO' as const, sector });
+    expect(out.sector.usesFeedback).toBe(true);
+    expect(sector.usesFeedback).toBe(false);
+    const cozinha = { name: 'Cozinha', usesColorCycle: false, usesFeedback: false };
+    expect(withFeedbackCycle({ track: 'ATIVO' as const, sector: cozinha }).sector).toBe(cozinha);
   });
 });
 

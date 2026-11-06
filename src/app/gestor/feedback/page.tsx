@@ -67,7 +67,7 @@ export default function FeedbackPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Feedback"
-        subtitle={`Todo colaborador ativo ou efetivado no ciclo de cores participa. Quando o feedback vence, você tem ${FEEDBACK_FILL_DAYS} dias para fazer.`}
+        subtitle={`Aparecem os efetivados dos setores que fazem feedback. Nos setores com cores, quando o feedback vence você tem ${FEEDBACK_FILL_DAYS} dias para fazer; nos demais, registre quando quiser.`}
       />
 
       <RoteiroFeedback />
@@ -83,7 +83,7 @@ export default function FeedbackPage() {
         rotulo="os feedbacks"
         skeleton={<SkeletonCardList rows={4} />}
         empty={todos.length === 0}
-        emptyState={<EmptyState>Ninguém no ciclo de feedback.</EmptyState>}
+        emptyState={<EmptyState>Nenhum colaborador de setor que faz feedback. O RH escolhe os setores em Setores.</EmptyState>}
       >
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
           <aside className="order-first lg:order-last">

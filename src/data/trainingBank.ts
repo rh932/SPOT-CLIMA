@@ -29,6 +29,8 @@ export interface TrainingCriterionSeed {
 
 export interface TrainingFormSeed {
   typeName: string;
+  /** Nomes anteriores do tipo: o seed renomeia o tipo que já existe em vez de criar outro. */
+  formerNames?: string[];
   description?: string;
   contextFields: TrainingContextField[];
   ratingOptions: TrainingRatingOption[];
@@ -62,7 +64,8 @@ const CABECALHO_SALAO: TrainingContextField[] = [
 
 /** Formulário de treinamento de GERÊNCIA. */
 export const GERENCIA_FORM: TrainingFormSeed = {
-  typeName: 'Gerentes',
+  typeName: 'Gerência',
+  formerNames: ['Gerentes'],
   contextFields: [...CABECALHO_SALAO, { key: 'pessoas', label: 'Pessoas no período', type: 'number' }],
   ratingOptions: ESCALA_OTIMO,
   positiveLabel: 'Pontos positivos',
@@ -87,9 +90,10 @@ export const GERENCIA_FORM: TrainingFormSeed = {
   ],
 };
 
-/** Formulário de treinamento de NOVOS COLABORADORES. */
+/** Formulário de treinamento do SALÃO (novos colaboradores). */
 export const NOVOS_FORM: TrainingFormSeed = {
-  typeName: 'Novos Colaboradores',
+  typeName: 'Salão',
+  formerNames: ['Novos Colaboradores'],
   contextFields: CABECALHO_SALAO,
   ratingOptions: ESCALA_OTIMO,
   positiveLabel: 'Pontos positivos',
@@ -112,9 +116,10 @@ export const NOVOS_FORM: TrainingFormSeed = {
   ],
 };
 
-/** Formulário de AVALIAÇÃO DO BAR — cabeçalho só com o nome. */
+/** Formulário de treinamento do BAR — cabeçalho só com o nome. */
 export const BAR_FORM: TrainingFormSeed = {
-  typeName: 'Avaliações do Bar',
+  typeName: 'Bar',
+  formerNames: ['Avaliações do Bar'],
   contextFields: [],
   ratingOptions: ESCALA_BAR,
   positiveLabel: 'Pontos fortes',

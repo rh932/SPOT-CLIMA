@@ -331,7 +331,19 @@ const CAIXA_AVISOS = {
   ],
 };
 
+const SETORES_Q = [
+  { id: 's1', name: 'Salão - Atendimento', usesColorCycle: true, usesFeedback: true },
+  { id: 's2', name: 'Cozinha', usesColorCycle: false, usesFeedback: false },
+];
+const PERGUNTAS_Q = [
+  { id: 'q1', sectorId: 's1', form: 'DESEMPENHO', text: 'O colaborador mantém a praça organizada durante todo o turno, inclusive nos horários de pico?', type: 'NOTA', required: true, order: 0, status: 'APROVADA', reviewNote: null, reviewedAt: null, updatedAt: new Date().toISOString(), sector: { id: 's1', name: 'Salão - Atendimento' }, createdBy: { name: 'Zé Barros' }, reviewedBy: { name: 'RH Spot' } },
+  { id: 'q2', sectorId: 's1', form: 'DESEMPENHO', text: 'Segue o padrão de abordagem da casa?', type: 'SIM_NAO', required: true, order: 1, status: 'EM_ANALISE', reviewNote: null, reviewedAt: null, updatedAt: new Date().toISOString(), sector: { id: 's1', name: 'Salão - Atendimento' }, createdBy: { name: 'Zé Barros' }, reviewedBy: null },
+  { id: 'q3', sectorId: 's1', form: 'FEEDBACK', text: 'Comentário livre sobre a evolução no atendimento nas últimas semanas, com exemplos', type: 'TEXTO', required: false, order: 0, status: 'REPROVADA', reviewNote: 'Muito parecida com a avaliação final; detalhe o que quer saber.', reviewedAt: null, updatedAt: new Date().toISOString(), sector: { id: 's1', name: 'Salão - Atendimento' }, createdBy: { name: 'Maira' }, reviewedBy: { name: 'RH Spot' } },
+];
+
 export const FIXTURES: Record<string, unknown> = {
+  '/api/gestor/questionnaires': { questions: PERGUNTAS_Q, sectors: SETORES_Q },
+  '/api/admin/questionnaires': { questions: PERGUNTAS_Q, sectors: SETORES_Q },
   '/api/gestor/notifications': CAIXA_AVISOS,
   '/api/admin/notifications': {
     ...CAIXA_AVISOS,
@@ -360,7 +372,7 @@ export const FIXTURES: Record<string, unknown> = {
   },
   '/api/gestor/lookups': { sectors: [{ id: 's1', name: 'Salão' }], units: [{ id: 'u1', name: 'Paulista' }], shifts: ['DIA', 'NOITE'] },
   '/api/admin/employees': { employees: EXPERIENCIA },
-  '/api/admin/sectors': { sectors: SETORES_EXP.map((x, i) => ({ ...x, active: true, order: i + 1, usesColorCycle: x.id === 's1', inSurvey: true, inEvaluation: true })) },
+  '/api/admin/sectors': { sectors: SETORES_EXP.map((x, i) => ({ ...x, active: true, order: i + 1, usesColorCycle: x.id === 's1', usesFeedback: x.id === 's1', inSurvey: true, inEvaluation: true })) },
   '/api/admin/units': { units: LOJAS_EXP.map((x, i) => ({ ...x, active: true, order: i + 1 })) },
   '/api/admin/admins': { admins: USUARIOS },
   // A tela de avaliacao le useParams().id, que fora de uma rota dinamica vem

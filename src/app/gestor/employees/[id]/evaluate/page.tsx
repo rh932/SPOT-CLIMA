@@ -7,6 +7,9 @@ import {
   EVALUATION_DIMENSIONS, CLASSIFICATION_OPTIONS, CONCLUSION_OPTIONS,
   type RatingOption, type SubAnswerOption,
 } from '@/data/evaluationBank';
+import { UniformeCard } from '@/components/gestor/UniformeCard';
+import { PerguntasExtrasCard, type PerguntaExtra } from '@/components/gestor/PerguntasExtrasCard';
+import { setorAvaliaUniforme } from '@/data/uniforme';
 import { RoteiroPdiForm } from '@/components/gestor/RoteiroPdiForm';
 import {
   CHAVES_ROTEIRO, unidadeUsaRoteiroPdi, dataRevisaoPdi, type PilarRoteiro, type PlanoRoteiro,
@@ -87,6 +90,11 @@ function EvaluateForm() {
   const [notasRoteiro, setNotasRoteiro] = useState<Record<string, RatingOption | null>>({});
   const [obsRoteiro, setObsRoteiro] = useState<Partial<Record<PilarRoteiro['key'], string>>>({});
   const [planoRoteiro, setPlanoRoteiro] = useState<PlanoRoteiro>({ competencias: [], pratica: '', mentoria: '', estudo: '' });
+  const [uniformRating, setUniformRating] = useState<RatingOption | null>(null);
+  const [uniformNotes, setUniformNotes] = useState('');
+  // Perguntas extras do setor (aprovadas pelo RH) e as respostas, por id da pergunta.
+  const [customQuestions, setCustomQuestions] = useState<{ DESEMPENHO: PerguntaExtra[]; FEEDBACK: PerguntaExtra[] }>({ DESEMPENHO: [], FEEDBACK: [] });
+  const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({});
   const [favorableAspects, setFavorableAspects] = useState('');
   const [unfavorableAspects, setUnfavorableAspects] = useState('');
   const [classification, setClassification] = useState('');
@@ -112,8 +120,8 @@ function EvaluateForm() {
     setLoading(true);
     setLoadError(null);
     setLoadForbidden(false);
-    apiFetch<{ employee: Employee; evaluations: { period: PeriodoAvaliacao }[]; canEvaluate: boolean; secondOpinion: SecondOpinion | null }>(`/api/gestor/employees/${params.id}`)
-      .then((d) => { setEmployee(d.employee); setHistorico(d.evaluations ?? []); setCanEvaluate(d.canEvaluate); setSecondOpinion(d.secondOpinion); })
+    apiFetch<{ employee: Employee; evaluations: { period: PeriodoAvaliacao }[]; canEvaluate: boolean; secondOpinion: SecondOpinion | null; customQuestions?: { DESEMPENHO: PerguntaExtra[]; FEEDBACK: PerguntaExtra[] } }>(`/api/gestor/employees/${params.id}`)
+      .then((d) => { setEmployee(d.employee); setHistorico(d.evaluations ?? []); setCanEvaluate(d.canEvaluate); setSecondOpinion(d.secondOpinion); setCustomQuestions(d.customQuestions ?? { DESEMPENHO: [], FEEDBACK: [] }); })
       .catch((e) => { setLoadForbidden(ehSemAcesso(e)); setLoadError(e instanceof Error ? e.message : 'Erro ao carregar.'); })
       .finally(() => setLoading(false));
   }, [params.id]);
@@ -221,6 +229,10 @@ function EvaluateForm() {
   const previewNextDate = color ? nextFeedbackDate(new Date(evaluationDate + 'T00:00:00'), color) : null;
 
   const usaRoteiro = isFeedback && unidadeUsaRoteiroPdi(employee.unit?.name);
+  const usaUniforme = isFeedback && setorAvaliaUniforme(employee.sector?.name);
+  const uniformeIncompleto = usaUniforme && !uniformRating;
+  const perguntasExtras = customQuestions[isFeedback ? 'FEEDBACK' : 'DESEMPENHO'];
+  const extrasIncompletas = perguntasExtras.some((p) => p.required && !(customAnswers[p.id] ?? '').trim());
   const roteiroIncompleto = usaRoteiro && CHAVES_ROTEIRO.some((k) => !notasRoteiro[k]);
   const dimensionsIncomplete = usaRoteiro ? [] : EVALUATION_DIMENSIONS.filter(
     (d) => !ratings[d.key] || d.subQuestions.some((sq) => !subAnswers[d.key][sq.key]),
@@ -231,7 +243,7 @@ function EvaluateForm() {
     !classification ||
     (!isFeedback && !conclusion) ||
     (needsColor && !color);
-  const invalid = dimensionsIncomplete.length > 0 || roteiroIncompleto || finalIncomplete;
+  const invalid = dimensionsIncomplete.length > 0 || roteiroIncompleto || uniformeIncompleto || extrasIncompletas || finalIncomplete;
 
   const submit = async () => {
     if (invalid) {
@@ -262,6 +274,15 @@ function EvaluateForm() {
       if (developmentPoints.trim()) payload.developmentPoints = developmentPoints.trim();
       if (guidance.trim()) payload.guidance = guidance.trim();
       if (trainingNeeds.trim()) payload.trainingNeeds = trainingNeeds.trim();
+      if (usaUniforme && uniformRating) {
+        payload.uniformRating = uniformRating;
+        if (uniformNotes.trim()) payload.uniformNotes = uniformNotes.trim();
+      }
+      if (perguntasExtras.length > 0) {
+        payload.customAnswers = Object.fromEntries(
+          perguntasExtras.map((p) => [p.id, (customAnswers[p.id] ?? '').trim()]).filter(([, v]) => v),
+        );
+      }
       if (usaRoteiro) {
         const observacoes = Object.fromEntries(
           Object.entries(obsRoteiro).map(([k, v]) => [k, (v ?? '').trim()]).filter(([, v]) => v),
@@ -381,6 +402,17 @@ function EvaluateForm() {
         />
         </div>
       ))}
+
+      {usaUniforme && (
+        <UniformeCard rating={uniformRating} onRating={setUniformRating} notes={uniformNotes} onNotes={setUniformNotes} mostrarErro={attempted} />
+      )}
+
+      <PerguntasExtrasCard
+        perguntas={perguntasExtras}
+        respostas={customAnswers}
+        onResposta={(id, v) => setCustomAnswers((prev) => ({ ...prev, [id]: v }))}
+        mostrarErro={attempted}
+      />
 
       <div className="card flex flex-col gap-4" data-erro={attempted && finalIncomplete ? 'true' : undefined}>
         <p className="font-sans text-lg font-extrabold tracking-tight text-spot-gray-900">Avaliação final</p>
@@ -515,6 +547,8 @@ function EvaluateForm() {
           Faltam campos obrigatórios
           {dimensionsIncomplete.length > 0 && ` em ${dimensionsIncomplete.length} dimensão(ões)`}
           {roteiroIncompleto && ' no roteiro (falta nota em algum item)'}
+          {uniformeIncompleto && ' no uniforme (falta a nota)'}
+          {extrasIncompletas && ' nas perguntas do setor'}
           . A tela levou você até o primeiro deles.
         </p>
       )}

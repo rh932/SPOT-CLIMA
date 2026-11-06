@@ -37,6 +37,7 @@ const GRUPOS: { titulo: string; itens: { href: string; label: string; icone: Nom
     itens: [
       { href: '/admin/employees', label: 'Avaliação de Experiência', icone: 'pessoa' },
       { href: '/admin/evaluations', label: 'Histórico de Avaliações e Feedbacks', icone: 'historico' },
+      { href: '/admin/questionarios', label: 'Questionários', icone: 'modelo' },
       { href: '/admin/indicadores', label: 'Indicadores da Experiência', icone: 'indicador' },
       { href: '/admin/trainings', label: 'Treinamentos', icone: 'treino' },
       { href: '/admin/trainings/report', label: 'Relatório de Treinamentos', icone: 'relatorio' },

@@ -26,7 +26,7 @@ const id = () =>
 // Enums
 // ------------------------------------------------------------------
 
-export const adminRoleEnum = pgEnum('admin_role', ['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR']);
+export const adminRoleEnum = pgEnum('admin_role', ['SUPER_ADMIN', 'RH', 'GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR', 'PJ']);
 export const leaderAreaEnum = pgEnum('leader_area', ['COZINHA', 'SALAO', 'ADM', 'DELIVERY']);
 export const surveyStatusEnum = pgEnum('survey_status', ['DRAFT', 'SCHEDULED', 'OPEN', 'CLOSED', 'ARCHIVED']);
 export const questionTypeEnum = pgEnum('question_type', [
@@ -208,8 +208,8 @@ export const adminShifts = pgTable('admin_shifts', {
 // ------------------------------------------------------------------
 
 /**
- * Tipos de treinamento — catálogo gerenciável (ex.: "Avaliações do Bar",
- * "Novos Colaboradores", "Gerentes"). Mesmo padrão de sectors/units.
+ * Tipos de treinamento — catálogo gerenciável (ex.: "Salão", "Bar",
+ * "Gerência"). Mesmo padrão de sectors/units.
  */
 export const trainingTypes = pgTable('training_types', {
   id: id(),
@@ -386,6 +386,14 @@ export const sectors = pgTable('sectors', {
    * amanhã sem precisar de versão nova do sistema.
    */
   usesColorCycle: boolean('uses_color_cycle').notNull().default(false),
+  /**
+   * Se o setor faz feedback dos colaboradores já efetivados. É uma escolha do
+   * setor, separada das cores: feedback SEM cores é registrado quando o gestor
+   * quiser (não agenda data nem gera aviso); feedback COM cores segue o ciclo de
+   * 45/120/180 dias. Quem liga as cores sem o feedback ainda assim faz feedback —
+   * a cor nasce dele (ver lib/feedbackParticipation.ts).
+   */
+  usesFeedback: boolean('uses_feedback').notNull().default(false),
   /**
    * Onde o setor aparece. Quase todo setor vale para os dois, mas a
    * Administração é dividida por gestor (Financeiro, RH, Compras,
@@ -683,6 +691,13 @@ export const performanceEvaluations = pgTable('performance_evaluations', {
   // Roteiro de feedback (PDI) de Paulista e JK: no feedback dessas unidades ele
   // ocupa o lugar das 4 dimensões acima, que ficam nulas. Ver data/roteiroPdi.ts.
   roteiro: jsonb('roteiro'),
+  // Uniforme (feedback dos setores do Salão): nota única e observação. Ver data/uniforme.ts.
+  uniformRating: evaluationRatingEnum('uniform_rating'),
+  uniformNotes: text('uniform_notes'),
+  // Respostas das perguntas extras do setor (aba Questionários). Guarda o TEXTO e o
+  // tipo da pergunta junto com a resposta: editar ou arquivar a pergunta depois
+  // não reescreve o que foi avaliado. Ver lib/questionnaire.ts.
+  customAnswers: jsonb('custom_answers'),
   favorableAspects: text('favorable_aspects').notNull(),
   unfavorableAspects: text('unfavorable_aspects').notNull(),
   classification: evaluationClassificationEnum('classification').notNull(),
@@ -704,6 +719,40 @@ export const performanceEvaluations = pgTable('performance_evaluations', {
   employeePeriodIdx: uniqueIndex('performance_evaluations_employee_period_idx')
     .on(table.employeeId, table.period, table.cycleNumber),
   externalIdIdx: uniqueIndex('performance_evaluations_external_id_idx').on(table.externalId),
+}));
+
+/**
+ * Perguntas extras que o PJ de um setor cria para o formulário de desempenho
+ * (experiência de 45/90 dias) ou para o de feedback daquele setor. O formulário
+ * padrão continua fixo no código; estas entram DEPOIS dele.
+ *
+ * Ciclo: o PJ salva como RASCUNHO, envia para EM_ANALISE e o RH decide
+ * (APROVADA / REPROVADA). Só APROVADA aparece para quem avalia. Mudou o texto
+ * de uma aprovada, ela volta para EM_ANALISE — nunca vai ao ar sem o RH ver.
+ */
+export const questionnaireFormEnum = pgEnum('questionnaire_form', ['DESEMPENHO', 'FEEDBACK']);
+export const questionnaireTypeEnum = pgEnum('questionnaire_question_type', ['NOTA', 'SIM_NAO', 'TEXTO']);
+export const questionnaireStatusEnum = pgEnum('questionnaire_question_status', ['RASCUNHO', 'EM_ANALISE', 'APROVADA', 'REPROVADA', 'ARQUIVADA']);
+
+export const questionnaireQuestions = pgTable('questionnaire_questions', {
+  id: id(),
+  sectorId: text('sector_id').notNull().references(() => sectors.id, { onDelete: 'cascade' }),
+  form: questionnaireFormEnum('form').notNull(),
+  text: text('text').notNull(),
+  type: questionnaireTypeEnum('type').notNull().default('NOTA'),
+  required: boolean('required').notNull().default(true),
+  order: integer('order').notNull().default(0),
+  status: questionnaireStatusEnum('status').notNull().default('RASCUNHO'),
+  createdById: text('created_by_id').references(() => admins.id, { onDelete: 'set null' }),
+  reviewedById: text('reviewed_by_id').references(() => admins.id, { onDelete: 'set null' }),
+  reviewedAt: timestamp('reviewed_at'),
+  // Recado do RH ao reprovar (ou ao pedir ajuste).
+  reviewNote: text('review_note'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  sectorFormIdx: index('questionnaire_questions_sector_form_idx').on(table.sectorId, table.form),
+  statusIdx: index('questionnaire_questions_status_idx').on(table.status),
 }));
 
 /**
@@ -1045,4 +1094,10 @@ export const performanceEvaluationsRelations = relations(performanceEvaluations,
 
 export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one }) => ({
   admin: one(admins, { fields: [pushSubscriptions.adminId], references: [admins.id] }),
+}));
+
+export const questionnaireQuestionsRelations = relations(questionnaireQuestions, ({ one }) => ({
+  sector: one(sectors, { fields: [questionnaireQuestions.sectorId], references: [sectors.id] }),
+  createdBy: one(admins, { fields: [questionnaireQuestions.createdById], references: [admins.id], relationName: 'questionCreatedBy' }),
+  reviewedBy: one(admins, { fields: [questionnaireQuestions.reviewedById], references: [admins.id], relationName: 'questionReviewedBy' }),
 }));

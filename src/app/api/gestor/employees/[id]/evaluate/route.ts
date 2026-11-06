@@ -12,8 +12,11 @@ import { nextFeedbackDate, type FeedbackColor } from '@/lib/feedbackCycle';
 import { statusFromEvaluations } from '@/lib/termination';
 import { secondOpinionFor, SEGUNDA_RESPOSTA_DIAS } from '@/lib/secondOpinion';
 import { nextEvaluationPeriod, type ColorUnlockInput } from '@/lib/colorUnlock';
-import { usesFeedbackCycle } from '@/lib/feedbackParticipation';
+import { usesFeedbackCycle, sectorDoesFeedback } from '@/lib/feedbackParticipation';
+import { formForPeriod, validateCustomAnswers } from '@/lib/questionnaire';
+import { liveQuestionsFor } from '@/lib/questionnaireService';
 import { unidadeUsaRoteiroPdi } from '@/data/roteiroPdi';
+import { setorAvaliaUniforme } from '@/data/uniforme';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
 
@@ -45,7 +48,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     const employee = await db.query.probationaryEmployees.findFirst({
       where: eq(schema.probationaryEmployees.id, params.id),
       with: {
-        sector: { columns: { id: true, name: true, usesColorCycle: true } },
+        sector: { columns: { id: true, name: true, usesColorCycle: true, usesFeedback: true } },
         unit: { columns: { name: true } },
       },
     });
@@ -103,8 +106,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         track: employee.track,
         evaluations: anteriores,
       });
-    if (period === 'FEEDBACK' && !usaCores) {
-      throw new ApiError(409, 'O setor deste colaborador não participa do ciclo de feedback por cores.');
+    // Feedback é escolha do setor (cores implicam feedback). Sem as cores o feedback é
+    // avulso: o gestor registra quando quiser, sem data agendada.
+    if (period === 'FEEDBACK' && !sectorDoesFeedback(employee.sector)) {
+      throw new ApiError(409, 'O setor deste colaborador não faz feedback. O RH pode incluí-lo em Setores.');
     }
 
     // Feedback de Paulista e JK é o roteiro PDI, que substitui as 4 dimensões da
@@ -119,6 +124,16 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     }
     if (!usaRoteiro && !data.flexibilityRating) {
       return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
+    }
+
+    // Uniforme: faz parte do feedback dos setores do Salão (Atendimento, Bar e
+    // Gerência). O setor vem do banco, não do corpo da requisição.
+    const usaUniforme = period === 'FEEDBACK' && setorAvaliaUniforme(employee.sector?.name);
+    if (usaUniforme && !data.uniformRating) {
+      return NextResponse.json({ error: 'Avalie o uniforme: dê uma nota.' }, { status: 400 });
+    }
+    if (!usaUniforme && (data.uniformRating || data.uniformNotes)) {
+      return NextResponse.json({ error: 'A avaliação do uniforme só se aplica ao feedback dos setores do Salão.' }, { status: 400 });
     }
 
     // Conclusão só existe na experiência; cor só a partir do momento em que o
@@ -152,6 +167,14 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         },
         { status: 400 },
       );
+    }
+
+    // Perguntas extras do setor (aprovadas pelo RH): obrigatórias respondidas, e o texto
+    // de cada uma fica gravado junto da resposta.
+    const extras = (await liveQuestionsFor(employee.sectorId))[formForPeriod(period)];
+    const respostasExtras = validateCustomAnswers(extras, data.customAnswers);
+    if (!respostasExtras.ok) {
+      return NextResponse.json({ error: respostasExtras.error, missingQuestionIds: respostasExtras.missingIds }, { status: 400 });
     }
 
     const evaluationDate = new Date(data.evaluationDate);
@@ -203,6 +226,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         learningRating: data.learningRating ?? null,
         learningSubAnswers: data.learningSubAnswers ?? null,
         roteiro: data.roteiro ?? null,
+        uniformRating: data.uniformRating ?? null,
+        uniformNotes: data.uniformNotes || null,
+        customAnswers: respostasExtras.answered.length > 0 ? respostasExtras.answered : null,
         favorableAspects: data.favorableAspects,
         unfavorableAspects: data.unfavorableAspects,
         classification: data.classification,

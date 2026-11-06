@@ -35,7 +35,10 @@ export type PermissionKey =
   | 'managers.manage'
   | 'users.manage'
   | 'settings.manage'
-  | 'audit.view';
+  | 'audit.view'
+  // Perguntas extras dos questionários (PJ cria; RH revisa e decide)
+  | 'questionnaires.manage'
+  | 'questionnaires.review';
 
 export interface PermissionDefinition {
   key: PermissionKey;
@@ -69,9 +72,11 @@ export const PERMISSIONS: PermissionDefinition[] = [
   { key: 'users.manage', label: 'Gerenciar usuários', category: 'Administração' },
   { key: 'settings.manage', label: 'Configurações do sistema', category: 'Administração' },
   { key: 'audit.view', label: 'Auditoria', category: 'Administração' },
+  { key: 'questionnaires.manage', label: 'Criar perguntas dos questionários do setor', category: 'Questionários' },
+  { key: 'questionnaires.review', label: 'Aprovar, reprovar e arquivar perguntas dos questionários', category: 'Questionários' },
 ];
 
-export type Role = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR' | 'GERENTE' | 'GERENTE_AVALIADOR' | 'GERENTE_TREINADOR';
+export type Role = 'SUPER_ADMIN' | 'RH' | 'GESTOR' | 'GESTOR_LIDER' | 'TREINADOR' | 'GERENTE' | 'GERENTE_AVALIADOR' | 'GERENTE_TREINADOR' | 'PJ';
 
 const ALL_KEYS = PERMISSIONS.map((p) => p.key);
 
@@ -149,6 +154,19 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   GERENTE_AVALIADOR: GESTAO_KEYS.filter((k) => !k.startsWith('trainings.')),
   // Gerente treinador: só treinamento do Salão, sem avaliação de experiência.
   GERENTE_TREINADOR: TREINADOR_KEYS,
+  /**
+   * PJ: quem comanda a área. Avalia a equipe como o Gestor, acompanha e corrige como
+   * o Líder (relatórios, excluir cadastro, reabrir treinamento) e é o único perfil
+   * de operação que cria perguntas nos questionários do setor. Criar não é publicar:
+   * quem aprova é o RH (`questionnaires.review`, só dele).
+   */
+  PJ: [
+    ...GESTAO_KEYS,
+    'employees.delete',
+    'trainings.reopen',
+    'reports.view',
+    'questionnaires.manage',
+  ],
 };
 
 export function hasPermission(role: string, key: PermissionKey): boolean {
@@ -167,7 +185,7 @@ export const ADMIN_ROLES: Role[] = ['SUPER_ADMIN', 'RH'];
  * pela mesma porta — o que cada um vê é decidido pelas permissões, não por
  * ter um site separado.
  */
-export const GESTOR_ROLES: Role[] = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR'];
+export const GESTOR_ROLES: Role[] = ['GESTOR', 'GESTOR_LIDER', 'TREINADOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR', 'PJ'];
 
 /**
  * Quem consegue ENTRAR no portal da operação.
