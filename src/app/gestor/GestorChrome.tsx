@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LayoutGroup, MotionConfig, motion } from 'motion/react';
 import { SpotBrand } from '@/components/theme/SpotBrand';
 import { NotificationBell } from '@/components/NotificationBell';
-import { PushPrompt } from '@/components/PushPrompt';
+import { PushGate } from '@/components/PushGate';
 
 import { useMyPermissions } from './useMyPermissions';
 import { activeNavHref, logoutAndLeave } from '@/lib/nav';
@@ -227,7 +227,7 @@ export function GestorChrome({ children }: { children: React.ReactNode }) {
 
         <main id="conteudo" tabIndex={-1} className="flex-1 min-w-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 lg:py-8">
-            {!loadingPerms && can('notifications.receive') && <PushPrompt portal="gestor" />}
+            {!loadingPerms && can('notifications.receive') && <PushGate portal="gestor" onSair={logout} />}
             <div key={pathname} className="animate-fadeIn">
               {children}
             </div>
