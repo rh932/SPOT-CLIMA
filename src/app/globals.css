@@ -1,0 +1,458 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Linguagem visual "Painel Spot" — ver design-system/spot-clima/MASTER.md.
+ *
+ * Em 15/10/2026 o painel trocou o "Boletim" (papel e filete, sem caixa) por um
+ * painel de blocos, a partir de dois modelos do Figma (ATS Resume Analyzer e
+ * Energy Management): barra lateral escura com ícones, indicadores em cartões
+ * com ícone, blocos arredondados com sombra rasa, tabelas com cabeçalho
+ * tingido e status em pílula suave. Marca, cores e fontes continuam as do Spot:
+ * amarelo é ação, preto é tinta forte, Fraunces nos números e títulos.
+ *
+ * A tela de login e a capa da pesquisa seguem como estavam.
+ *
+ * Regras que sustentam o resto:
+ *   1. Bloco é `.card`: borda fina, raio grande, sombra rasa. A sombra não
+ *      reage ao mouse — só o que é clicável reage.
+ *   2. Um bloco dentro de outro bloco não leva moldura (`.card-plain`).
+ *   3. Status é pílula suave com ponto e rótulo escrito: cor sozinha nunca
+ *      carrega significado.
+ */
+
+/*
+ * ─── Cores: claro e escuro ──────────────────────────────────────────────
+ * O modo escuro segue o aparelho (prefers-color-scheme) — não há chave para
+ * ligar. Os valores estão em canais RGB para o Tailwind aplicar opacidade
+ * (ver `c()` em tailwind.config.ts).
+ *
+ * Por que o escuro antigo (preset "Spot Escuro" da Personalização) não
+ * funcionava: só 7 cores eram variáveis. A escala de cinza inteira era fixa,
+ * então o texto de apoio continuava cinza-escuro sobre fundo escuro; e o
+ * "preto" da marca virava claro enquanto os botões e faixas em cima dele
+ * seguiam com `text-white` — letra branca em fundo creme.
+ *
+ * Contraste medido com src/lib/contrast.ts (texto sobre página / cartão):
+ *   claro  gray-900 17.5 · gray-600 7.6 · gray-500 4.8/5.1
+ *   escuro gray-900 16.3/15.0 · gray-600 8.7/8.0 · gray-500 6.5/6.0
+ *          danger 6.5/6.0 · success 8.5/7.8 · warningInk 11.1/10.2
+ *   texto em cima do black (onBlack) 16.3 nos dois; onYellow 12.0.
+ *
+ * Só em `screen`: impresso é sempre claro, mesmo com o telefone no escuro.
+ * `data-tema="claro"` prende um trecho no claro (a prévia do relatório de
+ * impressão): o elemento redeclara as variáveis e vence as herdadas.
+ */
+:root,
+[data-tema="claro"] {
+  color-scheme: light;
+  --spot-black: 22 19 15;
+  --spot-on-black: 238 232 220;
+  --spot-yellow: 245 196 0;
+  --spot-yellow-dark: 227 179 0;
+  --spot-on-yellow: 22 19 15;
+  --spot-white: 251 248 241;
+  --spot-cream: 238 232 220;
+  --spot-gray-50: 245 240 230;
+  --spot-gray-100: 231 224 210;
+  --spot-gray-200: 214 205 188;
+  --spot-gray-300: 196 186 167;
+  --spot-gray-400: 150 141 125;
+  --spot-gray-500: 104 96 82;
+  --spot-gray-600: 80 73 62;
+  --spot-gray-700: 56 51 43;
+  --spot-gray-800: 38 34 28;
+  --spot-gray-900: 22 19 15;
+  --spot-danger: 178 50 30;
+  --spot-danger-dark: 145 38 21;
+  --spot-success: 36 94 60;
+  --spot-warning: 227 179 0;
+  --spot-warning-ink: 120 86 0;
+  --spot-sidebar: 22 19 15;
+  --spot-sidebar-text: 238 232 220;
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    /* Faz o navegador desenhar escuros os controles nativos: seta do select,
+       calendário do campo de data, barra de rolagem, autocompletar. */
+    color-scheme: dark;
+    --spot-black: 238 232 220;
+    --spot-on-black: 22 19 15;
+    --spot-white: 32 29 25;
+    --spot-cream: 21 19 16;
+    --spot-gray-50: 27 25 21;
+    --spot-gray-100: 40 37 32;
+    --spot-gray-200: 54 50 43;
+    --spot-gray-300: 80 74 64;
+    --spot-gray-400: 114 107 94;
+    --spot-gray-500: 160 151 135;
+    --spot-gray-600: 186 178 162;
+    --spot-gray-700: 209 201 186;
+    --spot-gray-800: 227 221 208;
+    --spot-gray-900: 238 232 220;
+    --spot-danger: 240 128 104;
+    --spot-danger-dark: 246 168 152;
+    --spot-success: 116 198 146;
+    --spot-warning-ink: 232 195 90;
+    /* Um tom abaixo da página: a barra continua se destacando dela. */
+    --spot-sidebar: 12 10 8;
+  }
+}
+/*
+ * Capas de entrada (LoginCover, SurveyCover) ficam FORA do redesenho, por
+ * decisão do usuário: dentro de `.capa-entrada` valem a paleta e a fonte de
+ * antes da "Placa de serviço", nos dois modos.
+ */
+.capa-entrada {
+  --spot-black: 11 11 11;
+  --spot-on-black: 255 255 255;
+  --spot-yellow: 245 196 0;
+  --spot-yellow-dark: 217 174 0;
+  --spot-on-yellow: 11 11 11;
+  --spot-white: 255 255 255;
+  --spot-cream: 250 250 247;
+  --spot-gray-50: 250 250 250;
+  --spot-gray-100: 242 242 240;
+  --spot-gray-200: 228 228 225;
+  --spot-gray-300: 203 203 198;
+  --spot-gray-400: 156 156 149;
+  --spot-gray-500: 111 111 104;
+  --spot-gray-600: 84 84 79;
+  --spot-gray-700: 58 58 54;
+  --spot-gray-800: 37 37 31;
+  --spot-gray-900: 21 21 18;
+  --spot-danger: 201 58 58;
+  --spot-danger-dark: 168 46 46;
+  --spot-success: 15 122 61;
+  --spot-warning: 232 180 0;
+  --spot-warning-ink: 138 101 0;
+  --spot-sidebar: 11 11 11;
+  --spot-sidebar-text: 255 255 255;
+  font-family: var(--font-capa), system-ui, sans-serif;
+}
+@media screen and (prefers-color-scheme: dark) {
+  .capa-entrada {
+    --spot-black: 242 239 232;
+    --spot-on-black: 18 18 17;
+    --spot-white: 27 27 25;
+    --spot-cream: 18 18 17;
+    --spot-gray-50: 24 24 23;
+    --spot-gray-100: 36 36 34;
+    --spot-gray-200: 46 46 43;
+    --spot-gray-300: 74 74 69;
+    --spot-gray-400: 110 109 102;
+    --spot-gray-500: 154 152 143;
+    --spot-gray-600: 179 177 169;
+    --spot-gray-700: 204 202 194;
+    --spot-gray-800: 226 224 217;
+    --spot-gray-900: 242 239 232;
+    --spot-danger: 240 113 113;
+    --spot-danger-dark: 246 163 163;
+    --spot-success: 76 196 126;
+    --spot-warning-ink: 232 195 90;
+    --spot-sidebar: 8 8 7;
+  }
+}
+
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+    /* Evita que o iOS aumente a fonte sozinho ao girar o telefone. */
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-spot-cream text-spot-gray-900 font-sans antialiased;
+  }
+  /* Número em tabela e em indicador precisa alinhar em coluna: sem isto o "1"
+     ocupa menos espaço que o "8" e a coluna de porcentagem fica tremida. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Título grande numa tela de 375px quebra em duas linhas com
+     uma palavra sozinha embaixo ("Avaliação de / Experiência"). `balance`
+     divide as linhas por igual; `pretty` só evita a viúva no parágrafo.
+     Navegador sem suporte ignora a regra e fica como antes. */
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p, li {
+    text-wrap: pretty;
+  }
+  /* Foco sempre visível para quem navega por teclado — o `focus:outline-none`
+     dos campos tira o contorno padrão, e sem isto não sobra nenhuma pista. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-spot-yellow ring-offset-2 ring-offset-spot-white rounded-sm;
+  }
+}
+
+@layer components {
+  /* ─── Superfície ──────────────────────────────────────────────────────
+     Linguagem "Placa de serviço" (ver design-system/spot-clima/MASTER.md).
+     O bloco é papel claro sobre a página creme, com filete fino e canto
+     médio — sem sombra: o que tem relevo no sistema são as TECLAS (botões),
+     não as caixas. A hierarquia vem do número grande e do cabeçalho de seção
+     sobre filete de tinta.
+     min-w-0 é essencial: sem isso, um card que é item flex/grid (a maioria
+     é) nunca encolhe abaixo da largura mínima do seu conteúdo — e cards com
+     tabelas largas (mapa de calor, etc.) empurram a página inteira para o
+     lado no mobile em vez de rolar só internamente via overflow-x-auto. */
+  .card {
+    @apply bg-spot-white rounded-xl2 border border-spot-gray-200 p-5 sm:p-6 min-w-0;
+  }
+  /* Variante sem moldura, para quando o bloco já está dentro de outro. */
+  .card-plain {
+    @apply bg-transparent border-0 shadow-none rounded-none p-0 min-w-0;
+  }
+  /* Linha tracejada entre dois itens de uma lista. */
+  .picote {
+    @apply border-0 border-t border-dashed border-spot-gray-300;
+  }
+  /* Rótulo micro em mono, caixa-alta: índice, metadado, cabeçalho de coluna. */
+  .rotulo-mono {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-spot-gray-600;
+  }
+  /* Título de página: a "placa" — grotesca 800, grande e apertada. O salto
+     de escala (≈3,5× o corpo) e de peso (800 × 400) faz a hierarquia. */
+  .titulo-pagina {
+    @apply font-sans text-[2.25rem] sm:text-[3.25rem] font-extrabold leading-[1.02] tracking-[-0.035em] text-spot-gray-900;
+  }
+  /* Voz do sistema: serifa itálica, para subtítulo e para o que fala com a
+     pessoa. Nunca em dado nem em botão. */
+  .voz {
+    @apply font-display italic font-normal text-spot-gray-800;
+  }
+
+  /* ─── Seção ───────────────────────────────────────────────────────────
+     Cabeçalho do bloco: índice e título em mono caixa-alta sobre filete de
+     tinta, apoio à direita. Usar via <Secao>, em src/components/ui. */
+  .secao-regua {
+    @apply flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4 pb-2 border-b-[1.5px] border-spot-gray-900;
+  }
+  .secao-indice {
+    @apply font-mono text-[11px] font-medium tracking-[0.14em] text-spot-gray-500 shrink-0;
+  }
+  .secao-titulo {
+    @apply font-mono text-xs font-medium uppercase tracking-[0.14em] leading-tight text-spot-gray-900;
+  }
+  .secao-apoio {
+    @apply font-mono text-[11px] uppercase tracking-[0.12em] text-spot-gray-500 sm:ml-auto;
+  }
+
+  /* ─── Indicadores ─────────────────────────────────────────────────────
+     Número enorme em grotesca 800 sob um filete de tinta, sem cartão e sem
+     ícone. O destaque vira a PLACA amarela — uma só por tela, para o que o
+     RH precisa ver primeiro. */
+  .stat-regua {
+    @apply grid grid-cols-2 xl:grid-cols-4 gap-x-5 gap-y-6;
+  }
+  .stat {
+    @apply relative flex flex-col border-t-[1.5px] border-spot-gray-900 pt-2.5 min-w-0;
+  }
+  /* O ícone no quadradinho era sinal de template: saiu. A classe fica para
+     não quebrar quem ainda a passe. */
+  .stat-icone {
+    @apply hidden;
+  }
+  .stat-rotulo {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-spot-gray-600;
+  }
+  .stat-valor {
+    @apply font-sans text-5xl sm:text-6xl font-extrabold leading-[0.85] tracking-[-0.05em] text-spot-gray-900 mt-3 tabular;
+  }
+  .stat-apoio {
+    @apply text-sm text-spot-gray-600 mt-2;
+  }
+  .stat-destaque {
+    @apply border-t-0 rounded-xl2 bg-spot-yellow p-4 sm:p-5;
+  }
+  .stat-destaque .stat-rotulo,
+  .stat-destaque .stat-valor,
+  .stat-destaque .stat-apoio {
+    @apply text-spot-onYellow;
+  }
+
+  /* ─── Ações ───────────────────────────────────────────────────────────
+     Botão é TECLA: filete de tinta e uma sombra sólida de 3px embaixo, que
+     some quando a tecla é apertada (o botão desce 3px). É o único relevo do
+     sistema — por isso se lê como "aperte aqui" sem precisar de cor.
+     min-h-11 (44px) é o alvo mínimo confortável para o dedo. */
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 min-h-11 rounded-btn border-[1.5px] border-spot-gray-900 font-medium px-5 py-2.5 transition-[background-color,transform,box-shadow] duration-100 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    @apply shadow-[0_3px_0_rgb(var(--spot-gray-900))] active:translate-y-[3px] active:shadow-none;
+  }
+  .btn-primary {
+    @apply bg-spot-yellow text-spot-onYellow hover:bg-spot-yellowDark;
+  }
+  .btn-secondary {
+    @apply bg-spot-black text-spot-onBlack hover:bg-spot-gray-800;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-spot-gray-900 hover:bg-spot-gray-100 active:bg-spot-gray-200;
+  }
+  /* Ação que apaga: vermelho fixo nos dois modos, com texto branco. */
+  .btn-danger {
+    @apply bg-spot-dangerFill text-white hover:bg-spot-dangerFillHover;
+  }
+
+  /* "Pular para o conteúdo": primeira parada do Tab. Sem ele, quem navega
+     por teclado atravessa os 16 itens do menu do RH a cada troca de tela
+     antes de chegar no formulário. Invisível até receber foco. */
+  .pular-conteudo {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[70] focus:bg-spot-yellow focus:text-spot-onYellow focus:font-semibold focus:text-sm focus:px-4 focus:py-3 focus:rounded-btn;
+  }
+
+  /* Modal é uma das poucas coisas que REALMENTE paira sobre a página, então
+     é uma das poucas que ganha sombra. */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn;
+  }
+  .modal-panel {
+    @apply animate-scaleIn shadow-[0_24px_60px_-12px_rgba(0,0,0,0.35)];
+  }
+  /* No escuro o painel e a página atrás dele têm quase o mesmo tom, e a sombra
+     preta não aparece sobre fundo preto: quem separa os dois é um filete. */
+  @media screen and (prefers-color-scheme: dark) {
+    .modal-panel {
+      box-shadow: 0 0 0 1px rgb(var(--spot-gray-300)), 0 24px 60px -12px rgb(0 0 0 / 0.7);
+    }
+    .modal-overlay {
+      background-color: rgb(0 0 0 / 0.7);
+    }
+  }
+
+  /* ─── Formulário ──────────────────────────────────────────────────────
+     min-h-11 (44px), o mesmo alvo dos botões. */
+  .input {
+    /* text-base no celular, text-sm do sm: para cima.
+       Não é estética: o Safari do iPhone dá zoom automático ao focar um campo
+       com fonte menor que 16px, e a página fica torta até a pessoa fechar o
+       teclado. Como o sistema é usado principalmente no telefone, o campo
+       nasce com 16px e só encolhe onde há mouse. */
+    @apply w-full min-h-11 rounded-btn border-[1.5px] border-spot-gray-300 bg-spot-white px-3.5 py-2.5 text-base sm:text-sm transition-colors placeholder:text-spot-gray-500 hover:border-spot-gray-500 focus:outline-none focus:ring-2 focus:ring-spot-yellow focus:border-spot-gray-900;
+  }
+  .label {
+    @apply block font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-spot-gray-700 mb-1.5;
+  }
+
+  /* ─── Estado e classificação ──────────────────────────────────────────
+     Etiqueta em mono caixa-alta, canto de 3px — a mesma da aba de prazo das
+     fichas. A classificação ganha contorno de tinta e um quadradinho com a
+     cor da escala (a MESMA do mapa de calor); o rótulo continua por extenso,
+     porque cor sozinha não carrega significado (≈8% dos homens tem daltonia
+     vermelho-verde). `.badge` puro recebe o fundo de quem usa. */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-[3px] px-1.5 py-0.5 font-mono text-[10.5px] font-medium uppercase tracking-[0.1em] whitespace-nowrap;
+  }
+  .badge-excellent,
+  .badge-good,
+  .badge-attention,
+  .badge-critical,
+  .badge-very-critical {
+    @apply border border-spot-gray-900 text-spot-gray-900;
+  }
+  .badge-excellent::before,
+  .badge-good::before,
+  .badge-attention::before,
+  .badge-critical::before,
+  .badge-very-critical::before {
+    content: '';
+    @apply h-2 w-2 shrink-0 rounded-[1px];
+    background: var(--badge-ponto);
+  }
+  .badge-excellent { --badge-ponto: #245e3c; }
+  .badge-good { --badge-ponto: #4fa84b; }
+  .badge-attention { --badge-ponto: #e3b300; }
+  .badge-critical { --badge-ponto: #e27a2e; }
+  .badge-very-critical { --badge-ponto: #d9442a; }
+
+  /* ─── Tabela ──────────────────────────────────────────────────────────
+     Cabeçalho em mono sobre filete de tinta; linhas separadas por traço.
+     O realce ao passar o mouse é reforço: a leitura não depende dele. */
+  .tabela {
+    @apply w-full text-sm;
+  }
+  .tabela thead th {
+    @apply border-b-[1.5px] border-spot-gray-900 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-spot-gray-600 text-left px-3 py-2.5 whitespace-nowrap;
+  }
+  .tabela tbody td {
+    @apply px-3 py-3 align-top border-b border-dashed border-spot-gray-300;
+  }
+  .tabela tbody tr {
+    @apply transition-colors hover:bg-spot-gray-50;
+  }
+  .tabela tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  /* ─── Capas de entrada ────────────────────────────────────────────────
+     Login e capa da pesquisa ficaram fora do redesenho (decisão do usuário):
+     dentro de `.capa-entrada` os botões, campos e rótulos voltam ao desenho
+     de antes — sem filete de tinta, sem sombra de tecla. */
+  .capa-entrada :is(.btn-primary, .btn-secondary, .btn-danger) {
+    @apply border-0 shadow-none font-semibold px-6 py-3 active:translate-y-0 active:scale-[0.98];
+  }
+  .capa-entrada .btn-ghost {
+    @apply border border-spot-gray-300 text-spot-gray-700 hover:border-spot-gray-500 active:scale-[0.98];
+  }
+  .capa-entrada .input {
+    @apply border focus:border-spot-yellow;
+  }
+  .capa-entrada .label {
+    @apply font-sans text-xs normal-case tracking-normal;
+  }
+
+  /* Filete solto, para separar dois assuntos dentro do mesmo bloco. */
+  .regua {
+    @apply border-0 border-t border-spot-gray-200 my-6;
+  }
+}
+
+/* Respeita a preferência de sistema por menos movimento — encurta todas as
+   transições/animações praticamente a zero em vez de removê-las (mantém o
+   estado final correto sem depender de JS extra). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Impressão dos códigos de participação (AccessCodesPanel): só os papéis vão
+ * para a folha, em grade, sem o resto do painel.
+ */
+@media print {
+  body.imprimindo-codigos * {
+    visibility: hidden;
+  }
+  body.imprimindo-codigos .print-slips,
+  body.imprimindo-codigos .print-slips * {
+    visibility: visible;
+  }
+  body.imprimindo-codigos .print-slips {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: #fff;
+    color: #000;
+  }
+  body.imprimindo-codigos .print-slip {
+    break-inside: avoid;
+    border-color: #999;
+  }
+}

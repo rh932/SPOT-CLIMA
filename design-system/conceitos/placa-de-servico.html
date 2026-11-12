@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Spot Integra — Placa de serviço</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,800&family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#EEE8DC; --papel2:#E5DDCD; --tinta:#16130F; --tinta2:#2A251E;
+  --amarelo:#F5C400; --amarelo2:#E3B300; --tomate:#D9442A; --folha:#2F6B47;
+  --cinza:#8A8273; --linha:#CFC5B2;
+  --g:'Bricolage Grotesque',sans-serif; --s:'Instrument Serif',serif; --m:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1600px;height:1000px;overflow:hidden;font-family:var(--g);color:var(--tinta);
+  background:var(--papel);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.09 0 0 0 0 0.07 0 0 0 0 0.05 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.mono{font-family:var(--m);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.serif{font-family:var(--s);font-style:italic;font-weight:400}
+
+/* cabeçalho do estudo */
+.topo{position:absolute;left:56px;right:56px;top:40px;display:grid;grid-template-columns:auto 1fr auto;gap:40px;align-items:end;border-bottom:1.5px solid var(--tinta);padding-bottom:18px}
+.topo h1{font-size:64px;font-weight:800;letter-spacing:-.035em;line-height:.9}
+.topo h1 .serif{font-size:70px;letter-spacing:-.01em}
+.movs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 26px;color:var(--tinta2);font-family:var(--m);font-size:11px;line-height:1.45}
+.movs b{font-weight:500;color:var(--tinta)}
+.paleta{display:flex;gap:6px;align-items:flex-end}
+.paleta i{display:block;width:30px;height:46px;border:1px solid rgba(0,0,0,.12)}
+
+/* molduras */
+.quadro{position:absolute;top:168px}
+.legenda{margin-top:14px;display:flex;flex-direction:column;gap:4px;color:var(--tinta2)}
+.fone{width:330px;height:700px;border-radius:44px;background:var(--tinta);padding:11px;box-shadow:0 30px 60px -30px rgba(22,19,15,.55),0 2px 0 rgba(255,255,255,.4) inset}
+.tela{width:100%;height:100%;border-radius:34px;overflow:hidden;position:relative}
+
+/* 01 colaborador */
+.c{background:var(--amarelo);display:flex;flex-direction:column}
+.c .bar{display:flex;justify-content:space-between;padding:20px 22px 0}
+.c .prog{display:flex;gap:3px;padding:14px 22px 0}
+.c .prog i{flex:1;height:5px;background:rgba(22,19,15,.18)}
+.c .prog i.on{background:var(--tinta)}
+.c .q{padding:30px 22px 0}
+.c .q small{display:block;margin-bottom:12px}
+.c .q h2{font-family:var(--s);font-weight:400;font-size:39px;line-height:1.02;letter-spacing:-.01em}
+.c .q h2 em{font-style:italic}
+.teclas{margin-top:auto;background:var(--papel);padding:20px 18px 22px;border-top:1.5px solid var(--tinta)}
+.teclas .row{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.k{height:62px;border-radius:9px;background:#FBF8F1;border:1.5px solid var(--tinta);box-shadow:0 4px 0 var(--tinta);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:22px}
+.k span{font-family:var(--m);font-size:8.5px;letter-spacing:.06em;font-weight:400;margin-top:2px;text-transform:uppercase}
+.k.on{background:var(--tinta);color:var(--amarelo);transform:translateY(3px);box-shadow:0 1px 0 var(--tinta)}
+.teclas .anon{display:flex;gap:8px;align-items:flex-start;margin:16px 2px 14px;font-size:12.5px;line-height:1.35;color:var(--tinta2)}
+.teclas .anon b{font-family:var(--m);font-size:10px;letter-spacing:.12em;background:var(--tinta);color:var(--papel);padding:2px 5px;font-weight:500}
+.go{height:52px;border-radius:9px;background:var(--tinta);color:var(--papel);display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-weight:500;font-size:16px}
+
+/* 02 admin */
+.mon{width:750px;height:640px;background:var(--tinta);border-radius:14px;padding:10px;box-shadow:0 34px 60px -30px rgba(22,19,15,.6)}
+.desk{width:100%;height:100%;border-radius:6px;overflow:hidden;background:var(--papel);display:grid;grid-template-columns:62px 1fr}
+.rail{background:var(--tinta);color:var(--papel);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:4px}
+.rail .logo{width:34px;height:34px;background:var(--amarelo);color:var(--tinta);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;border-radius:4px;margin-bottom:16px}
+.rail a{font-family:var(--m);font-size:10.5px;letter-spacing:.08em;width:46px;height:40px;display:flex;align-items:center;justify-content:center;color:rgba(238,232,220,.6);border-radius:4px}
+.rail a.on{background:var(--papel);color:var(--tinta)}
+.main{padding:20px 26px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+.main .head{display:flex;justify-content:space-between;align-items:baseline}
+.main .head h3{font-size:22px;font-weight:500;letter-spacing:-.01em}
+.sel{border:1.5px solid var(--tinta);border-radius:6px;padding:6px 10px;font-family:var(--m);font-size:11px}
+.hero{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:stretch}
+.indice{border-top:1.5px solid var(--tinta);padding-top:8px}
+.indice .num{font-size:128px;font-weight:800;letter-spacing:-.06em;line-height:.82;margin-top:10px}
+.indice .num sup{font-size:48px;letter-spacing:-.02em;vertical-align:top;position:relative;top:16px;margin-left:2px}
+.indice p{margin-top:10px;font-size:13px;color:var(--tinta2)}
+.indice p .serif{font-size:20px;color:var(--tinta)}
+.alerta{background:var(--amarelo);border-radius:10px;padding:18px 18px 16px;display:flex;flex-direction:column;position:relative}
+.alerta .tag{align-self:flex-start;background:var(--tinta);color:var(--amarelo);padding:3px 7px;border-radius:3px}
+.alerta h4{font-family:var(--s);font-weight:400;font-size:26px;line-height:1.02;margin-top:14px}
+.alerta h4 em{font-style:italic}
+.alerta .n{font-size:13px;margin-top:8px;color:var(--tinta2)}
+.alerta .btn{margin-top:auto;align-self:flex-start;background:var(--tinta);color:var(--papel);font-size:13px;font-weight:500;padding:9px 13px;border-radius:6px}
+.dims{display:grid;grid-template-columns:1.15fr 1fr;gap:20px}
+.blk h5{display:flex;justify-content:space-between;border-bottom:1.5px solid var(--tinta);padding-bottom:6px;margin-bottom:6px}
+.dim{display:grid;grid-template-columns:118px 1fr 36px;align-items:center;gap:10px;padding:5px 0;font-size:13px}
+.led{display:grid;grid-template-columns:repeat(20,1fr);gap:2px}
+.led i{height:12px;background:var(--linha);border-radius:1px}
+.led.ok i.on{background:var(--folha)} .led.mid i.on{background:var(--amarelo2)} .led.bad i.on{background:var(--tomate)}
+.dim b{font-family:var(--m);font-weight:500;font-size:12px;text-align:right}
+.lista .l{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:7px 0;border-bottom:1px dashed var(--linha);font-size:13px}
+.lista .l small{color:var(--cinza);font-size:11.5px}
+.prazo{font-family:var(--m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;align-self:center;padding:3px 6px;border-radius:3px}
+.p0{background:var(--tomate);color:#fff}.p1{background:var(--tinta);color:var(--amarelo)}.p2{border:1px solid var(--tinta)}
+
+/* 03 gestor */
+.g{background:var(--papel);display:flex;flex-direction:column}
+.g .top{background:var(--tinta);color:var(--papel);padding:20px 20px 22px}
+.g .top .row{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.1em;color:rgba(238,232,220,.65)}
+.g .top h2{font-size:58px;font-weight:800;letter-spacing:-.05em;line-height:.85;margin-top:20px;color:var(--amarelo)}
+.g .top h2 .serif{font-size:30px;letter-spacing:0;color:var(--papel);display:block;margin-top:6px;line-height:1}
+.fichas{padding:16px 14px 0;display:flex;flex-direction:column;gap:10px;flex:1}
+.ficha{background:#FBF8F1;border:1.5px solid var(--tinta);border-radius:8px;position:relative;padding:12px 13px 12px 15px;display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.ficha:before{content:'';position:absolute;left:-1.5px;top:-1.5px;bottom:-1.5px;width:7px;border-radius:8px 0 0 8px;background:var(--c)}
+.ficha strong{font-size:16px;font-weight:500}
+.ficha small{font-size:12px;color:var(--cinza);grid-column:1}
+.ficha .acao{grid-column:1/3;margin-top:9px;display:flex;gap:6px}
+.ficha .acao span{font-size:12px;font-weight:500;padding:7px 10px;border-radius:6px;border:1.5px solid var(--tinta)}
+.ficha .acao span.f{background:var(--amarelo);border-color:var(--amarelo)}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1.5px solid var(--tinta);background:var(--papel)}
+.tabs a{font-family:var(--m);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;text-align:center;padding:14px 0 18px;color:var(--cinza);position:relative}
+.tabs a.on{color:var(--tinta)}
+.tabs a.on:before{content:'';position:absolute;top:-1.5px;left:22%;right:22%;height:4px;background:var(--amarelo)}
+.tabs a sup{background:var(--tomate);color:#fff;border-radius:3px;padding:0 3px;margin-left:2px}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div>
+    <p class="mono" style="color:var(--tinta2);margin-bottom:10px">Spot Integra · estudo de redesign nº 02 · 28/10/2026</p>
+    <h1>Placa de <span class="serif">serviço</span></h1>
+  </div>
+  <div class="movs">
+    <span><b>01</b> Amarelo Spot como superfície, não como enfeite: uma placa por tela.</span>
+    <span><b>02</b> Número enorme em grotesca 800 é o título da tela.</span>
+    <span><b>03</b> Serifa itálica só quando o sistema fala com a pessoa.</span>
+    <span><b>04</b> Resposta em teclas físicas, com curso e sombra real.</span>
+    <span><b>05</b> Gente em fichas com aba de prazo; dados em mono.</span>
+    <span><b>06</b> Medidor em LED no lugar de gráfico de pizza.</span>
+  </div>
+  <div class="paleta">
+    <i style="background:var(--amarelo)"></i><i style="background:var(--tinta)"></i><i style="background:var(--papel);height:46px"></i><i style="background:var(--tomate);height:24px"></i><i style="background:var(--folha);height:24px"></i>
+  </div>
+</header>
+
+<!-- 01 COLABORADOR -->
+<section class="quadro" style="left:56px">
+  <div class="fone"><div class="tela c">
+    <div class="bar mono"><span>Pesquisa de clima</span><span>07 / 24</span></div>
+    <div class="prog"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="q">
+      <small class="mono">Liderança · pergunta 7</small>
+      <h2>O seu líder avisa <em>com antecedência</em> quando a escala muda?</h2>
+    </div>
+    <div class="teclas">
+      <div class="row">
+        <div class="k">1<span>Nunca</span></div>
+        <div class="k">2<span>Pouco</span></div>
+        <div class="k">3<span>Às vezes</span></div>
+        <div class="k on">4<span>Quase</span></div>
+        <div class="k">5<span>Sempre</span></div>
+      </div>
+      <div class="anon"><b>ANÔNIMA</b><span>Ninguém vê sua resposta sozinha. O RH só enxerga grupos de 5 pessoas ou mais.</span></div>
+      <div class="go"><span>Próxima pergunta</span><span class="mono" style="font-size:13px">→</span></div>
+    </div>
+  </div></div>
+  <div class="legenda mono"><span>01 — Colaborador</span><span>celular · 1 vez por semestre</span></div>
+</section>
+
+<!-- 02 ADMIN -->
+<section class="quadro" style="left:428px">
+  <div class="mon"><div class="desk">
+    <nav class="rail">
+      <div class="logo">S</div>
+      <a class="on">CLI</a><a>PES</a><a>EXP</a><a>TRE</a><a>PLA</a><a>CAD</a>
+    </nav>
+    <div class="main">
+      <div class="head">
+        <h3>Clima <span class="serif" style="font-size:24px">— 1º semestre 2026</span></h3>
+        <span class="sel">Todas as unidades ▾</span>
+      </div>
+      <div class="hero">
+        <div class="indice">
+          <div style="display:flex;justify-content:space-between" class="mono"><span>Índice de clima</span><span style="color:var(--folha)">▲ 4 pts vs. 2º sem/25</span></div>
+          <div class="num">71<sup>%</sup></div>
+          <p><span class="serif">Bom, com um ponto fraco.</span> 48 de 77 pessoas responderam (62%).</p>
+        </div>
+        <div class="alerta">
+          <span class="tag mono">Pede atenção</span>
+          <h4>Carga de trabalho na <em>Cozinha</em> caiu para 49%.</h4>
+          <p class="n">Era 61% em abril. 9 comentários citam o fechamento de sábado.</p>
+          <span class="btn">Abrir plano de ação da Cozinha →</span>
+        </div>
+      </div>
+      <div class="dims">
+        <div class="blk">
+          <h5 class="mono"><span>Por dimensão</span><span>0–100</span></h5>
+          <div class="dim"><span>Reconhecimento</span><div class="led ok">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div><b>86</b></div>
+          <div class="dim"><span>Liderança</span><div class="led ok">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div><b>77</b></div>
+          <div class="dim"><span>Comunicação</span><div class="led mid">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>70</b></div>
+          <div class="dim"><span>Remuneração</span><div class="led bad">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>55</b></div>
+          <div class="dim"><span>Carga de trabalho</span><div class="led bad">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>49</b></div>
+        </div>
+        <div class="blk lista">
+          <h5 class="mono"><span>Experiência vencendo</span><span>esta semana · 12</span></h5>
+          <div class="l"><span>Joana Ferreira</span><span class="prazo p0">Atrasada 2d</span><small>Garçonete · Salão · Paulista</small></div>
+          <div class="l"><span>Diego Salles</span><span class="prazo p1">Hoje</span><small>Auxiliar · Salão · Paulista</small></div>
+          <div class="l"><span>Rafael Moura</span><span class="prazo p2">Sex 31/10</span><small>Barman · Bar · Itaim</small></div>
+          <div class="l" style="border:0"><span style="font-size:12px;text-decoration:underline;text-decoration-color:var(--amarelo2);text-decoration-thickness:2px;text-underline-offset:3px">Ver as 12 →</span></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <div class="legenda mono"><span>02 — RH / Admin</span><span>desktop · todo dia no escritório</span></div>
+</section>
+
+<!-- 03 GESTOR -->
+<section class="quadro" style="left:1214px">
+  <div class="fone"><div class="tela g">
+    <div class="top">
+      <div class="row mono"><span>Qua 28/10 · noite</span><span>Salão · Paulista</span></div>
+      <h2>3 hoje<span class="serif">avaliações antes de fechar o turno</span></h2>
+    </div>
+    <div class="fichas">
+      <div class="ficha" style="--c:var(--tomate)">
+        <strong>Joana Ferreira</strong><span class="prazo p0">2 dias atrasada</span>
+        <small>Garçonete · 45 dias de casa</small>
+        <div class="acao"><span class="f">Avaliar agora</span><span>Ver ficha</span></div>
+      </div>
+      <div class="ficha" style="--c:var(--amarelo)">
+        <strong>Diego Salles</strong><span class="prazo p1">Hoje</span>
+        <small>Auxiliar · 90 dias de casa</small>
+      </div>
+      <div class="ficha" style="--c:var(--folha)">
+        <strong>Rafael Moura</strong><span class="prazo p2">Treino</span>
+        <small>Fecha sexta · marcar Apto ou Não apto</small>
+      </div>
+    </div>
+    <nav class="tabs">
+      <a class="on">Hoje<sup>3</sup></a><a>Equipe</a><a>Treino</a><a>Feedback</a>
+    </nav>
+  </div></div>
+  <div class="legenda mono"><span>03 — Gestor</span><span>celular · no meio do turno</span></div>
+</section>
+
+</body>
+</html>
