@@ -228,6 +228,7 @@ export default function EmployeeDetailPage() {
       <TerminationSection
         employee={employee}
         onChanged={load}
+        endpoint={`/api/admin/employees/${employee.id}/termination`}
         // Desligado por "Demitir" na avaliação: o desligamento vem dela, não do RH.
         podeDesfazer={Boolean(employee.previousStatus) || statusFromEvaluations(evaluations.map((ev) => ({ period: ev.period, conclusion: ev.conclusion as 'DEMITIR' | 'EFETIVAR' | 'EXTENDER' | null, evaluationDate: ev.evaluationDate })), employee.isApprentice) !== 'TERMINATED'}
       />

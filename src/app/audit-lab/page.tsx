@@ -33,6 +33,7 @@ import AdminSectorsPage from '../admin/sectors/page';
 import AdminActionPlansPage from '../admin/action-plans/page';
 import AdminTemplatesPage from '../admin/templates/page';
 import GestorEmployeePage from '../gestor/employees/[id]/page';
+import DesligadosPage from '../gestor/desligados/page';
 import AdminOverviewPage from '../admin/page';
 import AdminResultsPage from '../admin/results/page';
 import AdminCommentsPage from '../admin/comments/page';
@@ -103,6 +104,7 @@ const TELAS: Record<string, () => React.JSX.Element> = {
   perguntas: PerguntasBancada,
   questionariosgestor: QuestionariosGestorPage as () => React.JSX.Element,
   questionariosrh: QuestionariosAdminPage as () => React.JSX.Element,
+  desligados: DesligadosPage as () => React.JSX.Element,
 };
 
 /** `?chrome=admin|gestor` monta a tela dentro do menu real do portal. */

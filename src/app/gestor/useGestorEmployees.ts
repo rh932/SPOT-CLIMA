@@ -32,6 +32,10 @@ export interface GestorEmployee extends DueDateFields {
   }[];
   /** Outro gestor já respondeu o período e este ainda pode dar a 2ª resposta (setor com dois gestores). */
   secondOpinion?: { period: 'FIRST' | 'SECOND'; until: string } | null;
+  /** Já saiu do Spot: fica só na aba Desligados e no histórico. */
+  desligado?: boolean;
+  /** Data e motivo da saída; nulos em quem foi desligado pela avaliação antes do registro existir. */
+  saida?: { date: string | null; reason: string | null } | null;
 }
 
 export const STATUS_LABEL: Record<GestorEmployee['status'], string> = {
@@ -206,9 +210,14 @@ export function useGestorEmployees() {
     [],
     { mensagemPadrao: 'Erro ao carregar a sua equipe.' },
   );
+  const todos = data?.employees ?? [];
 
   return {
-    employees: data?.employees ?? [],
+    // Quem já saiu do Spot não aparece nas abas do dia a dia: fica em
+    // `desligados` (aba Desligados). `todos` é para o histórico, que guarda tudo.
+    employees: todos.filter((e) => !e.desligado),
+    desligados: todos.filter((e) => e.desligado),
+    todos,
     // `true` enquanto não se sabe: o texto da tela fala em avaliar, e começar
     // dizendo "você não avalia" para depois corrigir é pior que esperar.
     canEvaluate: data?.canEvaluate ?? true,

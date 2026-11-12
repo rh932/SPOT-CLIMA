@@ -259,12 +259,36 @@ const AREAS: Area[] = [
         texto: 'O bloco "Classificação por cor" permite mudar a cor. Veja a seção correspondente.',
       },
       {
+        titulo: 'Registre a saída de quem saiu do Spot',
+        texto: 'No fim da ficha, use "Registrar desligamento": escolha o motivo, a data de saída e, se quiser, uma descrição. A pessoa vai para a aba Desligados e sai das listas da equipe, das pendências e dos lembretes, mas o histórico fica guardado. Lançou por engano? Na mesma ficha, "Desfazer desligamento" traz de volta.',
+      },
+      {
         titulo: 'Excluir colaborador (só Gestor Líder)',
         texto: 'No fim da ficha, o botão Excluir aparece apenas para quem tem essa permissão. A exclusão tem duas etapas de confirmação e apaga junto o histórico da pessoa.',
       },
       {
         titulo: 'Volte para a lista',
         texto: 'O link "← Voltar para a lista" leva de volta ao painel.',
+      },
+    ],
+  },
+  {
+    id: 'desligados',
+    titulo: 'Desligados',
+    quemVe: 'Quem vê: gestores, gerentes, Gestor Líder e PJ',
+    resumo: 'Quem já saiu do Spot, fora das listas do dia a dia.',
+    passos: [
+      {
+        titulo: 'Abra a aba Desligados',
+        texto: 'No menu, em Cadastro. A lista vem da saída mais recente para a mais antiga, com o motivo e a data.',
+      },
+      {
+        titulo: 'Busque e filtre',
+        texto: 'Pesquise pelo nome ou use "Filtros" para escolher loja, setor, turno, motivo da saída ou período de admissão.',
+      },
+      {
+        titulo: 'Abra a ficha para ver o histórico ou desfazer',
+        texto: 'A ficha continua com avaliações, cores e treinamentos. Se a saída foi lançada por engano, use "Desfazer desligamento".',
       },
     ],
   },

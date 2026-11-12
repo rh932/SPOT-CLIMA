@@ -50,10 +50,18 @@ describe('separarAcompanhamento', () => {
   });
 
   it('arquivo depois, também por loja e mais recente primeiro', () => {
-    expect(r.totalArquivados).toBe(3);
+    expect(r.totalArquivados).toBe(2);
     expect(r.arquivados.map((l) => l.unidade?.name)).toEqual(['PAULISTA', 'JK']);
-    expect(nomes(r.arquivados[0].itens)).toEqual(['Desligado', 'Efetivado']);
+    expect(nomes(r.arquivados[0].itens)).toEqual(['Efetivado']);
     expect(nomes(r.arquivados[1].itens)).toEqual(['Aprendiz JK']);
+  });
+
+  it('desligados ficam à parte, fora do arquivo de quem está trabalhando', () => {
+    expect(r.totalDesligados).toBe(1);
+    expect(r.desligados.map((l) => l.unidade?.name)).toEqual(['PAULISTA']);
+    expect(nomes(r.desligados[0].itens)).toEqual(['Desligado']);
+    const todosArquivados = r.arquivados.flatMap((l) => nomes(l.itens));
+    expect(todosArquivados).not.toContain('Desligado');
   });
 
   it('compara o dia da admissão, não a hora gravada; empate vai pelo nome', () => {

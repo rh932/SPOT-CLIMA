@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
           : {}),
         // Ciclo de cores e rescisão são da avaliação: só para quem a enxerga.
         ...(verAvaliacoes
-          ? { currentColor: true, nextFeedbackDueDate: true, terminationDate: true }
+          ? { currentColor: true, nextFeedbackDueDate: true, terminationDate: true, terminationReason: true }
           : {}),
       },
       with: {
@@ -141,9 +141,12 @@ export async function GET(req: NextRequest) {
       // Vencimento do contrato de experiência em aberto: é o que a aba de
       // treinamento usa para "perto de vencer", e não depende de ver o ciclo.
       const prazoExperiencia = prazoDaExperiencia(campos);
-      const { terminationDate, createdBy, ...resto } = campos;
+      const { terminationDate, terminationReason, createdBy, ...resto } = campos;
       const criadoPorGerente = PAPEIS_DE_GERENTE.includes((createdBy as { role?: string } | null)?.role ?? '');
-      if (!verAvaliacoes) return { ...semCamposDeCiclo(resto), prazoExperiencia, criadoPorGerente };
+      // Já saiu do Spot: as abas do dia a dia (inclusive o Treinamento, que
+      // não recebe a situação) tiram da lista; a aba Desligados mostra.
+      const desligado = campos.status === 'TERMINATED';
+      if (!verAvaliacoes) return { ...semCamposDeCiclo(resto), prazoExperiencia, criadoPorGerente, desligado };
       // Para a tela, `sector.usesColorCycle` responde se ESTE colaborador está no ciclo de feedback.
       const comCiclo = withFeedbackCycle(resto as { track?: 'NOVO' | 'ATIVO'; sector?: { usesColorCycle: boolean; usesFeedback?: boolean } | null });
       const evs = (campos.evaluations ?? []) as Parameters<typeof secondOpinionFor>[1];
@@ -153,7 +156,12 @@ export async function GET(req: NextRequest) {
       const responsaveis = quemAvalia
         .filter((a) => shouldNotify(a, { unitId: row.unit.id, sectorId: row.sector.id, shift: row.shift }))
         .map((a) => a.name);
-      return { ...comCiclo, prazoExperiencia, criadoPorGerente, responsaveis, secondOpinion: segunda ? { period: segunda.period, until: segunda.until } : null };
+      // Data e motivo da saída, para a aba Desligados. Nulos em quem foi
+      // desligado pela avaliação ("Demitir") antes de o registro existir.
+      const saida = desligado
+        ? { date: terminationDate ? (terminationDate as Date).toISOString() : null, reason: (terminationReason as string | null) ?? null }
+        : null;
+      return { ...comCiclo, prazoExperiencia, criadoPorGerente, desligado, saida, responsaveis, secondOpinion: segunda ? { period: segunda.period, until: segunda.until } : null };
     });
 
     return NextResponse.json({
