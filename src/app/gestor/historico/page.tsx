@@ -17,6 +17,7 @@ import {
 } from '@/lib/historicoAvaliacoes';
 import { AsyncSection, RefreshingBar, SkeletonCardList } from '@/components/async';
 import { BarraFiltros, CampoSelect, ROTULO_FILTRO } from '@/components/ui/BarraFiltros';
+import { ListaViva } from '@/components/ui/ListaViva';
 
 type EvaluationPeriod = GestorEmployee['evaluations'][number]['period'];
 
@@ -196,12 +197,12 @@ export default function HistoricoPage() {
                 <Link href={`/gestor/employees/${unicaPessoa.id}`} className="btn-ghost text-xs py-1.5 px-3 min-h-10">Abrir a ficha</Link>
               </div>
             )}
-            <div className="[&>*:last-child]:border-b-0 border-t border-spot-gray-300">
+            <ListaViva className="border-t border-spot-gray-300" classeItem="border-b border-spot-gray-200 last:border-b-0">
               {rows.map((row) => (
                 <Link
                   key={row.key}
                   href={`/gestor/employees/${row.employee.id}#avaliacao-${row.key}`}
-                  className="group flex items-center justify-between gap-4 flex-wrap py-4 border-b border-spot-gray-200 transition-colors hover:bg-spot-white"
+                  className="group flex items-center justify-between gap-4 flex-wrap py-4 transition-colors hover:bg-spot-white"
                 >
                   <div className="min-w-0">
                     <p className="font-semibold truncate group-hover:underline underline-offset-4 decoration-spot-yellow decoration-2">
@@ -233,7 +234,7 @@ export default function HistoricoPage() {
                   </div>
                 </Link>
               ))}
-            </div>
+            </ListaViva>
           </div>
         )}
       </AsyncSection>

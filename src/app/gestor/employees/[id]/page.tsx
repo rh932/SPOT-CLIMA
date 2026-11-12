@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/apiClient';
 import { usePainelModal } from '@/components/forms/usePainelModal';
 import { EmployeeDeleteButton } from '@/components/EmployeeDeleteButton';
 import { TerminationSection } from '@/components/TerminationSection';
+import { voarParaAba } from '@/lib/vooParaAba';
 import type { TerminationReason } from '@/lib/termination';
 import { dueBadge, pendingDueDate, statusLabel } from '@/lib/probation';
 import {
@@ -357,6 +358,7 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
             onChanged={load}
             podeDesfazer={Boolean(data.canUndoTermination)}
             endpoint={`/api/gestor/employees/${e.id}/termination`}
+            aoRegistrar={(origem) => voarParaAba({ origem, href: '/gestor/desligados', rotulo: e.fullName })}
           />
         </div>
       )}

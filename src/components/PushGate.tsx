@@ -1,5 +1,7 @@
 'use client';
 
+import { useRef } from 'react';
+import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { Spinner } from './async';
 import { usePush } from './usePush';
 
@@ -18,14 +20,28 @@ import { usePush } from './usePush';
 export function PushGate({ portal, onSair }: { portal: 'admin' | 'gestor'; onSair: () => void }) {
   const { estado, ocupado, erro, ligar } = usePush(portal);
 
-  if (estado !== 'desligado' && estado !== 'instalar' && estado !== 'bloqueado') return null;
+  // Guarda o último estado mostrado: enquanto a tela se fecha, o conteúdo não
+  // pode trocar para o texto de "ligado".
+  const visivel = estado === 'desligado' || estado === 'instalar' || estado === 'bloqueado';
+  const mostrado = useRef(estado);
+  if (visivel) mostrado.current = estado;
+  const e = mostrado.current;
 
   return (
-    <div
+    <AnimatePresence>
+    {visivel && (
+    <MotionConfig key="gate" reducedMotion="user">
+    <motion.div
       role="dialog"
       aria-modal="true"
       aria-labelledby="push-gate-titulo"
       className="fixed inset-0 z-50 flex items-center justify-center bg-spot-black/70 p-4 print:hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      // Ao ligar, a tela recolhe num círculo no canto do cabeçalho, onde fica
+      // o sino: é de lá que chegam os avisos agora.
+      exit={{ clipPath: 'circle(0% at 92% 28px)', opacity: 0.5, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } }}
+      transition={{ duration: 0.2 }}
     >
       <div className="w-full max-w-md bg-spot-white rounded-xl2 border-l-[3px] border-l-spot-yellow p-6 shadow-xl">
         <h2 id="push-gate-titulo" className="text-lg font-bold">Ative os avisos para continuar</h2>
@@ -34,13 +50,13 @@ export function PushGate({ portal, onSair }: { portal: 'admin' | 'gestor'; onSai
           Para quem avalia, ele é obrigatório: é por ele que você fica sabendo a tempo.
         </p>
 
-        {estado === 'bloqueado' && (
+        {e === 'bloqueado' && (
           <p className="text-sm text-spot-gray-700 leading-snug mt-3">
             Os avisos estão bloqueados neste aparelho. Toque no cadeado ao lado do endereço (ou em
             Configurações do site), libere as Notificações e recarregue a página.
           </p>
         )}
-        {estado === 'instalar' && (
+        {e === 'instalar' && (
           <p className="text-sm text-spot-gray-700 leading-snug mt-3">
             No iPhone, toque em Compartilhar e escolha &quot;Adicionar à Tela de Início&quot;. Depois abra o
             Spot Integra por esse ícone e ligue os avisos.
@@ -48,7 +64,7 @@ export function PushGate({ portal, onSair }: { portal: 'admin' | 'gestor'; onSai
         )}
 
         <div className="flex flex-wrap items-center gap-2 mt-5">
-          {estado === 'desligado' && (
+          {e === 'desligado' && (
             <button
               type="button"
               onClick={ligar}
@@ -60,7 +76,7 @@ export function PushGate({ portal, onSair }: { portal: 'admin' | 'gestor'; onSai
               {ocupado ? 'Ligando...' : 'Ligar avisos'}
             </button>
           )}
-          {estado === 'bloqueado' && (
+          {e === 'bloqueado' && (
             <button
               type="button"
               onClick={() => window.location.reload()}
@@ -79,6 +95,9 @@ export function PushGate({ portal, onSair }: { portal: 'admin' | 'gestor'; onSai
         </div>
         {erro && <p role="alert" className="text-xs text-spot-danger mt-3">{erro}</p>}
       </div>
-    </div>
+    </motion.div>
+    </MotionConfig>
+    )}
+    </AnimatePresence>
   );
 }

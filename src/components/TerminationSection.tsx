@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { apiFetch } from '@/lib/apiClient';
 import { useConfirm, useToast } from '@/components/async';
 import { TERMINATION_LABELS, TERMINATION_REASONS, type TerminationReason } from '@/lib/termination';
@@ -29,13 +29,19 @@ const hojeIso = () => {
  * Usado na ficha do RH (/admin) e na do gestor (/gestor), cada um com a sua rota.
  */
 export function TerminationSection({
-  employee, onChanged, podeDesfazer = true, endpoint,
+  employee, onChanged, podeDesfazer = true, endpoint, aoRegistrar,
 }: {
   employee: StatusActionsEmployee;
   onChanged: () => Promise<unknown>;
   podeDesfazer?: boolean;
   /** Rota do desligamento: a do RH (/api/admin/...) ou a do gestor (/api/gestor/...). */
   endpoint: string;
+  /**
+   * Chamado quando uma saída NOVA é gravada (não numa correção), com o lugar
+   * do formulário na tela — o portal do gestor usa para a ficha "viajar" até
+   * a aba Desligados.
+   */
+  aoRegistrar?: (origem: DOMRect | null) => void;
 }) {
   const [editando, setEditando] = useState(false);
   const [reason, setReason] = useState<TerminationReason | ''>(employee.terminationReason ?? '');
@@ -47,6 +53,7 @@ export function TerminationSection({
   const [error, setError] = useState<string | null>(null);
   const confirmar = useConfirm();
   const { mostrar } = useToast();
+  const formRef = useRef<HTMLDivElement>(null);
 
   const salvar = async () => {
     if (!reason) { setError('Escolha o motivo do desligamento.'); return; }
@@ -59,6 +66,8 @@ export function TerminationSection({
         // T12:00 evita que o fuso jogue a data para o dia anterior ao virar UTC.
         body: JSON.stringify({ reason, date: new Date(`${date}T12:00:00`).toISOString(), notes: notes.trim() || undefined }),
       });
+      // Mede antes de fechar o formulário: depois ele não está mais na tela.
+      if (employee.status !== 'TERMINATED') aoRegistrar?.(formRef.current?.getBoundingClientRect() ?? null);
       setEditando(false);
       mostrar('Desligamento registrado.');
       await onChanged();
@@ -128,7 +137,7 @@ export function TerminationSection({
   }
 
   return (
-    <div className="card flex flex-col gap-3">
+    <div ref={formRef} className="card flex flex-col gap-3">
       <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">Desligamento</p>
       <label className="block">
         <span className="label">Motivo</span>

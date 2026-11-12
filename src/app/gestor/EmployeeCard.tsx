@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { statusLabel } from '@/lib/probation';
 import { COLOR_OPTIONS, COLOR_LABELS } from '@/lib/feedbackCycle';
 import { CabecalhoPagina } from '@/components/ui/CabecalhoPagina';
+import { ListaViva } from '@/components/ui/ListaViva';
 import { SHIFT_LABEL, prazoBadge, isFeedbackCycle, awaitsSecond, type GestorEmployee } from './useGestorEmployees';
 
 /**
@@ -85,9 +86,12 @@ export function EmployeeCard({
   );
 }
 
-/** Lista de funcionários: fichas empilhadas, com respiro entre elas. */
+/**
+ * Lista de funcionários: fichas empilhadas, com respiro entre elas. Ao filtrar,
+ * buscar ou reordenar, as fichas deslizam até o novo lugar (ver ListaViva).
+ */
 export function EmployeeList({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-col gap-2.5">{children}</div>;
+  return <ListaViva className="flex flex-col gap-2.5">{children}</ListaViva>;
 }
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
