@@ -23,8 +23,12 @@ function hojeISO(): string {
  * recusaria. A trilha define para onde o colaborador vai:
  *  - Novo: treinamento (quando o setor tem), experiência e feedback;
  *  - Ativo: já na operação — só o feedback.
+ *
+ * `soAntigo` é o cadastro feito dentro da aba Feedback: a trilha fica fixa em
+ * Ativo (sem escolha) e os setores são os que fazem feedback; depois de salvar,
+ * a volta é para a lista de feedbacks.
  */
-export function CadastroFuncionario({ portal }: { portal: Portal }) {
+export function CadastroFuncionario({ portal, soAntigo = false }: { portal: Portal; soAntigo?: boolean }) {
   const { mostrar } = useToast();
   const [sectors, setSectors] = useState<Lookup[]>([]);
   const [units, setUnits] = useState<Lookup[]>([]);
@@ -32,10 +36,10 @@ export function CadastroFuncionario({ portal }: { portal: Portal }) {
   const [canChooseTrack, setCanChooseTrack] = useState(true);
   const [carregando, setCarregando] = useState(true);
 
-  const [track, setTrack] = useState<EmployeeTrack>('NOVO');
+  const [track, setTrack] = useState<EmployeeTrack>(soAntigo ? 'ATIVO' : 'NOVO');
   const [fullName, setFullName] = useState('');
   const [roleDescription, setRoleDescription] = useState('');
-  const [admissionDate, setAdmissionDate] = useState(hojeISO());
+  const [admissionDate, setAdmissionDate] = useState(soAntigo ? '' : hojeISO());
   const [sectorId, setSectorId] = useState('');
   const [unitId, setUnitId] = useState('');
   const [shift, setShift] = useState('');
@@ -50,9 +54,12 @@ export function CadastroFuncionario({ portal }: { portal: Portal }) {
     (async () => {
       try {
         if (portal === 'gestor') {
-          const d = await apiFetch<{ sectors: Lookup[]; units: Lookup[]; shifts: string[]; canChooseTrack: boolean }>('/api/gestor/lookups');
+          const d = await apiFetch<{ sectors: Lookup[]; units: Lookup[]; shifts: string[]; canChooseTrack: boolean }>(
+            soAntigo ? '/api/gestor/lookups?para=feedback' : '/api/gestor/lookups',
+          );
           if (!vivo) return;
-          setSectors(d.sectors); setUnits(d.units); setShifts(d.shifts); setCanChooseTrack(d.canChooseTrack);
+          setSectors(d.sectors); setUnits(d.units); setShifts(d.shifts); setCanChooseTrack(d.canChooseTrack && !soAntigo);
+          if (d.sectors.length === 1) setSectorId(d.sectors[0].id);
           if (d.units.length === 1) setUnitId(d.units[0].id);
           if (d.shifts.length === 1) setShift(d.shifts[0]);
         } else {
@@ -71,7 +78,7 @@ export function CadastroFuncionario({ portal }: { portal: Portal }) {
       }
     })();
     return () => { vivo = false; };
-  }, [portal]);
+  }, [portal, soAntigo]);
 
   const errors = {
     fullName: fullName.trim().length < 2 ? 'Informe o nome completo.' : undefined,
@@ -162,7 +169,7 @@ export function CadastroFuncionario({ portal }: { portal: Portal }) {
         </div>
         <div data-erro={show('admissionDate') ? 'true' : undefined}>
           <label className="block">
-            <span className="label">Data de admissão</span>
+            <span className="label">{soAntigo ? 'Data de admissão (aproximada)' : 'Data de admissão'}</span>
             <input type="date" className="input" value={admissionDate} max={hojeISO()} onChange={(e) => setAdmissionDate(e.target.value)} disabled={saving} />
           </label>
           {show('admissionDate') && <p className="text-xs text-spot-danger mt-1">{errors.admissionDate}</p>}
@@ -205,11 +212,19 @@ export function CadastroFuncionario({ portal }: { portal: Portal }) {
         Unidade, setor e turno definem quais gestores acompanham este colaborador.
       </p>
 
+      {soAntigo && !carregando && sectors.length === 0 && (
+        <p className="text-sm text-spot-gray-700">
+          Nenhum setor seu faz feedback. O RH escolhe os setores em Setores.
+        </p>
+      )}
+
       {error && <p role="alert" className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5">{error}</p>}
       {ultimo && !error && (
         <p role="status" className="text-sm text-spot-gray-700">
           {ultimo} foi cadastrado. Você pode cadastrar o próximo ou{' '}
-          <Link className="underline" href={portal === 'admin' ? '/admin/employees' : '/gestor'}>ver a lista</Link>.
+          <Link className="underline" href={soAntigo ? '/gestor/feedback' : portal === 'admin' ? '/admin/employees' : '/gestor'}>
+            {soAntigo ? 'voltar para o Feedback' : 'ver a lista'}
+          </Link>.
         </p>
       )}
 

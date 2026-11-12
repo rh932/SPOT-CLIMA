@@ -1,7 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { EmployeeCard, EmployeeList, EmptyState, PageHeader } from '../EmployeeCard';
+import Link from 'next/link';
+import { CabecalhoPagina } from '@/components/ui/CabecalhoPagina';
+import { useMyPermissions } from '../useMyPermissions';
+import { EmployeeCard, EmployeeList, EmptyState } from '../EmployeeCard';
 import {
   useGestorEmployees, isFeedback, feedbackDue, feedbackLate, daysUntilDue, openDueDate, FEEDBACK_FILL_DAYS,
   type GestorEmployee,
@@ -27,6 +30,8 @@ import {
  */
 export default function FeedbackPage() {
   const { employees, loading, reloading, error, forbidden, reload } = useGestorEmployees();
+  const { can } = useMyPermissions();
+  const podeCadastrar = can('employees.create');
   const [filtros, setFiltros] = useState<FiltrosEquipe>(FILTROS_VAZIOS);
   const [recorte, setRecorte] = useState<'TODOS' | 'VENCIDOS' | 'NUNCA'>('TODOS');
 
@@ -65,9 +70,14 @@ export default function FeedbackPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Feedback"
-        subtitle={`Aparecem os efetivados dos setores que fazem feedback. Nos setores com cores, quando o feedback vence você tem ${FEEDBACK_FILL_DAYS} dias para fazer; nos demais, registre quando quiser.`}
+      <CabecalhoPagina
+        titulo="Feedback"
+        subtitulo={`Aparecem os efetivados dos setores que fazem feedback. Nos setores com cores, quando o feedback vence você tem ${FEEDBACK_FILL_DAYS} dias para fazer; nos demais, registre quando quiser.`}
+        acao={
+          podeCadastrar
+            ? <Link href="/gestor/feedback/cadastrar" className="btn-ghost">Cadastrar colaborador antigo</Link>
+            : undefined
+        }
       />
 
       <RoteiroFeedback />
@@ -83,7 +93,12 @@ export default function FeedbackPage() {
         rotulo="os feedbacks"
         skeleton={<SkeletonCardList rows={4} />}
         empty={todos.length === 0}
-        emptyState={<EmptyState>Nenhum colaborador de setor que faz feedback. O RH escolhe os setores em Setores.</EmptyState>}
+        emptyState={(
+          <EmptyState>
+            Nenhum colaborador de setor que faz feedback. O RH escolhe os setores em Setores.
+            {podeCadastrar && ' Se a equipe já existe e não está no sistema, use "Cadastrar colaborador antigo".'}
+          </EmptyState>
+        )}
       >
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
           <aside className="order-first lg:order-last">

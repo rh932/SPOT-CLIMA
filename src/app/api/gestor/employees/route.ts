@@ -13,7 +13,7 @@ import { hasPermission, permissionsFor } from '@/lib/permissions';
 import { trainerEmployeeSchema } from '@/lib/validation';
 import { cycleFieldsFor, findDuplicate } from '@/lib/employeeCreate';
 import { secondOpinionFor } from '@/lib/secondOpinion';
-import { withFeedbackCycle } from '@/lib/feedbackParticipation';
+import { withFeedbackCycle, sectorDoesFeedback } from '@/lib/feedbackParticipation';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity, loadNotifiableAdmins } from '@/lib/notify';
 import { shouldNotify } from '@/lib/notificationTargets';
@@ -201,6 +201,17 @@ export async function POST(req: NextRequest) {
     const track = parsed.data.track ?? 'NOVO';
     if (track === 'ATIVO' && !avalia) {
       throw new ApiError(403, 'Seu perfil cadastra apenas colaboradores novos, para treinamento.');
+    }
+    // Colaborador antigo só tem o feedback: num setor que não faz feedback ele
+    // ficaria cadastrado e invisível em todas as abas.
+    if (track === 'ATIVO') {
+      const setor = await db.query.sectors.findFirst({
+        where: eq(schema.sectors.id, parsed.data.sectorId),
+        columns: { usesFeedback: true, usesColorCycle: true },
+      });
+      if (!sectorDoesFeedback(setor)) {
+        throw new ApiError(400, 'Este setor não faz feedback. Escolha um setor que faz, ou fale com o RH.');
+      }
     }
 
     // Cadastro único: o mesmo nome na mesma unidade não entra duas vezes.
