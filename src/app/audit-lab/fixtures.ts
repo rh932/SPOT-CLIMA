@@ -267,6 +267,8 @@ const FICHA_COLABORADOR = {
   canEvaluate: true,
   canChangeColor: true,
   canDelete: false,
+  canTerminate: true,
+  canUndoTermination: false,
   // Setor com dois gestores: o outro já respondeu o 1º período.
   secondOpinion: {
     period: 'FIRST',
@@ -356,10 +358,18 @@ export const FIXTURES: Record<string, unknown> = {
   '/api/public/surveys': { surveys: [{ id: 'pesq-1', name: 'Clima 2026 - 1o semestre', description: 'Leva poucos minutos.' }] },
   '/api/gestor/me': {
     role: 'GESTOR',
-    permissions: ['evaluations.view', 'evaluations.history.view', 'trainings.view', 'trainings.history.view', 'notifications.receive'],
+    permissions: ['evaluations.view', 'evaluations.history.view', 'trainings.view', 'trainings.history.view', 'notifications.receive', 'employees.terminate'],
   },
   '/api/auth/me': { admin: { name: 'Auditoria' } },
-  '/api/gestor/employees': { employees: [0, 1, 2, 3].map((i) => funcionario(i)), canEvaluate: true },
+  // Os dois últimos já saíram do Spot: só aparecem na aba Desligados.
+  '/api/gestor/employees': {
+    employees: [
+      ...[0, 1, 2, 3].map((i) => funcionario(i)),
+      funcionario(4, { status: 'TERMINATED', desligado: true, saida: { date: emDias(-5), reason: 'PEDIDO_DEMISSAO' } }),
+      funcionario(6, { status: 'TERMINATED', desligado: true, saida: { date: null, reason: null } }),
+    ],
+    canEvaluate: true,
+  },
   '/api/gestor/training-types': {
     trainingTypes: [{
       id: 't1', name: 'Atendimento ao cliente', description: 'Padrão de atendimento do salão.',

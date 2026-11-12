@@ -69,6 +69,8 @@ interface Employee {
   prazoExperiencia: string | null;
   /** Cadastrado por um gerente: não conta entre as últimas admissões. */
   criadoPorGerente: boolean;
+  /** Já saiu do Spot (aba Desligados): não entra na lista de treinar. */
+  desligado?: boolean;
 }
 
 const SHIFT_LABEL: Record<'DIA' | 'NOITE', string> = { DIA: 'Diurno', NOITE: 'Noturno' };
@@ -127,7 +129,8 @@ export default function TreinamentoPage() {
         apiFetch<{ employees: Employee[] }>('/api/gestor/employees?treinamento=1', { signal }),
         apiFetch<{ trainingTypes: TrainingType[] }>('/api/gestor/training-types', { signal }),
       ]);
-      return { employees: emp.employees, types: tipos.trainingTypes };
+      // Quem já saiu do Spot não aparece para treinar (o servidor também recusa a ficha).
+      return { employees: emp.employees.filter((e) => !e.desligado), types: tipos.trainingTypes };
     },
     [],
     { mensagemPadrao: 'Erro ao carregar os colaboradores.' },

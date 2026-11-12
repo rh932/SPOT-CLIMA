@@ -38,6 +38,8 @@ import type { PermissionKey } from '@/lib/permissions';
  */
 const NAV: { href: string; label: string; short: string; permission?: PermissionKey; grupo?: string }[] = [
   { href: '/gestor/cadastrar', label: 'Cadastrar Funcionário', short: 'Cadastrar', permission: 'employees.create', grupo: 'Cadastro' },
+  // Quem já saiu do Spot: fora das listas da equipe, com o histórico guardado.
+  { href: '/gestor/desligados', label: 'Desligados', short: 'Desligados', permission: 'evaluations.view', grupo: 'Cadastro' },
   { href: '/gestor', label: 'Avaliação de Experiência', short: 'Experiência', permission: 'evaluations.view', grupo: 'Avaliação e feedback' },
   { href: '/gestor/feedback', label: 'Feedback', short: 'Feedback', permission: 'evaluations.view', grupo: 'Avaliação e feedback' },
   { href: '/gestor/pendencias', label: 'Pendências', short: 'Pendências', permission: 'evaluations.view', grupo: 'Avaliação e feedback' },

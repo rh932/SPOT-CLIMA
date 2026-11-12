@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     const [employee, trainingType] = await Promise.all([
       db.query.probationaryEmployees.findFirst({
         where: eq(schema.probationaryEmployees.id, parsed.data.employeeId),
-        columns: { id: true, fullName: true, unitId: true, sectorId: true, shift: true },
+        columns: { id: true, fullName: true, unitId: true, sectorId: true, shift: true, status: true },
       }),
       db.query.trainingTypes.findFirst({
         where: eq(schema.trainingTypes.id, parsed.data.trainingTypeId),
@@ -110,6 +110,10 @@ export async function POST(req: NextRequest) {
     // Ninguém treina fora do próprio recorte, mesmo mandando o id na mão.
     if (!isInScope(session, employee)) {
       return NextResponse.json({ error: 'Este colaborador não está no seu escopo.' }, { status: 403 });
+    }
+    // Quem já saiu do Spot não recebe ficha nova (a lista de treinar nem o mostra).
+    if (employee.status === 'TERMINATED') {
+      return NextResponse.json({ error: 'Este colaborador já saiu da empresa (aba Desligados).' }, { status: 409 });
     }
     // O treinamento é só do Salão: ficha para colaborador de outro setor não entra.
     await assertTrainingSector(employee.sectorId);

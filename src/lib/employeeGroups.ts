@@ -3,8 +3,9 @@ import { awaitsSecondEvaluation, type PeriodoAvaliacao } from './colorUnlock';
 
 /**
  * A lista do acompanhamento: primeiro as avaliações pendentes, por loja, com
- * a 1ª e a 2ª avaliação separadas; depois o arquivo — quem já passou pela
- * experiência (efetivado ou desligado) e os aprendizes, que não têm avaliação.
+ * a 1ª e a 2ª avaliação separadas; depois o arquivo — os efetivados e os
+ * aprendizes, que não têm avaliação; por fim os desligados, à parte, para quem
+ * já saiu do Spot não ficar no meio de quem está trabalhando.
  * Em cada lista, da admissão mais recente para a mais antiga.
  */
 
@@ -46,7 +47,13 @@ export function faseDo(e: Pick<DueDateFields, 'status' | 'isApprentice'> & CorFi
 
 export interface LojaPendente<T> { chave: string; unidade: Lookup | null; primeira: T[]; segunda: T[] }
 export interface LojaArquivada<T> { chave: string; unidade: Lookup | null; itens: T[] }
-export interface Acompanhamento<T> { pendentes: LojaPendente<T>[]; arquivados: LojaArquivada<T>[]; totalArquivados: number }
+export interface Acompanhamento<T> {
+  pendentes: LojaPendente<T>[];
+  arquivados: LojaArquivada<T>[];
+  totalArquivados: number;
+  desligados: LojaArquivada<T>[];
+  totalDesligados: number;
+}
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -79,6 +86,13 @@ export function separarAcompanhamento<T extends GroupableEmployee>(employees: T[
     primeira: g.itens.filter((e) => faseDo(e) === 'PENDENTE_1'),
     segunda: g.itens.filter((e) => faseDo(e) === 'PENDENTE_2'),
   }));
-  const arquivo = employees.filter((e) => faseDo(e) === 'ARQUIVADO');
-  return { pendentes, arquivados: porLoja(arquivo, unidades), totalArquivados: arquivo.length };
+  const arquivo = employees.filter((e) => faseDo(e) === 'ARQUIVADO' && e.status !== 'TERMINATED');
+  const desligados = employees.filter((e) => e.status === 'TERMINATED');
+  return {
+    pendentes,
+    arquivados: porLoja(arquivo, unidades),
+    totalArquivados: arquivo.length,
+    desligados: porLoja(desligados, unidades),
+    totalDesligados: desligados.length,
+  };
 }

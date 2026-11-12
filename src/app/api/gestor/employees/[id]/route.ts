@@ -12,6 +12,7 @@ import { isInScope, canEvaluate } from '@/lib/scope';
 import { secondOpinionFor } from '@/lib/secondOpinion';
 import { logAudit } from '@/lib/audit';
 import { notifyActivity } from '@/lib/notify';
+import { saidaPodeSerDesfeita } from '@/lib/terminationService';
 
 export async function GET(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -119,6 +120,10 @@ export async function GET(_req: NextRequest, props: { params: Promise<{ id: stri
       canEvaluate: canEvaluate(session.role),
       canChangeColor: hasPermission(session.role, 'employees.color.edit'),
       canDelete: hasPermission(session.role, 'employees.delete'),
+      // Registrar a saída (aba Desligados). Desfazer segue a mesma regra do RH.
+      canTerminate: podeVerAvaliacoes && hasPermission(session.role, 'employees.terminate'),
+      canUndoTermination: podeVerAvaliacoes && hasPermission(session.role, 'employees.terminate')
+        && saidaPodeSerDesfeita({ ...employee, evaluations }),
     });
   } catch (err) {
     return handleApiError(err);

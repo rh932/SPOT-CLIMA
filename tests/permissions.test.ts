@@ -185,3 +185,21 @@ describe('cadastro por todos os perfis de gestão', () => {
     expect(hasPermission('GESTOR', 'employees.delete')).toBe(false);
   });
 });
+
+describe('registrar a saída do colaborador (aba Desligados)', () => {
+  it('quem cuida da equipe registra: gestor, gerentes que avaliam, líder, PJ e RH', () => {
+    for (const role of ['GESTOR', 'GERENTE', 'GERENTE_AVALIADOR', 'GESTOR_LIDER', 'PJ', 'RH', 'SUPER_ADMIN']) {
+      expect(hasPermission(role, 'employees.terminate')).toBe(true);
+    }
+  });
+
+  it('o treinador não registra saída nem enxerga a aba', () => {
+    for (const role of ['TREINADOR', 'GERENTE_TREINADOR']) {
+      expect(hasPermission(role, 'employees.terminate')).toBe(false);
+    }
+  });
+
+  it('registrar saída não deu ao gestor comum o poder de excluir', () => {
+    expect(hasPermission('GESTOR', 'employees.delete')).toBe(false);
+  });
+});

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { apiFetch } from '@/lib/apiClient';
 import { usePainelModal } from '@/components/forms/usePainelModal';
 import { EmployeeDeleteButton } from '@/components/EmployeeDeleteButton';
+import { TerminationSection } from '@/components/TerminationSection';
+import type { TerminationReason } from '@/lib/termination';
 import { dueBadge, pendingDueDate, statusLabel } from '@/lib/probation';
 import {
   COLOR_OPTIONS, COLOR_LABELS, COLOR_INTERVAL_DAYS, colorChangePreview,
@@ -47,6 +49,10 @@ interface Employee {
   nextFeedbackDueDate: string | null;
   sector: { id: string; name: string; usesColorCycle: boolean; usesFeedback?: boolean } | null;
   unit: { id: string; name: string } | null;
+  /** Só vêm para quem enxerga avaliação. */
+  terminationReason?: TerminationReason | null;
+  terminationDate?: string | null;
+  terminationNotes?: string | null;
 }
 
 interface Payload {
@@ -57,6 +63,9 @@ interface Payload {
   canEvaluate: boolean;
   canChangeColor: boolean;
   canDelete: boolean;
+  /** Pode registrar a saída (aba Desligados). */
+  canTerminate?: boolean;
+  canUndoTermination?: boolean;
   secondOpinion: {
     period: 'FIRST' | 'SECOND';
     until: string;
@@ -171,8 +180,11 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/gestor" className="text-sm text-spot-gray-500 hover:text-spot-gray-900 transition self-start">
-        ← Voltar para a lista
+      <Link
+        href={e.status === 'TERMINATED' ? '/gestor/desligados' : '/gestor'}
+        className="text-sm text-spot-gray-500 hover:text-spot-gray-900 transition self-start"
+      >
+        {e.status === 'TERMINATED' ? '← Voltar para Desligados' : '← Voltar para a lista'}
       </Link>
 
       <header>
@@ -323,10 +335,36 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
         </section>
       )}
 
+      {/* Saiu do Spot: vai para a aba Desligados e some das listas e dos
+          lembretes, com o histórico guardado. Diferente de excluir, dá para desfazer. */}
+      {data.canTerminate && (
+        <div className={e.status === 'TERMINATED' ? '' : 'border-t border-spot-gray-200 pt-4 flex flex-col gap-2'}>
+          {e.status !== 'TERMINATED' && (
+            <p className="text-xs text-spot-gray-500">
+              Não trabalha mais no Spot? Registre a saída: ele vai para a aba Desligados e sai das listas da equipe.
+            </p>
+          )}
+          <TerminationSection
+            employee={{
+              id: e.id,
+              fullName: e.fullName,
+              status: e.status,
+              isApprentice: e.isApprentice,
+              terminationReason: e.terminationReason ?? null,
+              terminationDate: e.terminationDate ?? null,
+              terminationNotes: e.terminationNotes ?? null,
+            }}
+            onChanged={load}
+            podeDesfazer={Boolean(data.canUndoTermination)}
+            endpoint={`/api/gestor/employees/${e.id}/termination`}
+          />
+        </div>
+      )}
+
       {canDelete && (
         <div className="border-t border-spot-gray-200 pt-4">
           <p className="text-xs text-spot-gray-500 mb-2">
-            Cadastrou errado? A exclusão apaga o colaborador e todo o histórico dele.
+            Cadastrou errado? A exclusão apaga o colaborador e todo o histórico dele. Para quem saiu da empresa, use &quot;Registrar desligamento&quot;.
           </p>
           <EmployeeDeleteButton
             employeeId={e.id}

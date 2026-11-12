@@ -55,7 +55,8 @@ function periodLabel(row: HistoryRow): string {
  * histórico próprio, em outra aba.
  */
 export default function HistoricoPage() {
-  const { employees, loading, reloading, error, forbidden, reload } = useGestorEmployees();
+  // O histórico guarda também quem já saiu (aba Desligados).
+  const { todos: employees, loading, reloading, error, forbidden, reload } = useGestorEmployees();
   const [f, setF] = useState<FiltrosHistorico>(FILTROS_HISTORICO_VAZIOS);
   const set = (parcial: Partial<FiltrosHistorico>) => setF((atual) => ({ ...atual, ...parcial }));
 

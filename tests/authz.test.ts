@@ -275,6 +275,44 @@ describe('handlers: acesso vertical e horizontal', () => {
     expect(res.status).toBe(403);
   });
 
+  it('TREINADOR tentando registrar a saída de um colaborador: 403', async () => {
+    const { POST, DELETE } = await import('../src/app/api/gestor/employees/[id]/termination/route');
+    account('TREINADOR');
+    state.cookies.set('spot_gestor_session', await tokenFor('TREINADOR'));
+    const params = { params: Promise.resolve({ id: 'e1' }) };
+    expect((await POST(req('/api/gestor/employees/e1/termination', { method: 'POST' }), params)).status).toBe(403);
+    expect((await DELETE(req('/api/gestor/employees/e1/termination', { method: 'DELETE' }), params)).status).toBe(403);
+  });
+
+  it('IDOR: gestor registrando a saída de alguém de outra unidade: 403, sem gravar', async () => {
+    const { POST } = await import('../src/app/api/gestor/employees/[id]/termination/route');
+    account('GESTOR');
+    state.cookies.set('spot_gestor_session', await tokenFor('GESTOR'));
+    state.employee = {
+      id: 'e9', unitId: 'OUTRA', sectorId: 's1', shift: 'DIA', status: 'HIRED', previousStatus: null,
+      admissionDate: new Date('2026-01-10T12:00:00Z'),
+    };
+    const r = new NextRequest('https://spot.test/api/gestor/employees/e9/termination', {
+      method: 'POST',
+      headers: new Headers({ host: 'spot.test', 'content-type': 'application/json' }),
+      body: JSON.stringify({ reason: 'PEDIDO_DEMISSAO', date: '2026-03-01T15:00:00.000Z' }),
+    });
+    const res = await POST(r, { params: Promise.resolve({ id: 'e9' }) });
+    expect(res.status).toBe(403);
+  });
+
+  it('IDOR: gestor desfazendo a saída de alguém de outro turno: 403', async () => {
+    const { DELETE } = await import('../src/app/api/gestor/employees/[id]/termination/route');
+    account('GESTOR');
+    state.cookies.set('spot_gestor_session', await tokenFor('GESTOR'));
+    state.employee = {
+      id: 'e9', unitId: 'u1', sectorId: 's1', shift: 'NOITE', isApprentice: false,
+      terminationReason: 'PEDIDO_DEMISSAO', previousStatus: 'HIRED', evaluations: [],
+    };
+    const res = await DELETE(req('/api/gestor/employees/e9/termination', { method: 'DELETE' }), { params: Promise.resolve({ id: 'e9' }) });
+    expect(res.status).toBe(403);
+  });
+
   it('TREINADOR tentando preencher avaliação de experiência: 403', async () => {
     const { POST } = await import('../src/app/api/gestor/employees/[id]/evaluate/route');
     account('TREINADOR');

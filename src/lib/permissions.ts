@@ -17,6 +17,7 @@ export type PermissionKey =
   | 'employees.delete'
   | 'employees.summary.view'
   | 'employees.color.edit'
+  | 'employees.terminate'
   // Avaliação de experiência (45/90 dias) — gestão
   | 'evaluations.view'
   | 'evaluations.create'
@@ -53,6 +54,7 @@ export const PERMISSIONS: PermissionDefinition[] = [
   { key: 'employees.delete', label: 'Excluir funcionário', category: 'Funcionários' },
   { key: 'employees.summary.view', label: 'Visualizar resumo do funcionário', category: 'Funcionários' },
   { key: 'employees.color.edit', label: 'Reclassificar cor do colaborador', category: 'Funcionários' },
+  { key: 'employees.terminate', label: 'Registrar a saída do colaborador (desligados)', category: 'Funcionários' },
 
   { key: 'evaluations.view', label: 'Visualizar avaliações de experiência', category: 'Avaliações' },
   { key: 'evaluations.create', label: 'Realizar avaliação de experiência', category: 'Avaliações' },
@@ -89,6 +91,9 @@ const GESTAO_KEYS: PermissionKey[] = [
   // Reclassificar fora da avaliação: o gestor percebe a mudança de postura no
   // meio do ciclo e ajusta a cadência sem esperar o próximo feedback.
   'employees.color.edit',
+  // Quem cuida da equipe registra quem saiu da empresa: a pessoa vai para a aba
+  // Desligados e para de aparecer nas listas e nos lembretes. Dá para desfazer.
+  'employees.terminate',
   'evaluations.view',
   'evaluations.create',
   'evaluations.history.view',
@@ -135,6 +140,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
     // Ele não avalia, mas corrige: é quem conserta uma cor errada sem
     // depender do RH.
     'employees.color.edit',
+    'employees.terminate',
     'employees.delete',
     'evaluations.view',
     'evaluations.history.view',

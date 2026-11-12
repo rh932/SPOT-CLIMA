@@ -81,6 +81,7 @@ function AdminEmployees() {
   };
   const [colorFilter, setColorFilter] = useState<ColorFilter>('TODOS');
   const [arquivoAberto, setArquivoAberto] = useState(false);
+  const [desligadosAbertos, setDesligadosAbertos] = useState(false);
   const { mostrar } = useToast();
 
   /**
@@ -109,12 +110,16 @@ function AdminEmployees() {
   const sectors = data?.sectors ?? [];
   const units = data?.units ?? [];
 
-  const visible = employees.filter((e) => {
+  // Quem já saiu do Spot fica numa seção própria, no fim: o filtro de cor e as
+  // contagens falam só de quem está trabalhando.
+  const ativos = employees.filter((e) => e.status !== 'TERMINATED');
+  const desligados = employees.filter((e) => e.status === 'TERMINATED');
+  const visible = ativos.filter((e) => {
     if (colorFilter === 'TODOS') return true;
     if (colorFilter === 'SEM_COR') return !e.currentColor;
     return e.currentColor === colorFilter;
   });
-  const acompanhamento = separarAcompanhamento(visible, units);
+  const acompanhamento = separarAcompanhamento([...visible, ...desligados], units);
 
   return (
     <div className="flex flex-col gap-6">
@@ -182,13 +187,13 @@ function AdminEmployees() {
       {!loading && !error && (
         <div className="flex flex-wrap gap-2">
           {([
-          { value: 'TODOS' as const, label: `Todos (${employees.length})`, dot: null },
+          { value: 'TODOS' as const, label: `Todos (${ativos.length})`, dot: null },
           ...COLOR_OPTIONS.map((c) => ({
             value: c.value,
-            label: `${COLOR_LABELS[c.value]} (${employees.filter((e) => e.currentColor === c.value).length})`,
+            label: `${COLOR_LABELS[c.value]} (${ativos.filter((e) => e.currentColor === c.value).length})`,
             dot: c.dotClassName,
           })),
-          { value: 'SEM_COR' as const, label: `Sem classificação (${employees.filter((e) => !e.currentColor).length})`, dot: null },
+          { value: 'SEM_COR' as const, label: `Sem classificação (${ativos.filter((e) => !e.currentColor).length})`, dot: null },
         ]).map((opt) => (
           <button
               key={opt.value}
@@ -217,7 +222,7 @@ function AdminEmployees() {
         retrying={reloading}
         rotulo="os funcionários"
         skeleton={<SkeletonCardList rows={5} />}
-        empty={employees.length === 0 || visible.length === 0}
+        empty={employees.length === 0 || (visible.length === 0 && desligados.length === 0)}
         emptyState={
           <EmptyState>
             {employees.length === 0
@@ -263,7 +268,7 @@ function AdminEmployees() {
                   <h2 id="arquivo" className="font-sans text-xl font-extrabold tracking-tight leading-tight text-spot-gray-800">
                     Arquivo <span className="text-spot-gray-500 font-normal">({acompanhamento.totalArquivados})</span>
                   </h2>
-                  <p className="text-sm text-spot-gray-500">Avaliações concluídas: efetivados, desligados e aprendizes.</p>
+                  <p className="text-sm text-spot-gray-500">Avaliações concluídas: efetivados e aprendizes.</p>
                 </div>
                 {colorFilter === 'TODOS' && (
                   <button
@@ -281,6 +286,44 @@ function AdminEmployees() {
               {(arquivoAberto || colorFilter !== 'TODOS') && (
                 <div id="lista-arquivo" className="flex flex-col gap-6 mt-4">
                   {acompanhamento.arquivados.map((loja) => (
+                    <div key={loja.chave}>
+                      <h3 className="flex items-baseline justify-between gap-x-4 border-b border-spot-gray-300 pb-2 font-mono text-[11px] uppercase tracking-[0.14em] text-spot-gray-800">
+                        <span>{loja.unidade?.name ?? 'Sem loja'}</span>
+                        <span className="text-spot-gray-500">{loja.itens.length}</span>
+                      </h3>
+                      <div className="[&>*:last-child]:border-b-0">
+                        {loja.itens.map((e) => <LinhaFuncionario key={e.id} e={e} />)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Quem já saiu do Spot: à parte, recolhido, para não ficar no meio da equipe. */}
+          {acompanhamento.totalDesligados > 0 && (
+            <section aria-labelledby="desligados" className="border-t-2 border-spot-gray-300 pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 id="desligados" className="font-sans text-xl font-extrabold tracking-tight leading-tight text-spot-gray-800">
+                    Desligados <span className="text-spot-gray-500 font-normal">({acompanhamento.totalDesligados})</span>
+                  </h2>
+                  <p className="text-sm text-spot-gray-500">Já saíram do Spot. Não entram nas listas nem nos lembretes; a ficha guarda o histórico.</p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-ghost py-2 px-4"
+                  aria-expanded={desligadosAbertos}
+                  aria-controls="lista-desligados"
+                  onClick={() => setDesligadosAbertos((v) => !v)}
+                >
+                  {desligadosAbertos ? 'Recolher' : 'Mostrar desligados'}
+                </button>
+              </div>
+              {desligadosAbertos && (
+                <div id="lista-desligados" className="flex flex-col gap-6 mt-4">
+                  {acompanhamento.desligados.map((loja) => (
                     <div key={loja.chave}>
                       <h3 className="flex items-baseline justify-between gap-x-4 border-b border-spot-gray-300 pb-2 font-mono text-[11px] uppercase tracking-[0.14em] text-spot-gray-800">
                         <span>{loja.unidade?.name ?? 'Sem loja'}</span>
