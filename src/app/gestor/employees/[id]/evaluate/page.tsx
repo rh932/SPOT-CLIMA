@@ -40,7 +40,9 @@ interface Employee {
 const formatDate = (value: string | Date) =>
   (typeof value === 'string' ? new Date(value) : value).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
-type Ratings = Record<string, RatingOption | null>;
+const RASCUNHO_VALIDADE_MS = 7 * 24 * 60 * 60 * 1000;
+
+type Ratings =Record<string, RatingOption | null>;
 type SubAnswers = Record<string, Record<string, SubAnswerOption | null>>;
 
 const emptyRatings = (): Ratings => Object.fromEntries(EVALUATION_DIMENSIONS.map((d) => [d.key, null]));
@@ -127,6 +129,108 @@ function EvaluateForm() {
   }, [params.id]);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  // ─── Rascunho ───────────────────────────────────────────────────────────
+  // A ficha tem ~40 respostas e textos; recarregar a página, perder a rede ou
+  // a sessão expirar apagava tudo. O rascunho fica SÓ neste aparelho
+  // (localStorage), por colaborador, some ao enviar e vence em 7 dias.
+  const chaveRascunho = `spot_clima_rascunho_avaliacao_${params.id}${querSegunda ? '_2' : ''}`;
+  const [rascunhoPronto, setRascunhoPronto] = useState(false);
+  const [rascunhoRestaurado, setRascunhoRestaurado] = useState(false);
+
+  useEffect(() => {
+    if (loading || !employee || rascunhoPronto) return;
+    setRascunhoPronto(true);
+    try {
+      const bruto = localStorage.getItem(chaveRascunho);
+      if (!bruto) return;
+      const r = JSON.parse(bruto);
+      if (!r || typeof r !== 'object' || Date.now() - Number(r.t) > RASCUNHO_VALIDADE_MS) {
+        localStorage.removeItem(chaveRascunho);
+        return;
+      }
+      const txt = (v: unknown) => (typeof v === 'string' ? v : '');
+      if (r.ratings && typeof r.ratings === 'object') setRatings((p) => ({ ...p, ...(Object.fromEntries(Object.entries(r.ratings).filter(([k]) => k in p)) as Ratings) }));
+      if (r.subAnswers && typeof r.subAnswers === 'object') {
+        setSubAnswers((p) => Object.fromEntries(Object.entries(p).map(([dim, subs]) => [dim, { ...subs, ...(Object.fromEntries(Object.entries(r.subAnswers[dim] ?? {}).filter(([k]) => k in subs)) as Record<string, SubAnswerOption | null>) }])) as SubAnswers);
+      }
+      if (r.notasRoteiro && typeof r.notasRoteiro === 'object') setNotasRoteiro(r.notasRoteiro);
+      if (r.obsRoteiro && typeof r.obsRoteiro === 'object') setObsRoteiro(r.obsRoteiro);
+      if (r.planoRoteiro && typeof r.planoRoteiro === 'object') {
+        setPlanoRoteiro({
+          competencias: Array.isArray(r.planoRoteiro.competencias) ? r.planoRoteiro.competencias.filter((c: unknown) => typeof c === 'string') : [],
+          pratica: txt(r.planoRoteiro.pratica), mentoria: txt(r.planoRoteiro.mentoria), estudo: txt(r.planoRoteiro.estudo),
+        });
+      }
+      if (typeof r.uniformRating === 'string') setUniformRating(r.uniformRating as RatingOption);
+      setUniformNotes(txt(r.uniformNotes));
+      if (r.customAnswers && typeof r.customAnswers === 'object') setCustomAnswers(r.customAnswers);
+      setFavorableAspects(txt(r.favorableAspects));
+      setUnfavorableAspects(txt(r.unfavorableAspects));
+      setClassification(txt(r.classification));
+      setConclusion(txt(r.conclusion));
+      setColor(txt(r.color) as FeedbackColor | '');
+      setColorReason(txt(r.colorReason));
+      setDevelopmentPoints(txt(r.developmentPoints));
+      setGuidance(txt(r.guidance));
+      setTrainingNeeds(txt(r.trainingNeeds));
+      setRascunhoRestaurado(true);
+    } catch {
+      // Rascunho ilegível ou armazenamento indisponível: segue com a ficha em branco.
+    }
+  }, [loading, employee, rascunhoPronto, chaveRascunho]);
+
+  useEffect(() => {
+    if (!rascunhoPronto || enviado) return;
+    const espera = setTimeout(() => {
+      try {
+        const temAlgo =
+          Object.values(ratings).some(Boolean) || Object.values(subAnswers).some((s) => Object.values(s).some(Boolean)) ||
+          Object.values(notasRoteiro).some(Boolean) || Object.values(obsRoteiro).some(Boolean) ||
+          planoRoteiro.competencias.length > 0 || [planoRoteiro.pratica, planoRoteiro.mentoria, planoRoteiro.estudo].some((t) => t.trim()) ||
+          uniformRating || uniformNotes.trim() || Object.values(customAnswers).some((t) => t.trim()) ||
+          [favorableAspects, unfavorableAspects, classification, conclusion, color, colorReason, developmentPoints, guidance, trainingNeeds].some((t) => t.trim());
+        if (!temAlgo) {
+          localStorage.removeItem(chaveRascunho);
+          return;
+        }
+        localStorage.setItem(chaveRascunho, JSON.stringify({
+          t: Date.now(), ratings, subAnswers, notasRoteiro, obsRoteiro, planoRoteiro, uniformRating, uniformNotes,
+          customAnswers, favorableAspects, unfavorableAspects, classification, conclusion, color, colorReason,
+          developmentPoints, guidance, trainingNeeds,
+        }));
+      } catch {
+        // Sem espaço ou em navegação privada: a ficha continua funcionando, só não guarda.
+      }
+    }, 600);
+    return () => clearTimeout(espera);
+  }, [
+    rascunhoPronto, enviado, chaveRascunho, ratings, subAnswers, notasRoteiro, obsRoteiro, planoRoteiro, uniformRating,
+    uniformNotes, customAnswers, favorableAspects, unfavorableAspects, classification, conclusion, color, colorReason,
+    developmentPoints, guidance, trainingNeeds,
+  ]);
+
+  const descartarRascunho = () => {
+    try { localStorage.removeItem(chaveRascunho); } catch { /* sem armazenamento */ }
+    setRatings(emptyRatings());
+    setSubAnswers(emptySubAnswers());
+    setNotasRoteiro({});
+    setObsRoteiro({});
+    setPlanoRoteiro({ competencias: [], pratica: '', mentoria: '', estudo: '' });
+    setUniformRating(null);
+    setUniformNotes('');
+    setCustomAnswers({});
+    setFavorableAspects('');
+    setUnfavorableAspects('');
+    setClassification('');
+    setConclusion('');
+    setColor('');
+    setColorReason('');
+    setDevelopmentPoints('');
+    setGuidance('');
+    setTrainingNeeds('');
+    setRascunhoRestaurado(false);
+  };
 
   if (loading) {
     return (
@@ -308,6 +412,7 @@ function EvaluateForm() {
       // Confirma e SEGURA o estado de envio: a navegação do App Router ainda
       // vai buscar a rota, e durante esses segundos a tela continua sendo esta.
       setEnviado(true);
+      try { localStorage.removeItem(chaveRascunho); } catch { /* sem armazenamento */ }
       mostrar(`Avaliação de ${employee.fullName} registrada.`);
       router.push('/gestor');
       router.refresh();
@@ -342,6 +447,13 @@ function EvaluateForm() {
           {formatDate(dueDate)}
         </p>
       </div>
+
+      {rascunhoRestaurado && (
+        <div role="status" className="card border-l-[3px] border-spot-yellow flex flex-wrap items-center justify-between gap-3 text-sm text-spot-gray-800">
+          <p>Retomamos o que você já tinha preenchido. O rascunho fica só neste aparelho.</p>
+          <button type="button" className="btn-ghost" onClick={descartarRascunho}>Começar do zero</button>
+        </div>
+      )}
 
       {segunda && (
         <div className="card border-l-[3px] border-spot-yellow text-sm text-spot-gray-800 leading-relaxed">

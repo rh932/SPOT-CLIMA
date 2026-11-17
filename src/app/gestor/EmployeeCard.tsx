@@ -61,10 +61,11 @@ export function EmployeeCard({
         </p>
         <p className="text-xs text-spot-gray-600 mt-1 flex items-center gap-1.5">
           {colorOption && (
-            <span
-              className={`h-2 w-2 rounded-[1px] ${colorOption.dotClassName}`}
-              title={`Classificação ${COLOR_LABELS[colorOption.value]}`}
-            />
+            <>
+              <span aria-hidden className={`h-2 w-2 shrink-0 rounded-[1px] ${colorOption.dotClassName}`} />
+              {/* Por extenso: o tooltip de antes não aparece no toque nem no leitor de tela. */}
+              <span className="font-medium text-spot-gray-800">{COLOR_LABELS[colorOption.value]} ·</span>
+            </>
           )}
           {awaitsSecond(employee)
             ? 'Efetivado no 1º período · falta a 2ª avaliação'

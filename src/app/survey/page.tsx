@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { SurveyCover, CoverButton } from '@/components/survey/SurveyCover';
 import { ProgressBar } from '@/components/ProgressBar';
+import { ChoiceGroup, ChoiceOption } from '@/components/forms/ChoiceGroup';
 import { QuestionField, type AnswerValue, type QuestionData } from '@/components/survey/QuestionField';
 import { LiveStatus, Skeleton, Spinner } from '@/components/async';
 import { scrollToFirstError } from '@/lib/scrollToError';
@@ -128,6 +129,24 @@ export default function SurveyPage() {
       })
       .catch(() => setStage('error'));
   }, []);
+
+  // Cada etapa é a mesma página trocando de conteúdo: sem isto o foco ficava no
+  // botão que acabou de sumir e quem usa leitor de tela ou teclado não sabia
+  // que a tela mudou. Move o foco para o título da etapa nova e volta ao topo.
+  const etapaAnterior = useRef<Stage>('loading');
+  useEffect(() => {
+    const veioDoCarregamento = etapaAnterior.current === 'loading';
+    etapaAnterior.current = stage;
+    if (stage === 'loading' || veioDoCarregamento) return;
+    window.scrollTo({ top: 0 });
+    // O campo do código já nasce com foco (autoFocus): não o tira dele.
+    if (document.activeElement?.matches('input, textarea, select')) return;
+    const titulo = document.querySelector<HTMLElement>('h1, h2');
+    if (titulo) {
+      titulo.tabIndex = -1;
+      titulo.focus({ preventScroll: true });
+    }
+  }, [stage, pageIndex]);
 
   const selectSurvey = async (surveyId: string) => {
     setAbrindoId(surveyId);
@@ -432,19 +451,23 @@ export default function SurveyPage() {
         <p className="text-spot-gray-500 text-sm mb-6">
           Usamos apenas o setor e a unidade para organizar os resultados — sua resposta continua anônima.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-          {data.sectors.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setSectorId(s.id)}
-              className={`rounded-xl2 border px-4 py-4 text-left font-medium transition active:scale-[0.98] ${
-                sectorId === s.id ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'
-              }`}
-            >
-              {s.name}
-            </button>
-          ))}
-        </div>
+        <ChoiceGroup legenda={<span className="sr-only">Setor</span>} className="mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {data.sectors.map((s) => (
+              <ChoiceOption
+                key={s.id}
+                name="setor"
+                value={s.id}
+                checked={sectorId === s.id}
+                onChange={() => setSectorId(s.id)}
+                className={opcaoEtapa(sectorId === s.id)}
+              >
+                <span>{s.name}</span>
+                {sectorId === s.id && <MarcaEscolha />}
+              </ChoiceOption>
+            ))}
+          </div>
+        </ChoiceGroup>
         <div className="flex gap-3">
           <button className="btn-ghost" onClick={() => setStage('intro')}>
             Voltar
@@ -464,19 +487,23 @@ export default function SurveyPage() {
         <p className="text-spot-gray-500 text-sm mb-6">
           A loja/unidade em que você trabalha — sua resposta continua anônima.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-          {data.units.map((u) => (
-            <button
-              key={u.id}
-              onClick={() => setUnitId(u.id)}
-              className={`rounded-xl2 border px-4 py-4 text-left font-medium transition active:scale-[0.98] ${
-                unitId === u.id ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'
-              }`}
-            >
-              {u.name}
-            </button>
-          ))}
-        </div>
+        <ChoiceGroup legenda={<span className="sr-only">Unidade</span>} className="mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {data.units.map((u) => (
+              <ChoiceOption
+                key={u.id}
+                name="unidade"
+                value={u.id}
+                checked={unitId === u.id}
+                onChange={() => setUnitId(u.id)}
+                className={opcaoEtapa(unitId === u.id)}
+              >
+                <span>{u.name}</span>
+                {unitId === u.id && <MarcaEscolha />}
+              </ChoiceOption>
+            ))}
+          </div>
+        </ChoiceGroup>
         <div className="flex gap-3">
           <button className="btn-ghost" onClick={() => setStage('sector')}>
             Voltar
@@ -652,7 +679,9 @@ export default function SurveyPage() {
           </p>
         )}
         <div className="flex gap-3">
-          <button className="btn-ghost" onClick={() => setStage('questions')} disabled={enviando}>
+          {/* Leva ao começo: quem quer conferir uma resposta não deve ter de
+              voltar página por página a partir da última. */}
+          <button className="btn-ghost" onClick={() => { setPageIndex(0); setStage('questions'); }} disabled={enviando}>
             Revisar respostas
           </button>
           <button className="btn-primary flex-1" onClick={submit} disabled={enviando} aria-busy={enviando || undefined}>
@@ -684,6 +713,21 @@ export default function SurveyPage() {
   }
 
   return null;
+}
+
+/** Opção de setor/unidade: a escolhida ganha borda grossa e uma marca, não só outra cor. */
+function opcaoEtapa(escolhida: boolean) {
+  return `flex items-center justify-between gap-2 min-h-11 rounded-xl2 border-2 px-4 py-4 text-left font-medium transition active:scale-[0.98] ${
+    escolhida ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'
+  }`;
+}
+
+function MarcaEscolha() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
+  );
 }
 
 function isAnswered(v: AnswerValue | undefined): boolean {

@@ -116,15 +116,16 @@ function GestorLoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   className="absolute inset-y-0 right-0 px-3 text-xs font-medium text-spot-gray-500 hover:text-spot-gray-900 transition"
                 >
-                  {showPassword ? 'Ocultar' : 'Ver'}
+                  {showPassword ? 'Ocultar' : 'Mostrar'}
                 </button>
               </div>
             </div>
 
             {error && (
-              <p className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5">{error}</p>
+              <p role="alert" className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5">{error}</p>
             )}
 
             <button type="submit" disabled={loading} className="btn-primary w-full mt-1">
