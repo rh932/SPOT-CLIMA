@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiFetch } from '@/lib/apiClient';
 import { usePainelModal } from '@/components/forms/usePainelModal';
 import { EmployeeDeleteButton } from '@/components/EmployeeDeleteButton';
+import { LinhaDoTempo } from '@/components/LinhaDoTempo';
 import { TerminationSection } from '@/components/TerminationSection';
 import { voarParaAba } from '@/lib/vooParaAba';
 import type { TerminationReason } from '@/lib/termination';
@@ -91,15 +92,6 @@ function prazoEmPalavras(days: number): string {
   return days > 0 ? `em ${days} dias` : `há ${Math.abs(days)} dias`;
 }
 
-const KIND_STYLE: Record<TimelineEvent['kind'], { dot: string; label: string }> = {
-  ADMISSAO: { dot: 'bg-spot-gray-400', label: 'Admissão' },
-  AVALIACAO: { dot: 'bg-spot-black', label: 'Avaliação' },
-  COR: { dot: 'bg-spot-yellow', label: 'Classificação' },
-  // Fora da paleta do projeto (era sky-500); o cinza medio distingue sem
-  // introduzir uma sexta cor so para este marcador.
-  TREINAMENTO: { dot: 'bg-spot-gray-600', label: 'Treinamento' },
-};
-
 export default function EmployeeFilePage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
   const [data, setData] = useState<Payload | null>(null);
@@ -174,6 +166,9 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
   const colorOption = e.currentColor ? COLOR_OPTIONS.find((c) => c.value === e.currentColor) ?? null : null;
   const timeline = buildEmployeeTimeline({
     admissionDate: e.admissionDate,
+    period1DueDate: e.isApprentice || e.track === 'ATIVO' ? null : e.period1DueDate,
+    period2DueDate: e.isApprentice || e.track === 'ATIVO' ? null : e.period2DueDate,
+    termination: e.status === 'TERMINATED' ? { date: e.terminationDate ?? null, reason: e.terminationReason ?? null, notes: e.terminationNotes ?? null } : null,
     evaluations: data.evaluations,
     colorChanges: data.colorChanges,
     trainings: data.trainings,
@@ -300,41 +295,29 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
       )}
 
       {/* 3. A história da pessoa. */}
-      <section className="card flex flex-col gap-4">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">Linha do tempo</p>
-        <ol className="flex flex-col">
-          {timeline.map((ev, i) => (
-            <li key={ev.id} className="flex gap-3">
-              {/* Trilho: ponto do evento e a linha que liga ao próximo. */}
-              <div className="flex flex-col items-center shrink-0 pt-1.5">
-                <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${KIND_STYLE[ev.kind].dot}`} />
-                {i < timeline.length - 1 && <span aria-hidden className="w-px flex-1 bg-spot-gray-200 my-1" />}
-              </div>
-              <div className={`min-w-0 ${i < timeline.length - 1 ? 'pb-5' : ''}`}>
-                <p className="text-xs text-spot-gray-500">
-                  {formatDate(ev.date)} · {KIND_STYLE[ev.kind].label}
-                </p>
-                <p className="font-semibold text-sm leading-snug">{ev.title}</p>
-                {ev.detail && <p className="text-sm text-spot-gray-600 leading-snug">{ev.detail}</p>}
-                {ev.author && <p className="text-xs text-spot-gray-500 mt-0.5">por {ev.author}</p>}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
+      <LinhaDoTempo eventos={timeline} />
 
       {/* 4. Histórico permanente: cada avaliação com tudo o que foi registrado
           nela. Avaliações novas entram aqui sem apagar as anteriores. */}
-      {data.evaluations.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">
-            Avaliações registradas · {data.evaluations.length}
-          </p>
-          {[...(data.evaluations as unknown as EvaluationRecord[])]
-            .sort((a, b) => new Date(b.evaluationDate).getTime() - new Date(a.evaluationDate).getTime())
-            .map((ev) => <div key={ev.id} id={`avaliacao-${ev.id}`} className="scroll-mt-20"><EvaluationCard ev={ev} /></div>)}
-        </section>
-      )}
+      {data.evaluations.length > 0 && (() => {
+        const todas = [...(data.evaluations as unknown as EvaluationRecord[])]
+          .sort((x, y) => new Date(y.evaluationDate).getTime() - new Date(x.evaluationDate).getTime()
+            || y.cycleNumber - x.cycleNumber);
+        const feedbacks = todas.filter((ev) => ev.period === 'FEEDBACK');
+        const experiencia = todas.filter((ev) => ev.period !== 'FEEDBACK');
+        const bloco = (titulo: string, itens: EvaluationRecord[]) => itens.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">
+              {titulo} · {itens.length}
+            </p>
+            {itens.map((ev) => <div key={ev.id} id={`avaliacao-${ev.id}`} className="scroll-mt-20"><EvaluationCard ev={ev} /></div>)}
+          </section>
+        );
+        // Feedbacks e avaliações de experiência são etapas diferentes: ficam em
+        // blocos separados. Todos continuam aqui para sempre — um registro novo
+        // entra na lista, nunca no lugar de um antigo.
+        return <>{bloco('Feedbacks registrados', feedbacks)}{bloco('Avaliações de experiência', experiencia)}</>;
+      })()}
 
       {/* Saiu do Spot: vai para a aba Desligados e some das listas e dos
           lembretes, com o histórico guardado. Diferente de excluir, dá para desfazer. */}

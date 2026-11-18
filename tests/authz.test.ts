@@ -1,3 +1,4 @@
+import { EVALUATION_DIMENSIONS } from '../src/data/evaluationBank';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SignJWT } from 'jose';
 import { NextRequest } from 'next/server';
@@ -329,13 +330,14 @@ describe('handlers: acesso vertical e horizontal', () => {
       id: 'e1', unitId: 'u1', sectorId: 's1', shift: 'DIA', isApprentice: false, status: 'AWAITING_PERIOD_1',
       admissionDate: new Date('2026-08-01T00:00:00Z'), sector: { usesColorCycle: false },
     };
-    const sub = (n: number) => Object.fromEntries(Array.from({ length: n }, (_, i) => [`k${i}`, 'SIM']));
+    const sub = (dim: 'flexibility' | 'interest' | 'relationship' | 'learning') =>
+      Object.fromEntries(EVALUATION_DIMENSIONS.find((d) => d.key === dim)!.subQuestions.map((q) => [q.key, 'SIM']));
     const futuro = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
     const r = req('/api/gestor/employees/e1/evaluate', { method: 'POST' });
     const body = {
       evaluationDate: futuro, dueDateAtEvaluation: futuro,
-      flexibilityRating: 'BOM', flexibilitySubAnswers: sub(4), interestRating: 'BOM', interestSubAnswers: sub(3),
-      relationshipRating: 'BOM', relationshipSubAnswers: sub(2), learningRating: 'BOM', learningSubAnswers: sub(2),
+      flexibilityRating: 'BOM', flexibilitySubAnswers: sub('flexibility'), interestRating: 'BOM', interestSubAnswers: sub('interest'),
+      relationshipRating: 'BOM', relationshipSubAnswers: sub('relationship'), learningRating: 'BOM', learningSubAnswers: sub('learning'),
       favorableAspects: 'ok ok', unfavorableAspects: 'ok ok', classification: 'OTIMAS_PERSPECTIVAS', conclusion: 'EFETIVAR',
     };
     const res = await POST(new NextRequest(r.url, { method: 'POST', headers: r.headers, body: JSON.stringify(body) }), { params: Promise.resolve({ id: 'e1' }) });

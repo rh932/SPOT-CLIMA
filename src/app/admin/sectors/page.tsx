@@ -261,9 +261,9 @@ export default function SectorsPage() {
                   aria-label={
                     s.usesColorCycle
                       ? `Tirar "${s.name}" do ciclo de cores — os colaboradores param de receber aviso de feedback`
-                      : `Incluir "${s.name}" no ciclo de cores — feedback a cada 45, 120 ou 180 dias`
+                      : `Incluir "${s.name}" no ciclo de cores — feedback a cada 30, 120 ou 180 dias`
                   }
-                  title="Projeto de cores: 45 / 120 / 180 dias de feedback"
+                  title="Projeto de cores: 30 / 120 / 180 dias de feedback"
                 >
                   {s.usesColorCycle ? 'Tirar do ciclo de cores' : 'Incluir no ciclo de cores'}
                 </ActionButton>
@@ -316,7 +316,7 @@ export default function SectorsPage() {
       </form>
       {createError && <p role="alert" className="text-sm text-spot-danger">{createError}</p>}
       <p className="text-xs text-spot-gray-500">
-        &quot;Ciclo de cores&quot; é o projeto 🔴 45 / 🟡 120 / 🟢 180 dias: só os setores marcados recebem
+        &quot;Ciclo de cores&quot; é o projeto 🔴 30 / 🟡 120 / 🟢 180 dias: só os setores marcados recebem
         classificação por cor na efetivação e entram no ciclo permanente de feedback. Os demais são efetivados sem
         cor. &quot;Só pesquisa de clima&quot; deixa o setor no formulário da pesquisa e fora do cadastro de funcionários
         e do escopo dos gestores; &quot;Só avaliações&quot; faz o contrário — é como a Administração é dividida por

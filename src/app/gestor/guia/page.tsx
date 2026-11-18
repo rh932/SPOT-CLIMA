@@ -140,7 +140,7 @@ const AREAS: Area[] = [
     passos: [
       {
         titulo: 'Entenda o que cada cor significa',
-        texto: 'Vermelho: feedback a cada 45 dias. Amarelo: a cada 120 dias. Verde: a cada 180 dias.',
+        texto: 'Vermelho: feedback a cada 30 dias. Amarelo: a cada 120 dias. Verde: a cada 180 dias.',
       },
       {
         titulo: 'Saiba quando a cor é liberada',

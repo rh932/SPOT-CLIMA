@@ -10,14 +10,16 @@ import {
   reminderMessage,
   colorChangeBaseDate,
   colorChangePreview,
+  feedbackOrdinalLabel,
+  COLOR_OPTIONS,
 } from '../src/lib/feedbackCycle';
 
 /** Datas locais para não depender do fuso da máquina que roda os testes. */
 const at = (y: number, m: number, d: number, h = 0) => new Date(y, m - 1, d, h);
 
 describe('nextFeedbackDate', () => {
-  it('vermelho agenda para 45 dias', () => {
-    expect(nextFeedbackDate(at(2026, 1, 1), 'VERMELHO')).toEqual(at(2026, 2, 15));
+  it('vermelho agenda para 30 dias', () => {
+    expect(nextFeedbackDate(at(2026, 1, 1), 'VERMELHO')).toEqual(at(2026, 1, 31));
   });
 
   it('amarelo agenda para 120 dias', () => {
@@ -34,8 +36,8 @@ describe('nextFeedbackDate', () => {
     expect(manha).toEqual(noite);
   });
 
-  it('os intervalos são exatamente os da regra 45/120/180', () => {
-    expect(COLOR_INTERVAL_DAYS).toEqual({ VERMELHO: 45, AMARELO: 120, VERDE: 180 });
+  it('os intervalos são exatamente os da regra 30/120/180', () => {
+    expect(COLOR_INTERVAL_DAYS).toEqual({ VERMELHO: 30, AMARELO: 120, VERDE: 180 });
   });
 });
 
@@ -46,8 +48,8 @@ describe('mudança de cor recalcula o ciclo', () => {
     expect(nextFeedbackDate(feedback, 'AMARELO')).toEqual(at(2026, 5, 1));
   });
 
-  it('amarelo -> vermelho antecipa a próxima avaliação para 45 dias', () => {
-    expect(nextFeedbackDate(at(2026, 1, 1), 'VERMELHO')).toEqual(at(2026, 2, 15));
+  it('amarelo -> vermelho antecipa a próxima avaliação para 30 dias', () => {
+    expect(nextFeedbackDate(at(2026, 1, 1), 'VERMELHO')).toEqual(at(2026, 1, 31));
   });
 });
 
@@ -204,7 +206,7 @@ describe('colorChangePreview', () => {
       today: hoje,
     });
     expect(p.nextDueDate).toEqual(nextFeedbackDate(at(2026, 5, 1), 'VERMELHO'));
-    // 45 dias em vez de 180: o próximo feedback vem 135 dias antes.
+    // 30 dias em vez de 180: o próximo feedback vem 150 dias antes.
     expect(p.shiftInDays).toBe(COLOR_INTERVAL_DAYS.VERMELHO - COLOR_INTERVAL_DAYS.VERDE);
   });
 
@@ -238,5 +240,33 @@ describe('reminderMessage fora dos dias da rotina (botão "Lembrar gestores agor
     expect(reminderMessage('Ana', -12, 'de 90 dias')).toBe('Atrasada há 12 dias: a avaliação de 90 dias de Ana ainda não foi registrada.');
     expect(reminderMessage('Ana', 5, 'de 45 dias')).toBe('Lembrete: a avaliação de 45 dias de Ana está prevista para daqui a 5 dias.');
     expect(reminderMessage('Ana', 0, 'de 45 dias')).toBe('Hoje é o dia: a avaliação de 45 dias de Ana vence hoje.');
+  });
+});
+
+describe('regra de prazos do feedback (independente da experiência)', () => {
+  it('conta a partir da data de realização do feedback, nunca da admissão', () => {
+    const admissao = at(2025, 1, 10);
+    const feedback = at(2027, 1, 12);
+    // Mesmo com a admissão distante, o prazo sai do dia do feedback.
+    expect(nextFeedbackDate(feedback, 'VERMELHO')).toEqual(at(2027, 2, 11));
+    expect(nextFeedbackDate(feedback, 'AMARELO')).toEqual(at(2027, 5, 12));
+    expect(nextFeedbackDate(feedback, 'VERDE')).toEqual(at(2027, 7, 11));
+    expect(daysBetween(admissao, nextFeedbackDate(feedback, 'VERMELHO'))).not.toBe(45);
+  });
+
+  it('a tela descreve o vermelho com 30 dias, e não com os 45 da experiência', () => {
+    const vermelho = COLOR_OPTIONS.find((c) => c.value === 'VERMELHO')!;
+    expect(vermelho.description).toContain('30 dias');
+    expect(vermelho.description).not.toContain('45');
+  });
+});
+
+describe('feedbackOrdinalLabel', () => {
+  it('nomeia o contador por extenso e passa a numeral depois do décimo', () => {
+    expect([1, 2, 3, 4, 5].map(feedbackOrdinalLabel)).toEqual([
+      'Primeiro feedback', 'Segundo feedback', 'Terceiro feedback', 'Quarto feedback', 'Quinto feedback',
+    ]);
+    expect(feedbackOrdinalLabel(10)).toBe('Décimo feedback');
+    expect(feedbackOrdinalLabel(11)).toBe('11º feedback');
   });
 });

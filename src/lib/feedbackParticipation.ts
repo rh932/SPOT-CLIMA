@@ -5,7 +5,7 @@
  *  - `usesFeedback`: faz feedback dos colaboradores já efetivados, quando o gestor
  *    quiser (sem data agendada nem aviso).
  *  - `usesColorCycle`: além disso, classifica por cor e agenda o próximo feedback
- *    (🔴45 / 🟡120 / 🟢180 dias). Quem usa cores sempre faz feedback.
+ *    (🔴30 / 🟡120 / 🟢180 dias). Quem usa cores sempre faz feedback.
  *
  * A trilha do colaborador (NOVO/ATIVO) deixou de decidir: antes o ATIVO participava
  * em qualquer setor; a migração 0029 ligou as chaves dos setores que já tinham ATIVO.

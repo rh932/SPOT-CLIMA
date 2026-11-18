@@ -57,7 +57,7 @@ export const employeeTrackEnum = pgEnum('employee_track', ['NOVO', 'ATIVO']);
 // avaliação de 90 dias e se repete para sempre, na cadência da cor.
 export const evaluationPeriodEnum = pgEnum('evaluation_period', ['FIRST', 'SECOND', 'FEEDBACK']);
 // Classificação dada pelo gestor ao fim da avaliação de 90 dias e revisada a
-// cada feedback. A cor é o que define a cadência: 45 / 120 / 180 dias.
+// cada feedback. A cor é o que define a cadência: 30 / 120 / 180 dias.
 export const feedbackColorEnum = pgEnum('feedback_color', ['VERMELHO', 'AMARELO', 'VERDE']);
 // Dois grupos de aviso na mesma tabela:
 // - lembretes de prazo, gerados pela rotina diária (feedback e experiência);
@@ -377,7 +377,7 @@ export const sectors = pgTable('sectors', {
   order: integer('order').notNull().default(0),
   active: boolean('active').notNull().default(true),
   /**
-   * Se o setor participa do ciclo de cores (🔴45 / 🟡120 / 🟢180 dias).
+   * Se o setor participa do ciclo de cores (🔴30 / 🟡120 / 🟢180 dias).
    *
    * O projeto das cores é do Salão. Quem não participa faz normalmente as
    * avaliações de 45 e 90 dias, mas efetiva SEM cor: não ganha data de próximo
@@ -390,7 +390,7 @@ export const sectors = pgTable('sectors', {
    * Se o setor faz feedback dos colaboradores já efetivados. É uma escolha do
    * setor, separada das cores: feedback SEM cores é registrado quando o gestor
    * quiser (não agenda data nem gera aviso); feedback COM cores segue o ciclo de
-   * 45/120/180 dias. Quem liga as cores sem o feedback ainda assim faz feedback —
+   * 30/120/180 dias. Quem liga as cores sem o feedback ainda assim faz feedback —
    * a cor nasce dele (ver lib/feedbackParticipation.ts).
    */
   usesFeedback: boolean('uses_feedback').notNull().default(false),

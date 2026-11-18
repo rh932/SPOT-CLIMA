@@ -1,16 +1,23 @@
-import { COLOR_LABELS, type FeedbackColor } from './feedbackCycle';
+import { COLOR_LABELS, feedbackOrdinalLabel, type FeedbackColor } from './feedbackCycle';
+import { TERMINATION_LABELS, type TerminationReason } from './termination';
 import { trainingResultLabel } from './trainingResult';
 
 /**
- * Linha do tempo do colaborador: junta admissão, avaliações, mudanças de cor e
- * treinamentos numa lista só, ordenada do mais recente para o mais antigo.
+ * Linha do tempo do colaborador: junta admissão, avaliações de experiência,
+ * feedbacks, mudanças de cor, treinamentos e o desligamento numa lista só, em
+ * ordem cronológica (do mais antigo ao mais recente), para acompanhar a jornada
+ * desde a admissão.
+ *
+ * Experiência e feedback são etapas DIFERENTES e aparecem com nomes e tipos
+ * diferentes: "Primeiro prazo de experiência (45 dias)" não é o "Primeiro
+ * feedback". O feedback nunca leva o nome de admissão nem de experiência.
  *
  * É lógica pura (nada de I/O, nada de React) porque é a parte fácil de errar:
- * a ordem, o rótulo do ciclo ("2º feedback") e quais mudanças de cor já estão
- * contadas dentro de uma avaliação. A tela só desenha o que sai daqui.
+ * a ordem, o rótulo de cada etapa e quais mudanças de cor já estão contadas
+ * dentro de uma avaliação. A tela só desenha o que sai daqui.
  */
 
-export type TimelineKind = 'ADMISSAO' | 'AVALIACAO' | 'COR' | 'TREINAMENTO';
+export type TimelineKind = 'ADMISSAO' | 'EXPERIENCIA' | 'FEEDBACK' | 'COR' | 'TREINAMENTO' | 'DESLIGAMENTO';
 
 export interface TimelineEvent {
   id: string;
@@ -23,6 +30,10 @@ export interface TimelineEvent {
   detail: string | null;
   /** Cor envolvida no evento, quando houver, para o ponto colorido. */
   color: FeedbackColor | null;
+  /** Próxima data prevista a partir deste evento (próximo prazo ou feedback). */
+  nextDate: Date | null;
+  /** Avaliação por trás do evento: a tela usa para abrir o registro completo. */
+  evaluationId: string | null;
 }
 
 export interface TimelineEvaluation {
@@ -33,7 +44,11 @@ export interface TimelineEvaluation {
   classification: string;
   conclusion: string | null;
   color: FeedbackColor | null;
+  /** Data do próximo feedback que esta avaliação agendou (só quando há cor). */
+  nextDueDate?: string | Date | null;
   evaluator: { name: string } | null;
+  /** Quem avaliou fora do sistema (Forms) não tem conta: vem só o nome. */
+  evaluatorName?: string | null;
 }
 
 export interface TimelineColorChange {
@@ -79,23 +94,36 @@ export function evaluationResult(ev: { classification: string; conclusion: strin
 }
 
 export function evaluationTitle(period: TimelineEvaluation['period'], cycleNumber: number): string {
-  if (period === 'FIRST') return 'Avaliação de 45 dias';
-  if (period === 'SECOND') return 'Avaliação de 90 dias';
-  return `${cycleNumber}º feedback`;
+  if (period === 'FIRST') return 'Primeiro prazo de experiência (45 dias)';
+  if (period === 'SECOND') return 'Segundo prazo de experiência (mais 45 dias)';
+  return feedbackOrdinalLabel(cycleNumber);
 }
 
 const toDate = (value: string | Date) => (value instanceof Date ? value : new Date(value));
 
+/** Empate de data: a jornada segue a ordem natural das etapas. */
+const KIND_RANK: Record<TimelineKind, number> = {
+  ADMISSAO: 0, EXPERIENCIA: 1, FEEDBACK: 2, COR: 3, TREINAMENTO: 4, DESLIGAMENTO: 5,
+};
+
 export function buildEmployeeTimeline({
   admissionDate,
+  period1DueDate,
+  period2DueDate,
   evaluations = [],
   colorChanges = [],
   trainings = [],
+  termination = null,
 }: {
   admissionDate: string | Date;
+  /** Fim do 1º prazo de experiência — a "próxima data" da admissão. */
+  period1DueDate?: string | Date | null;
+  /** Fim do 2º prazo — a próxima data de quem teve a experiência estendida. */
+  period2DueDate?: string | Date | null;
   evaluations?: TimelineEvaluation[];
   colorChanges?: TimelineColorChange[];
   trainings?: TimelineTraining[];
+  termination?: { date: string | Date | null; reason: string | null; notes?: string | null } | null;
 }): TimelineEvent[] {
   const events: TimelineEvent[] = [];
 
@@ -107,20 +135,33 @@ export function buildEmployeeTimeline({
     author: null,
     detail: null,
     color: null,
+    nextDate: period1DueDate ? toDate(period1DueDate) : null,
+    evaluationId: null,
   });
 
   for (const ev of evaluations) {
     const partes = [CLASSIFICATION_LABEL[ev.classification] ?? ev.classification];
     if (ev.conclusion) partes.push(CONCLUSION_LABEL[ev.conclusion] ?? ev.conclusion);
     if (ev.color) partes.push(`Classificado como ${COLOR_LABELS[ev.color]}`);
+    // Próxima data: no feedback, a que a cor agendou; no 1º prazo estendido,
+    // o fim do 2º prazo. Nos demais casos a etapa se encerra ali.
+    const nextDate = ev.nextDueDate
+      ? toDate(ev.nextDueDate)
+      : ev.period === 'FIRST' && ev.conclusion === 'EXTENDER' && period2DueDate
+        ? toDate(period2DueDate)
+        : null;
+    // Setor com dois gestores: a 2ª resposta do mesmo prazo de experiência.
+    const sufixo = ev.period !== 'FEEDBACK' && ev.cycleNumber > 1 ? ` (${ev.cycleNumber}ª resposta)` : '';
     events.push({
       id: `ev-${ev.id}`,
-      kind: 'AVALIACAO',
+      kind: ev.period === 'FEEDBACK' ? 'FEEDBACK' : 'EXPERIENCIA',
       date: toDate(ev.evaluationDate),
-      title: evaluationTitle(ev.period, ev.cycleNumber),
-      author: ev.evaluator?.name ?? null,
+      title: evaluationTitle(ev.period, ev.cycleNumber) + sufixo,
+      author: ev.evaluator?.name ?? ev.evaluatorName ?? null,
       detail: partes.join(' · '),
       color: ev.color,
+      nextDate,
+      evaluationId: ev.id,
     });
   }
 
@@ -138,6 +179,8 @@ export function buildEmployeeTimeline({
       author: ch.changedBy?.name ?? null,
       detail: ch.reason,
       color: ch.newColor,
+      nextDate: null,
+      evaluationId: null,
     });
   }
 
@@ -153,10 +196,32 @@ export function buildEmployeeTimeline({
       author: tr.trainer?.name ?? null,
       detail: partes.join(' · '),
       color: null,
+      nextDate: null,
+      evaluationId: null,
     });
   }
 
-  // Mais recente primeiro. O desempate por id mantém a ordem estável quando
-  // dois eventos caem no mesmo instante (ex.: avaliação e mudança de cor).
-  return events.sort((a, b) => (b.date.getTime() - a.date.getTime()) || a.id.localeCompare(b.id));
+  // Desligamento: o fim da jornada. Sem data registrada (saída antiga, feita
+  // pela avaliação "Demitir"), não há onde encaixá-lo na ordem: fica de fora.
+  if (termination?.date) {
+    const motivo = termination.reason
+      ? (TERMINATION_LABELS[termination.reason as TerminationReason] ?? termination.reason)
+      : null;
+    events.push({
+      id: 'saida',
+      kind: 'DESLIGAMENTO',
+      date: toDate(termination.date),
+      title: 'Desligamento',
+      author: null,
+      detail: [motivo, termination.notes?.trim() || null].filter(Boolean).join(' · ') || null,
+      color: null,
+      nextDate: null,
+      evaluationId: null,
+    });
+  }
+
+  // Do mais antigo ao mais recente. No mesmo instante vale a ordem das etapas
+  // (admissão, experiência, feedback...), e depois o id, para ficar estável.
+  return events.sort((a, b) =>
+    (a.date.getTime() - b.date.getTime()) || (KIND_RANK[a.kind] - KIND_RANK[b.kind]) || a.id.localeCompare(b.id));
 }

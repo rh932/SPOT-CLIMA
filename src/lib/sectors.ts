@@ -1,7 +1,7 @@
 /**
  * Regras do cadastro de setores.
  *
- * O projeto de cores (feedback a cada 45/120/180 dias) nasceu no Salão, e a
+ * O projeto de cores (feedback a cada 30/120/180 dias) nasceu no Salão, e a
  * regra do restaurante é: setor cujo nome começa com "Salão" já entra no
  * ciclo. Isso é só o VALOR PADRÃO — depois de criado, quem manda é a chave
  * `usesColorCycle` do cadastro, que o RH liga e desliga na tela de Setores.

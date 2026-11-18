@@ -3,6 +3,7 @@ import { TERMINATION_REASONS } from './termination';
 import { saoPauloDay } from './probation';
 import { MIN_ANONYMITY_THRESHOLD, MAX_ANONYMITY_THRESHOLD } from './anonymity';
 import { CHAVES_ROTEIRO, CHAVES_COMPETENCIAS } from '@/data/roteiroPdi';
+import { opcoesPermitidas } from '@/data/evaluationBank';
 
 /** Id gerado pelo sistema (cuid2). Teto de tamanho para nada arbitrário chegar ao banco. */
 const idSchema = z.string().min(1).max(64);
@@ -58,7 +59,7 @@ export const sectorSchema = z.object({
   name: z.string().min(2).max(80),
   order: z.number().int().optional(),
   active: z.boolean().optional(),
-  /** Participa do ciclo de cores (45/120/180) — ver sectors.usesColorCycle. */
+  /** Participa do ciclo de cores (30/120/180) — ver sectors.usesColorCycle. */
   usesColorCycle: z.boolean().optional(),
   /** Faz feedback dos efetivados (com ou sem cores) — ver sectors.usesFeedback. */
   usesFeedback: z.boolean().optional(),
@@ -382,7 +383,7 @@ export const trainerEmployeeSchema = probationaryEmployeeSchema.extend({
   path: ['admissionDate'],
 });
 
-const subAnswerValue = z.enum(['SIM', 'NAO', 'TALVEZ', 'REGULAR']);
+const subAnswerValue = z.enum(['SIM', 'NAO', 'TALVEZ', 'REGULAR', 'MEDIO', 'AS_VEZES']);
 const ratingValue = z.enum(['OTIMO', 'BOM', 'REGULAR', 'RUIM']);
 
 const DIMENSOES = ['flexibility', 'interest', 'relationship', 'learning'] as const;
@@ -470,6 +471,16 @@ export const evaluationSubmissionSchema = z.object({
     const subs = d[`${k}SubAnswers`];
     if (!d[`${k}Rating`] || !subs || Object.keys(subs).length !== QTD_SUBPERGUNTAS[k]) {
       ctx.addIssue({ code: 'custom', message: 'Todas as sub-perguntas de cada dimensão são obrigatórias.', path: [`${k}SubAnswers`] });
+      continue;
+    }
+    // Cada pergunta só aceita as opções dela: "Médio" e "Às vezes" existem só
+    // onde o formulário as oferece, e chave desconhecida (ou a pergunta antiga
+    // que foi substituída) não entra em avaliação nova.
+    for (const [chave, resposta] of Object.entries(subs)) {
+      const permitidas = opcoesPermitidas(k, chave);
+      if (!permitidas || !permitidas.includes(resposta)) {
+        ctx.addIssue({ code: 'custom', message: 'Resposta inválida para uma das perguntas.', path: [`${k}SubAnswers`, chave] });
+      }
     }
   }
 });

@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/apiClient';
 import { EmployeeDeleteButton } from '@/components/EmployeeDeleteButton';
 import { EvaluationCard, type EvaluationRecord } from '@/components/EvaluationCard';
+import { LinhaDoTempo } from '@/components/LinhaDoTempo';
+import { buildEmployeeTimeline, type TimelineEvaluation } from '@/lib/employeeTimeline';
 import { pendingDueDate, dueBadge, statusLabel, type DueDateFields } from '@/lib/probation';
 import { statusFromEvaluations, type TerminationReason } from '@/lib/termination';
 import { TerminationSection, ApprenticeToggle } from './EmployeeStatusActions';
@@ -45,6 +47,8 @@ interface ColorChange {
   reason: string;
   nextDueDate: string;
   createdAt: string;
+  /** Mudança nascida de uma avaliação: já está descrita na linha dela. */
+  evaluationId?: string | null;
   changedBy: { name: string } | null;
 }
 
@@ -233,13 +237,38 @@ export default function EmployeeDetailPage() {
         podeDesfazer={Boolean(employee.previousStatus) || statusFromEvaluations(evaluations.map((ev) => ({ period: ev.period, conclusion: ev.conclusion as 'DEMITIR' | 'EFETIVAR' | 'EXTENDER' | null, evaluationDate: ev.evaluationDate })), employee.isApprentice) !== 'TERMINATED'}
       />
 
+      {/* A jornada inteira, da admissão ao desligamento: experiência e feedback
+          aparecem como etapas diferentes. */}
+      <LinhaDoTempo
+        eventos={buildEmployeeTimeline({
+          admissionDate: employee.admissionDate,
+          period1DueDate: employee.isApprentice || employee.track === 'ATIVO' ? null : employee.period1DueDate,
+          period2DueDate: employee.isApprentice || employee.track === 'ATIVO' ? null : employee.period2DueDate,
+          termination: employee.status === 'TERMINATED'
+            ? { date: employee.terminationDate, reason: employee.terminationReason, notes: employee.terminationNotes }
+            : null,
+          evaluations: evaluations as unknown as TimelineEvaluation[],
+          colorChanges: colorChanges.map((c) => ({ ...c, evaluationId: c.evaluationId ?? null })),
+        })}
+      />
+
       {evaluations.length === 0 ? (
         <div className="card text-center py-10 text-spot-gray-500">
           {employee.isApprentice ? 'Jovem aprendiz não passa pela avaliação de experiência.' : 'Nenhuma avaliação registrada ainda.'}
         </div>
-      ) : (
-        evaluations.map((ev) => <EvaluationCard key={ev.id} ev={ev} />)
-      )}
+      ) : (() => {
+        const ordenadas = [...evaluations].sort((x, y) => new Date(y.evaluationDate).getTime() - new Date(x.evaluationDate).getTime()
+          || y.cycleNumber - x.cycleNumber);
+        const feedbacks = ordenadas.filter((ev) => ev.period === 'FEEDBACK');
+        const experiencia = ordenadas.filter((ev) => ev.period !== 'FEEDBACK');
+        const bloco = (titulo: string, itens: Evaluation[]) => itens.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500">{titulo} · {itens.length}</p>
+            {itens.map((ev) => <div key={ev.id} id={`avaliacao-${ev.id}`} className="scroll-mt-20"><EvaluationCard ev={ev} /></div>)}
+          </section>
+        );
+        return <>{bloco('Feedbacks registrados', feedbacks)}{bloco('Avaliações de experiência', experiencia)}</>;
+      })()}
 
       {/* Última coisa da página, e não um botão perdido no topo: quem chega
           aqui para excluir já rolou por cima do histórico que vai perder. */}

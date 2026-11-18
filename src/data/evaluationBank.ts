@@ -10,13 +10,19 @@
  * sem precisar de tabela de mapeamento.
  */
 
-export type SubAnswerOption = 'SIM' | 'NAO' | 'TALVEZ' | 'REGULAR';
+export type SubAnswerOption = 'SIM' | 'NAO' | 'TALVEZ' | 'REGULAR' | 'MEDIO' | 'AS_VEZES';
 export type RatingOption = 'OTIMO' | 'BOM' | 'REGULAR' | 'RUIM';
 
 export interface SubQuestion {
   key: string;
   text: string;
   options: SubAnswerOption[];
+  /**
+   * Pergunta que esta substituiu. Avaliações antigas guardaram a resposta na
+   * chave antiga, com o sentido do texto antigo; a ficha mostra a pergunta
+   * antiga (e não a nova) para essas respostas não serem lidas ao contrário.
+   */
+  legacy?: { key: string; text: string; options: SubAnswerOption[] };
 }
 
 export interface EvaluationDimension {
@@ -28,7 +34,9 @@ export interface EvaluationDimension {
 
 export const RATING_OPTIONS: RatingOption[] = ['OTIMO', 'BOM', 'REGULAR', 'RUIM'];
 export const RATING_LABELS: Record<RatingOption, string> = { OTIMO: 'Ótimo', BOM: 'Bom', REGULAR: 'Regular', RUIM: 'Ruim' };
-export const SUB_ANSWER_LABELS: Record<SubAnswerOption, string> = { SIM: 'Sim', NAO: 'Não', TALVEZ: 'Talvez', REGULAR: 'Regular' };
+export const SUB_ANSWER_LABELS: Record<SubAnswerOption, string> = {
+  SIM: 'Sim', NAO: 'Não', TALVEZ: 'Talvez', REGULAR: 'Regular', MEDIO: 'Médio', AS_VEZES: 'Às vezes',
+};
 
 export const EVALUATION_DIMENSIONS: EvaluationDimension[] = [
   {
@@ -49,7 +57,20 @@ export const EVALUATION_DIMENSIONS: EvaluationDimension[] = [
     subQuestions: [
       { key: 'q1', text: 'Demonstra total interesse pelo emprego e pelos seus resultados.', options: ['SIM', 'NAO'] },
       { key: 'q2', text: 'Demonstra interesse normal para um novo colaborador que está em fase de adaptação.', options: ['SIM', 'NAO'] },
-      { key: 'q3', text: 'Não perde o estímulo com facilidade, não se faz necessário constantes doses de motivação.', options: ['SIM', 'NAO'] },
+      // Pergunta reescrita: a antiga ("Não perde o estímulo...") era negativa e só
+      // aceitava Sim/Não, o que não cabia em quem oscila. Agora o Sim significa
+      // perder o estímulo, e há resposta intermediária. Chave nova (q3_v2) para as
+      // respostas antigas, gravadas em q3 com o sentido contrário, não se misturarem.
+      {
+        key: 'q3_v2',
+        text: 'Perde o estímulo com facilidade? Faz-se necessário oferecer doses constantes de motivação?',
+        options: ['SIM', 'NAO', 'MEDIO', 'AS_VEZES'],
+        legacy: {
+          key: 'q3',
+          text: 'Não perde o estímulo com facilidade, não se faz necessário constantes doses de motivação.',
+          options: ['SIM', 'NAO'],
+        },
+      },
     ],
   },
   {
@@ -84,3 +105,15 @@ export const CONCLUSION_OPTIONS = [
   { value: 'EFETIVAR', label: 'Efetivar.' },
   { value: 'EXTENDER', label: '+ 45 dias em caráter experimental.' },
 ] as const;
+
+/**
+ * Respostas permitidas por pergunta, pela chave da dimensão e da pergunta
+ * (inclui as chaves antigas, que o histórico ainda guarda). A rota usa isto
+ * para recusar uma opção que a pergunta não oferece — "Médio" numa pergunta de
+ * Sim/Não, por exemplo.
+ */
+export function opcoesPermitidas(dimensao: EvaluationDimension['key'], chave: string): SubAnswerOption[] | null {
+  const d = EVALUATION_DIMENSIONS.find((x) => x.key === dimensao);
+  const q = d?.subQuestions.find((sq) => sq.key === chave);
+  return q ? q.options : null;
+}

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   EVALUATION_DIMENSIONS, SUB_ANSWER_LABELS, CLASSIFICATION_OPTIONS, CONCLUSION_OPTIONS,
   type RatingOption, type SubAnswerOption,
 } from '@/data/evaluationBank';
 import { deliveredOnTime } from '@/lib/probation';
-import { COLOR_OPTIONS, COLOR_LABELS, type FeedbackColor } from '@/lib/feedbackCycle';
+import { COLOR_OPTIONS, COLOR_LABELS, feedbackOrdinalLabel, type FeedbackColor } from '@/lib/feedbackCycle';
 import { StarRating } from '@/components/StarRating';
 import { answerLabel, type AnsweredQuestion } from '@/lib/questionnaire';
 import { RoteiroResumo } from '@/components/RoteiroResumo';
@@ -20,6 +20,9 @@ import { PILARES_ROTEIRO, notaDoPilar, type RoteiroGravado } from '@/data/roteir
  */
 
 const formatDate = (value: string) => new Date(value).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+/** Data e hora em que o registro foi gravado (horário de Brasília). */
+const formatRegistro = (value: string) =>
+  new Date(value).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
 
 export interface EvaluationRecord {
   id: string;
@@ -43,11 +46,20 @@ export interface EvaluationRecord {
   evaluatorName: string | null;
   source: 'SISTEMA' | 'FORMS';
   dueDateAtEvaluation: string;
+  /** Quando o registro foi gravado — data e hora, diferente do dia da avaliação. */
+  createdAt?: string;
   [key: string]: unknown;
 }
 
 export function EvaluationCard({ ev }: { ev: EvaluationRecord }) {
   const [showAll, setShowAll] = useState(false);
+  // Veio da linha do tempo (#avaliacao-<id>): abre as respostas completas.
+  useEffect(() => {
+    const abrirSeForEste = () => { if (window.location.hash === `#avaliacao-${ev.id}`) setShowAll(true); };
+    abrirSeForEste();
+    window.addEventListener('hashchange', abrirSeForEste);
+    return () => window.removeEventListener('hashchange', abrirSeForEste);
+  }, [ev.id]);
   // Feedback de Paulista/JK: o roteiro PDI ocupa o lugar das 4 dimensões.
   const roteiro = (ev.roteiro ?? null) as RoteiroGravado | null;
 
@@ -55,7 +67,7 @@ export function EvaluationCard({ ev }: { ev: EvaluationRecord }) {
     <div className="card flex flex-col gap-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="font-bold">
-          {ev.period === 'FIRST' ? '1º ciclo (45 dias)' : ev.period === 'SECOND' ? '2º ciclo (90 dias)' : `${ev.cycleNumber}º feedback`}
+          {ev.period === 'FIRST' ? 'Primeiro prazo de experiência (45 dias)' : ev.period === 'SECOND' ? 'Segundo prazo de experiência (mais 45 dias)' : feedbackOrdinalLabel(ev.cycleNumber)}
           {/* Dois gestores no setor: os dois podem ter avaliado o mesmo período. */}
           {ev.period !== 'FEEDBACK' && ev.cycleNumber > 1 && (
             <span className="font-normal text-spot-gray-500"> · {ev.cycleNumber}ª resposta</span>
@@ -63,6 +75,7 @@ export function EvaluationCard({ ev }: { ev: EvaluationRecord }) {
         </p>
         <span className="text-xs text-spot-gray-500">
           {formatDate(ev.evaluationDate)} · avaliado por {ev.evaluator?.name ?? ev.evaluatorName ?? '—'}
+          {ev.createdAt && ev.source !== 'FORMS' && <> · registrado em {formatRegistro(ev.createdAt)}</>}
         </span>
       </div>
       {ev.period !== 'FEEDBACK' && (() => {
@@ -187,7 +200,11 @@ export function EvaluationCard({ ev }: { ev: EvaluationRecord }) {
                   <StarRating rating={ev[`${d.key}Rating`] as RatingOption} showLabel />
                 </div>
                 <ul className="flex flex-col gap-1.5">
-                  {d.subQuestions.map((q) => {
+                  {d.subQuestions.map((qAtual) => {
+                    // Avaliação antiga: a resposta está na chave da pergunta que foi
+                    // substituída, e é a pergunta antiga que dá sentido a ela.
+                    const antiga = qAtual.legacy && !subAnswers[qAtual.key] && subAnswers[qAtual.legacy.key];
+                    const q = antiga ? qAtual.legacy! : qAtual;
                     const answer = subAnswers[q.key];
                     return (
                       <li key={q.key} className="flex items-start justify-between gap-3 text-sm border-b border-spot-gray-100 pb-1.5">

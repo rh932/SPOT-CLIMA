@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { requireGestor, handleApiError, ApiError } from '@/lib/apiAuth';
 import { isInScope, canEvaluate } from '@/lib/scope';
 import { evaluationSubmissionSchema } from '@/lib/validation';
@@ -191,21 +191,19 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
           ? employee.period2DueDate
           : (employee.nextFeedbackDueDate ?? evaluationDate);
 
-    // Feedbacks se repetem, então a ordem dentro do período é contada; FIRST e
+    // Feedbacks se repetem, então a ordem dentro do período é contada (1º, 2º,
+    // 3º feedback...), independente da avaliação de experiência; FIRST e
     // SECOND ficam sempre em 1, garantido pelo unique (employee, period, cycle).
     // A segunda resposta entra depois das que o período já tem.
     let cycleNumber = 1;
     if (segunda) {
       cycleNumber = Math.max(0, ...anteriores.filter((e) => e.period === period).map((e) => e.cycleNumber)) + 1;
     } else if (period === 'FEEDBACK') {
-      const [{ count }] = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(schema.performanceEvaluations)
-        .where(and(
-          eq(schema.performanceEvaluations.employeeId, employee.id),
-          eq(schema.performanceEvaluations.period, 'FEEDBACK'),
-        ));
-      cycleNumber = count + 1;
+      // Contador do feedback: o maior número já gravado + 1. Cada feedback é uma
+      // linha nova, nunca um UPDATE — o histórico do colaborador só cresce. Se
+      // dois gestores gravarem juntos, o unique (colaborador, período, número)
+      // recusa o segundo e a resposta 409 abaixo explica quem chegou primeiro.
+      cycleNumber = Math.max(0, ...anteriores.filter((e) => e.period === 'FEEDBACK').map((e) => e.cycleNumber)) + 1;
     }
 
     const [evaluation] = await db

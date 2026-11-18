@@ -1,7 +1,7 @@
 /**
  * Lógica pura do ciclo permanente de feedback — sem I/O, testável isoladamente.
  *
- * Começa depois da avaliação de 90 dias: o gestor classifica o colaborador com
+ * Começa depois da avaliação de 90 dias (ou já na entrada de quem é da trilha ATIVO): o gestor classifica o colaborador com
  * uma cor, e a cor define de quantos em quantos dias ele volta a ser avaliado.
  * A cor pode mudar a cada feedback, e a mudança recalcula a próxima data.
  *
@@ -14,9 +14,14 @@ export type FeedbackColor = 'VERMELHO' | 'AMARELO' | 'VERDE';
 
 export const FEEDBACK_COLORS: FeedbackColor[] = ['VERMELHO', 'AMARELO', 'VERDE'];
 
-/** Intervalo entre feedbacks, em dias, por cor. */
+/**
+ * Intervalo entre feedbacks, em dias, por cor. É a regra do FEEDBACK e só dele:
+ * os 45 dias da avaliação de experiência (45 + 45) moram em `probation.ts` e
+ * não se misturam com esta tabela. Vermelho era 45 por engano — acompanhamento
+ * mais próximo é 30 dias.
+ */
 export const COLOR_INTERVAL_DAYS: Record<FeedbackColor, number> = {
-  VERMELHO: 45,
+  VERMELHO: 30,
   AMARELO: 120,
   VERDE: 180,
 };
@@ -40,7 +45,7 @@ export const COLOR_OPTIONS: ColorOption[] = [
   {
     value: 'VERMELHO',
     label: 'Vermelho',
-    description: 'Acompanhamento mais frequente — novo feedback a cada 45 dias.',
+    description: 'Acompanhamento mais frequente — novo feedback a cada 30 dias.',
     className: 'text-spot-gray-800',
     dotClassName: 'bg-[#D64545]',
   },
@@ -59,6 +64,21 @@ export const COLOR_OPTIONS: ColorOption[] = [
     dotClassName: 'bg-[#0F7A3D]',
   },
 ];
+
+const ORDINAIS_FEEDBACK = [
+  '', 'Primeiro', 'Segundo', 'Terceiro', 'Quarto', 'Quinto', 'Sexto', 'Sétimo', 'Oitavo', 'Nono', 'Décimo',
+];
+
+/**
+ * Nome do feedback pela ordem em que aconteceu: "Primeiro feedback",
+ * "Segundo feedback"... Passando do décimo cai no número ("11º feedback").
+ * É o contador que a linha do tempo, a ficha e o formulário usam, para o
+ * mesmo registro ter sempre o mesmo nome em todas as telas.
+ */
+export function feedbackOrdinalLabel(n: number): string {
+  const nome = ORDINAIS_FEEDBACK[n];
+  return nome ? `${nome} feedback` : `${n}º feedback`;
+}
 
 export function isFeedbackColor(value: unknown): value is FeedbackColor {
   return typeof value === 'string' && (FEEDBACK_COLORS as string[]).includes(value);

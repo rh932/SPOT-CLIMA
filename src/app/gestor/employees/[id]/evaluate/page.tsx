@@ -15,7 +15,9 @@ import {
   CHAVES_ROTEIRO, unidadeUsaRoteiroPdi, dataRevisaoPdi, type PilarRoteiro, type PlanoRoteiro,
 } from '@/data/roteiroPdi';
 import { EvaluationDimensionCard } from '@/components/gestor/EvaluationDimensionCard';
-import { COLOR_OPTIONS, COLOR_INTERVAL_DAYS, COLOR_LABELS, nextFeedbackDate, type FeedbackColor } from '@/lib/feedbackCycle';
+import { COLOR_OPTIONS, COLOR_INTERVAL_DAYS, COLOR_LABELS, nextFeedbackDate, feedbackOrdinalLabel, type FeedbackColor } from '@/lib/feedbackCycle';
+import { FeedbacksAnteriores } from '@/components/gestor/FeedbacksAnteriores';
+import type { EvaluationRecord } from '@/components/EvaluationCard';
 import { ActionButton, ErrorState, SkeletonForm, LiveStatus, useToast, ForbiddenState, ehSemAcesso } from '@/components/async';
 import { scrollToFirstError } from '@/lib/scrollToError';
 import { saoPauloIsoDate } from '@/lib/probation';
@@ -78,7 +80,7 @@ function EvaluateForm() {
   const [secondOpinion, setSecondOpinion] = useState<SecondOpinion | null>(null);
 
   const [employee, setEmployee] = useState<Employee | null>(null);
-  const [historico, setHistorico] = useState<{ period: PeriodoAvaliacao }[]>([]);
+  const [historico, setHistorico] = useState<(EvaluationRecord & { period: PeriodoAvaliacao })[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadForbidden, setLoadForbidden] = useState(false);
@@ -122,7 +124,7 @@ function EvaluateForm() {
     setLoading(true);
     setLoadError(null);
     setLoadForbidden(false);
-    apiFetch<{ employee: Employee; evaluations: { period: PeriodoAvaliacao }[]; canEvaluate: boolean; secondOpinion: SecondOpinion | null; customQuestions?: { DESEMPENHO: PerguntaExtra[]; FEEDBACK: PerguntaExtra[] } }>(`/api/gestor/employees/${params.id}`)
+    apiFetch<{ employee: Employee; evaluations: (EvaluationRecord & { period: PeriodoAvaliacao })[]; canEvaluate: boolean; secondOpinion: SecondOpinion | null; customQuestions?: { DESEMPENHO: PerguntaExtra[]; FEEDBACK: PerguntaExtra[] } }>(`/api/gestor/employees/${params.id}`)
       .then((d) => { setEmployee(d.employee); setHistorico(d.evaluations ?? []); setCanEvaluate(d.canEvaluate); setSecondOpinion(d.secondOpinion); setCustomQuestions(d.customQuestions ?? { DESEMPENHO: [], FEEDBACK: [] }); })
       .catch((e) => { setLoadForbidden(ehSemAcesso(e)); setLoadError(e instanceof Error ? e.message : 'Erro ao carregar.'); })
       .finally(() => setLoading(false));
@@ -313,6 +315,10 @@ function EvaluateForm() {
       evaluations: historico,
     }) ?? 'FEEDBACK';
   const isFeedback = period === 'FEEDBACK';
+  // Feedback e experiência têm contadores separados: o próximo feedback é o
+  // maior número já gravado + 1 (a mesma conta que a rota faz ao salvar).
+  const feedbacksAnteriores = historico.filter((h) => h.period === 'FEEDBACK');
+  const numeroDoFeedback = Math.max(0, ...feedbacksAnteriores.map((h) => h.cycleNumber)) + 1;
   const dueDate =
     period === 'FIRST'
       ? employee.period1DueDate
@@ -441,12 +447,14 @@ function EvaluateForm() {
             ? '1º ciclo de experiência (45 dias)'
             : period === 'SECOND'
               ? '2º ciclo de experiência (90 dias)'
-              : `Feedback periódico${employee.currentColor ? ` · classificação atual: ${COLOR_LABELS[employee.currentColor]}` : ''}`}
+              : `${feedbackOrdinalLabel(numeroDoFeedback)}${employee.currentColor ? ` · classificação atual: ${COLOR_LABELS[employee.currentColor]}` : ''}`}
           {' — '}
           {isFeedback ? 'previsto para ' : 'vencimento '}
           {formatDate(dueDate)}
         </p>
       </div>
+
+      {isFeedback && <FeedbacksAnteriores feedbacks={feedbacksAnteriores} />}
 
       {rascunhoRestaurado && (
         <div role="status" className="card border-l-[3px] border-spot-yellow flex flex-wrap items-center justify-between gap-3 text-sm text-spot-gray-800">

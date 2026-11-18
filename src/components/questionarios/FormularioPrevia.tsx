@@ -76,7 +76,7 @@ export function FormularioPrevia({
       </BlocoFixo>
 
       {form === 'FEEDBACK' && setor.usesColorCycle && (
-        <BlocoFixo titulo="Classificação por cor">🔴 45 dias · 🟡 120 dias · 🟢 180 dias — define a data do próximo feedback.</BlocoFixo>
+        <BlocoFixo titulo="Classificação por cor">🔴 30 dias · 🟡 120 dias · 🟢 180 dias — define a data do próximo feedback.</BlocoFixo>
       )}
     </div>
   );

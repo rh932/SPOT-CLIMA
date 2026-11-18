@@ -37,7 +37,7 @@ export interface DimensionSeed {
 }
 
 /**
- * `usesColorCycle` marca os setores do projeto de cores (45/120/180 dias de
+ * `usesColorCycle` marca os setores do projeto de cores (30/120/180 dias de
  * feedback) — hoje, os dois do Salão. É só o ponto de partida de um banco
  * novo: depois quem manda é o cadastro de Setores no painel do RH.
  */

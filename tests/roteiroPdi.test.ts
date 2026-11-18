@@ -15,7 +15,7 @@ const notas = () => Object.fromEntries(CHAVES_ROTEIRO.map((k) => [k, 'BOM']));
 const roteiro = () => ({ versao: 1, notas: notas(), plano: { competencias: ['cardapio'], pratica: 'a', mentoria: 'b', estudo: 'c' } });
 const dims = {
   flexibilityRating: 'BOM', flexibilitySubAnswers: { q1: 'SIM', q2: 'SIM', q3: 'SIM', q4: 'SIM' },
-  interestRating: 'BOM', interestSubAnswers: { q1: 'SIM', q2: 'SIM', q3: 'SIM' },
+  interestRating: 'BOM', interestSubAnswers: { q1: 'SIM', q2: 'SIM', q3_v2: 'NAO' },
   relationshipRating: 'BOM', relationshipSubAnswers: { q1: 'SIM', q2: 'SIM' },
   learningRating: 'BOM', learningSubAnswers: { q1: 'SIM', q2: 'SIM' },
 };
