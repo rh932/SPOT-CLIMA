@@ -27,6 +27,7 @@ const confirmSchema = z.object({
     sectorId: idSchema,
     shift: z.enum(['DIA', 'NOITE']),
     track: z.enum(['NOVO', 'ATIVO']),
+    isApprentice: z.boolean().optional(),
   })).min(1).max(MAX_IMPORT_EMPLOYEES),
 });
 
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
         sectorId: r.sectorId,
         unitId: r.unitId,
         shift: r.shift,
-        ...cycleFieldsFor(r.track, admissionDate),
+        ...cycleFieldsFor(r.track, admissionDate, r.isApprentice ?? false),
         createdById: session.adminId,
       });
     }

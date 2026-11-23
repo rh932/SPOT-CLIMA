@@ -46,7 +46,13 @@ export async function readSpreadsheetUpload(req: NextRequest): Promise<ArrayBuff
 
 const CSV_MIME = new Set(['text/csv', 'text/plain', 'application/vnd.ms-excel', 'application/csv', 'application/octet-stream', '']);
 
-export type EmployeeUpload = { kind: 'xlsx'; buffer: ArrayBuffer } | { kind: 'csv'; text: string };
+export type EmployeeUpload = (
+  { kind: 'xlsx'; buffer: ArrayBuffer } | { kind: 'csv'; text: string }
+) & {
+  fileName: string;
+  /** Campo opcional `unitId` do formulário: unidade escolhida para planilhas sem coluna "Unidade". */
+  unitId: string | null;
+};
 
 /**
  * Planilha de colaboradores: .xlsx (mesma checagem de `readSpreadsheetUpload`)
@@ -59,6 +65,8 @@ export async function readEmployeeUpload(req: NextRequest): Promise<EmployeeUplo
 
   const form = await req.formData().catch(() => null);
   const file = form?.get('file');
+  const unitRaw = form?.get('unitId');
+  const unitField = typeof unitRaw === 'string' && unitRaw.trim() ? unitRaw.trim().slice(0, 64) : null;
   if (!(file instanceof File)) throw new ApiError(400, 'Nenhum arquivo enviado.');
   if (file.size > MAX_SPREADSHEET_BYTES) throw new ApiError(413, 'Arquivo excede o limite de 10MB.');
 
@@ -68,7 +76,7 @@ export async function readEmployeeUpload(req: NextRequest): Promise<EmployeeUplo
     if (bytes.includes(0)) throw new ApiError(415, 'O arquivo não é um CSV válido.');
     let text = new TextDecoder('utf-8').decode(bytes);
     if (text.includes('�')) text = new TextDecoder('windows-1252').decode(bytes);
-    return { kind: 'csv', text };
+    return { kind: 'csv', text, fileName: file.name, unitId: unitField };
   }
   // Reaproveita as checagens do .xlsx: o formulário já foi lido, então refaz com o arquivo.
   if (!/\.xlsx$/i.test(file.name) || !XLSX_MIME.has(file.type)) {
@@ -78,5 +86,5 @@ export async function readEmployeeUpload(req: NextRequest): Promise<EmployeeUplo
   const head = new Uint8Array(buffer, 0, Math.min(4, buffer.byteLength));
   const isZip = head.length === 4 && head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04;
   if (!isZip) throw new ApiError(415, 'O arquivo não é uma planilha .xlsx válida.');
-  return { kind: 'xlsx', buffer };
+  return { kind: 'xlsx', buffer, fileName: file.name, unitId: unitField };
 }

@@ -35,6 +35,8 @@ export interface PreviewRow {
   track: EmployeeTrack;
   unitId: string | null;
   sectorId: string | null;
+  /** Aprendiz (setor "X/APRENDIZ" no cadastro geral): entra efetivado, sem experiência. */
+  isApprentice: boolean;
   status: PreviewStatus;
   /** Motivo do erro ou do duplicado. */
   messages: string[];
@@ -46,6 +48,8 @@ export interface PreviewResult {
   rows: PreviewRow[];
   /** Erros que invalidam a planilha inteira (ex.: coluna obrigatória ausente). */
   fileErrors: string[];
+  /** Avisos sobre o arquivo todo (unidade detectada, linhas inativas puladas...). */
+  notes: string[];
   counts: { total: number; ok: number; duplicado: number; erro: number };
 }
 
@@ -89,15 +93,16 @@ export function parseCsv(text: string): string[][] {
 export async function readXlsxMatrix(buffer: ArrayBuffer): Promise<Cell[][]> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
-  const sheet = workbook.worksheets[0];
+  // Cadastro geral do DP: os ativos ficam na aba "ATIVOS" (as outras são exames, demitidos etc.).
+  const sheet = workbook.worksheets.find((w) => normalizeName(w.name) === 'ativos') ?? workbook.worksheets[0];
   if (!sheet) return [];
-  if (sheet.rowCount > MAX_IMPORT_EMPLOYEES + 1) {
+  if (sheet.rowCount > MAX_IMPORT_EMPLOYEES + 10) {
     throw new Error(`A planilha tem mais de ${MAX_IMPORT_EMPLOYEES} linhas. Divida em partes menores.`);
   }
   const out: Cell[][] = [];
   sheet.eachRow({ includeEmpty: true }, (row, n) => {
     const cells: Cell[] = [];
-    const last = Math.max(row.cellCount, 8);
+    const last = Math.min(Math.max(row.cellCount, 8), 40);
     for (let c = 1; c <= last; c++) {
       const v = row.getCell(c).value as unknown;
       if (v && typeof v === 'object' && !(v instanceof Date)) {
@@ -115,15 +120,55 @@ export async function readXlsxMatrix(buffer: ArrayBuffer): Promise<Cell[][]> {
 
 // ------------------------------------------------------------- validação --
 
-const HEADERS: Record<'nome' | 'unidade' | 'setor' | 'cargo' | 'turno' | 'admissao' | 'tipo', string[]> = {
-  nome: ['nome completo', 'nome', 'funcionario', 'colaborador'],
+const HEADERS: Record<'nome' | 'unidade' | 'setor' | 'cargo' | 'turno' | 'admissao' | 'tipo' | 'horario' | 'status', string[]> = {
+  nome: ['nome completo', 'nome', 'funcionario', 'funcionarios', 'colaborador'],
   unidade: ['unidade', 'loja'],
   setor: ['setor', 'area'],
-  cargo: ['cargo', 'funcao', 'cargo/funcao', 'cargo / funcao'],
+  cargo: ['cargo', 'cargo atual', 'funcao', 'cargo/funcao', 'cargo / funcao'],
   turno: ['turno'],
   admissao: ['data de admissao', 'admissao', 'data admissao'],
   tipo: ['tipo', 'tipo de colaborador', 'trilha'],
+  horario: ['horario'],
+  status: ['status atual', 'status', 'situacao'],
 };
+
+/** No cadastro geral, quem foi admitido há até este tempo segue a trilha de colaborador novo. */
+export const DIAS_COLABORADOR_NOVO = 90;
+
+/** "17h00 às 00h55" → NOITE (começa às 17h ou depois); "08h10 às 16h30" → DIA. */
+export function shiftFromSchedule(raw: string): 'DIA' | 'NOITE' {
+  const m = normalizeName(raw).match(/(\d{1,2})\s*h/);
+  if (!m) return 'DIA';
+  const h = Number(m[1]);
+  return h >= 17 || h < 5 ? 'NOITE' : 'DIA';
+}
+
+/** Setor do cadastro geral ("COZINHA/APRENDIZ") → setor puro + marca de aprendiz. */
+function splitApprentice(raw: string): { sector: string; apprentice: boolean } {
+  const m = raw.match(/^(.*?)\s*\/\s*aprendiz\s*$/i);
+  return m ? { sector: m[1].trim(), apprentice: true } : { sector: raw, apprentice: false };
+}
+
+/** Unidade pelo nome do arquivo ("... - PP C.xlsx", "... - JK..xlsx"). */
+export function inferUnitFromFileName(fileName: string, units: Lookup[]): Lookup | null {
+  const k = ` ${normalizeName(fileName).replace(/\.[a-z]+$/, '').replace(/[^a-z0-9]+/g, ' ')} `;
+  for (const u of units) {
+    const un = normalizeName(u.name).replace(/[^a-z0-9]+/g, ' ');
+    if (un && k.includes(` ${un} `)) return u;
+  }
+  if (/ pp /.test(k)) return units.find((u) => normalizeName(u.name).includes('paulista')) ?? null;
+  return null;
+}
+
+/** Salão tem Bar e Atendimento no cadastro: o cargo decide (Barman, Chefe de Bar → Bar). */
+function pickSectorByRole(list: Lookup[], sectorName: string, role: string): Lookup | null {
+  const key = normalizeName(sectorName);
+  const cands = list.filter((l) => normalizeName(l.name).includes(key));
+  if (cands.length < 2) return null;
+  const bar = /\bbar(man|woman|tender)?\b|\bchefe de bar\b/.test(normalizeName(role));
+  const pick = cands.find((c) => /\bbar\b/.test(normalizeName(c.name)) === bar);
+  return pick ?? null;
+}
 
 function text(cell: Cell): string {
   if (cell === null || cell === undefined) return '';
@@ -201,40 +246,60 @@ export function previewEmployeeRows(
     units: Lookup[];
     sectors: Lookup[];
     existing: { fullName: string; unitId: string }[];
+    /** Unidade da planilha quando ela não tem coluna "Unidade" (cadastro geral de uma loja). */
+    defaultUnit?: Lookup | null;
   },
 ): PreviewResult {
-  const empty = (fileErrors: string[]): PreviewResult => ({ rows: [], fileErrors, counts: { total: 0, ok: 0, duplicado: 0, erro: 0 } });
+  const empty = (fileErrors: string[]): PreviewResult => ({ rows: [], fileErrors, notes: [], counts: { total: 0, ok: 0, duplicado: 0, erro: 0 } });
   if (matrix.length === 0) return empty(['Planilha vazia.']);
 
-  const header = (matrix[0] ?? []).map((c) => normalizeName(text(c)));
+  // O cadastro geral do DP tem uma linha de títulos solta acima do cabeçalho (JK): procura nas primeiras linhas.
+  let headerRow = 0;
+  for (let i = 0; i < Math.min(matrix.length, 10); i++) {
+    if ((matrix[i] ?? []).some((c) => HEADERS.nome.includes(normalizeName(text(c))))) { headerRow = i; break; }
+  }
+  const header = (matrix[headerRow] ?? []).map((c) => normalizeName(text(c)));
   const col = (key: keyof typeof HEADERS) => header.findIndex((h) => HEADERS[key].includes(h));
   const idx = {
     nome: col('nome'), unidade: col('unidade'), setor: col('setor'), cargo: col('cargo'),
     turno: col('turno'), admissao: col('admissao'), tipo: col('tipo'),
+    horario: col('horario'), status: col('status'),
   };
-  const faltando = ([['nome', 'Nome completo'], ['unidade', 'Unidade'], ['setor', 'Setor']] as const)
+  const faltando: string[] = ([['nome', 'Nome completo'], ['setor', 'Setor']] as const)
     .filter(([k]) => idx[k] < 0)
     .map(([, label]) => label);
+  if (idx.unidade < 0 && !ctx.defaultUnit) faltando.push('Unidade');
   if (faltando.length > 0) {
-    return empty([`Coluna obrigatória ausente no cabeçalho: ${faltando.join(', ')}. Baixe o modelo para conferir.`]);
+    return empty([
+      `Coluna obrigatória ausente no cabeçalho: ${faltando.join(', ')}. Baixe o modelo para conferir`
+      + (idx.unidade < 0 ? ', ou escolha a unidade da planilha.' : '.'),
+    ]);
   }
-  if (matrix.length - 1 > MAX_IMPORT_EMPLOYEES) {
+  if (matrix.length - 1 - headerRow > MAX_IMPORT_EMPLOYEES) {
     return empty([`A planilha tem mais de ${MAX_IMPORT_EMPLOYEES} linhas. Divida em partes menores.`]);
   }
+  const cadastroGeral = idx.status >= 0 || idx.horario >= 0;
 
   const rows: PreviewRow[] = [];
+  const notes: string[] = [];
+  if (idx.unidade < 0 && ctx.defaultUnit) notes.push(`Unidade da planilha: ${ctx.defaultUnit.name}.`);
+  let inativos = 0;
   // Quem já entrou nesta mesma importação, para pegar repetição dentro da planilha.
   const vistos: { fullName: string; unitId: string; line: number }[] = [];
 
-  for (let i = 1; i < matrix.length; i++) {
+  for (let i = headerRow + 1; i < matrix.length; i++) {
     const r = matrix[i] ?? [];
     const get = (c: number) => (c >= 0 ? r[c] : undefined);
     const fullName = text(get(idx.nome)).replace(/\s+/g, ' ');
-    const unitName = text(get(idx.unidade));
-    const sectorName = text(get(idx.setor));
+    const unitName = idx.unidade >= 0 ? text(get(idx.unidade)) : (ctx.defaultUnit?.name ?? '');
+    const setorBruto = text(get(idx.setor));
     const cargoRaw = text(get(idx.cargo));
     // Linha totalmente vazia: planilhas costumam ter sobra em branco no fim.
     if (r.every((c) => text(c) === '' && !(c instanceof Date))) continue;
+    // Cadastro geral: só "ATIVO" entra (inativo, afastado etc. ficam de fora).
+    if (idx.status >= 0 && text(get(idx.status)) && normalizeName(text(get(idx.status))) !== 'ativo') { inativos++; continue; }
+    // Linhas de apoio sem nome (totais, notas) não são colaboradores.
+    if (cadastroGeral && !fullName) continue;
 
     const messages: string[] = [];
     const warnings: string[] = [];
@@ -243,18 +308,28 @@ export function previewEmployeeRows(
     if (fullName.length < 2) messages.push('Nome completo vazio ou curto demais.');
     else if (fullName.length > 160) messages.push('Nome completo longo demais (máx. 160).');
 
-    const unit = matchLookup(ctx.units, unitName);
+    const unit = idx.unidade < 0 && ctx.defaultUnit
+      ? { item: ctx.defaultUnit as Lookup | null, ambiguous: false }
+      : matchLookup(ctx.units, unitName);
     if (!unitName) messages.push('Unidade vazia.');
     else if (!unit.item) messages.push(unit.ambiguous ? `Unidade "${unitName}" é ambígua.` : `Unidade "${unitName}" não encontrada.`);
 
-    const sector = matchLookup(ctx.sectors, sectorName);
+    // "COZINHA/APRENDIZ" = setor Cozinha + aprendiz.
+    const { sector: sectorName, apprentice } = splitApprentice(setorBruto);
+    const isApprentice = apprentice;
+    let sector = matchLookup(ctx.sectors, sectorName);
+    if (!sector.item && sector.ambiguous) {
+      const porCargo = pickSectorByRole(ctx.sectors, sectorName, cargoRaw);
+      if (porCargo) sector = { item: porCargo, ambiguous: false };
+    }
     if (!sectorName) messages.push('Setor vazio.');
     else if (!sector.item) messages.push(sector.ambiguous ? `Setor "${sectorName}" é ambíguo.` : `Setor "${sectorName}" não encontrado.`);
 
-    const shift = parseShift(text(get(idx.turno)));
-    if (!shift) messages.push(`Turno inválido: "${text(get(idx.turno))}". Use Diurno ou Noturno.`);
+    const turnoTexto = text(get(idx.turno));
+    const shift = turnoTexto || idx.horario < 0 ? parseShift(turnoTexto) : shiftFromSchedule(text(get(idx.horario)));
+    if (!shift) messages.push(`Turno inválido: "${turnoTexto}". Use Diurno ou Noturno.`);
 
-    const track = parseTrack(text(get(idx.tipo)));
+    let track = parseTrack(text(get(idx.tipo)));
     if (!track) messages.push(`Tipo inválido: "${text(get(idx.tipo))}". Use Ativo ou Novo.`);
 
     const date = parseAdmissionDate(get(idx.admissao));
@@ -263,6 +338,15 @@ export function previewEmployeeRows(
       if (track === 'NOVO') messages.push('Colaborador novo precisa da data de admissão.');
       else warnings.push('Sem data de admissão — será registrada a data da importação.');
     }
+    // Cadastro geral não tem coluna de tipo: admitido há pouco tempo ainda está no treinamento/experiência.
+    if (cadastroGeral && idx.tipo < 0 && date.iso && !isApprentice) {
+      const dias = (Date.now() - new Date(date.iso).getTime()) / 86_400_000;
+      if (dias <= DIAS_COLABORADOR_NOVO) {
+        track = 'NOVO';
+        warnings.push(`Admitido há ${Math.max(0, Math.floor(dias))} dia(s): entra como colaborador novo (experiência).`);
+      }
+    }
+    if (isApprentice) warnings.push('Aprendiz: entra efetivado, sem avaliação de experiência.');
 
     if (cargoRaw.length > 300) messages.push('Cargo longo demais (máx. 300).');
     const roleDescription = cargoRaw || sector.item?.name || sectorName;
@@ -286,7 +370,7 @@ export function previewEmployeeRows(
 
     rows.push({
       line: i + 1,
-      fullName, unitName, sectorName, roleDescription,
+      fullName, unitName, sectorName, roleDescription, isApprentice,
       shift: shift ?? 'DIA',
       admissionDate: date.iso,
       track: track ?? 'ATIVO',
@@ -303,7 +387,8 @@ export function previewEmployeeRows(
     erro: rows.filter((r) => r.status === 'ERRO').length,
   };
   if (rows.length === 0) return empty(['A planilha não tem nenhuma linha de colaborador.']);
-  return { rows, fileErrors: [], counts };
+  if (inativos > 0) notes.push(`${inativos} linha(s) com status diferente de ATIVO foram puladas.`);
+  return { rows, fileErrors: [], notes, counts };
 }
 
 /** Dia de hoje em dd/mm/aaaa — usado nos exemplos do modelo. */

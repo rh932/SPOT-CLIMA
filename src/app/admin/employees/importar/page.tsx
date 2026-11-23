@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/apiClient';
 import { ActionButton, Spinner } from '@/components/async';
@@ -16,6 +16,7 @@ interface PreviewRow {
   shift: 'DIA' | 'NOITE';
   admissionDate: string | null;
   track: 'NOVO' | 'ATIVO';
+  isApprentice: boolean;
   unitId: string | null;
   sectorId: string | null;
   status: Status;
@@ -25,6 +26,7 @@ interface PreviewRow {
 interface Preview {
   rows: PreviewRow[];
   fileErrors: string[];
+  notes: string[];
   counts: { total: number; ok: number; duplicado: number; erro: number };
 }
 interface Resultado {
@@ -53,6 +55,15 @@ export default function ImportarColaboradoresPage() {
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<'TODOS' | Status>('TODOS');
+  const [unidades, setUnidades] = useState<{ id: string; name: string }[]>([]);
+  // Vazio = deixar o sistema descobrir pelo nome do arquivo (ou pela coluna "Unidade").
+  const [unidadeId, setUnidadeId] = useState('');
+
+  useEffect(() => {
+    apiFetch<{ units: { id: string; name: string }[] }>('/api/admin/employees/import/preview')
+      .then((d) => setUnidades(d.units))
+      .catch(() => setUnidades([]));
+  }, []);
 
   const reset = () => {
     setPreview(null); setResultado(null); setError(null); setNomeArquivo(null); setFiltro('TODOS');
@@ -66,6 +77,7 @@ export default function ImportarColaboradoresPage() {
     try {
       const form = new FormData();
       form.append('file', file);
+      if (unidadeId) form.append('unitId', unidadeId);
       setPreview(await apiFetch<Preview>('/api/admin/employees/import/preview', { method: 'POST', body: form }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao ler a planilha.');
@@ -90,7 +102,7 @@ export default function ImportarColaboradoresPage() {
           rows: aImportar.map((r) => ({
             line: r.line, fullName: r.fullName, roleDescription: r.roleDescription,
             admissionDate: r.admissionDate, unitId: r.unitId, sectorId: r.sectorId,
-            shift: r.shift, track: r.track,
+            shift: r.shift, track: r.track, isApprentice: r.isApprentice,
           })),
         }),
       });
@@ -125,6 +137,24 @@ export default function ImportarColaboradoresPage() {
           Colunas: Nome completo, Unidade e Setor são obrigatórias; Cargo, Turno, Data de admissão e Tipo são opcionais.
           Colaborador ativo participa só do feedback — sem treinamento nem avaliação de experiência.
         </p>
+        <p className="text-xs text-spot-gray-600">
+          Também aceita direto o <strong>Cadastro Geral de Funcionários</strong> do DP (aba ATIVOS) de Paulista ou JK:
+          o setor, o cargo, o horário (turno) e a admissão são lidos da planilha, quem não está com status ATIVO é pulado,
+          e quem foi admitido há até 90 dias entra como colaborador novo.
+        </p>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-semibold">Unidade da planilha</span>
+          <select
+            value={unidadeId}
+            onChange={(e) => setUnidadeId(e.target.value)}
+            disabled={lendo || importando}
+            className="min-h-11 rounded-btn border border-spot-gray-300 bg-spot-white px-3 max-w-xs"
+          >
+            <option value="">Detectar pelo nome do arquivo</option>
+            {unidades.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+          </select>
+          <span className="text-xs text-spot-gray-600">Só vale para planilhas sem a coluna &quot;Unidade&quot; (como o Cadastro Geral). Escolha a unidade antes de enviar o arquivo.</span>
+        </label>
         <input ref={fileRef} type="file" accept=".xlsx,.csv" onChange={enviar} className="text-sm" disabled={lendo || importando} />
         {lendo && (
           <p role="status" aria-live="polite" className="text-sm text-spot-gray-600 flex items-center gap-2">
@@ -143,6 +173,11 @@ export default function ImportarColaboradoresPage() {
       {preview && preview.rows.length > 0 && (
         <div className="card flex flex-col gap-4">
           <p className="font-semibold">2. Confira a prévia</p>
+          {preview.notes.length > 0 && (
+            <ul className="text-xs text-spot-gray-600 list-disc pl-5">
+              {preview.notes.map((n) => <li key={n}>{n}</li>)}
+            </ul>
+          )}
           <div className="flex flex-wrap gap-2">
             {([
               ['TODOS', `Todos (${preview.counts.total})`],

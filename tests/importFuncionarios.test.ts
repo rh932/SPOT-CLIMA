@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseCsv, parseAdmissionDate, matchLookup, previewEmployeeRows } from '../src/lib/importFuncionarios';
+import { parseCsv, parseAdmissionDate, matchLookup, previewEmployeeRows, inferUnitFromFileName, shiftFromSchedule } from '../src/lib/importFuncionarios';
 
 const units = [{ id: 'u1', name: 'Paulista' }, { id: 'u2', name: 'JK' }];
 const sectors = [{ id: 's1', name: 'Salão' }, { id: 's2', name: 'Cozinha' }];
@@ -84,5 +84,60 @@ describe('previewEmployeeRows', () => {
     expect(r.rows).toHaveLength(1);
     expect(r.rows[0].warnings.length).toBe(2);
     expect(r.rows[0].roleDescription).toBe('Cozinha');
+  });
+});
+
+describe('cadastro geral do DP (aba ATIVOS)', () => {
+  const sec = [
+    { id: 'sa', name: 'Salão - Atendimento' }, { id: 'sb', name: 'Salão - Bar' },
+    { id: 'co', name: 'Cozinha' }, { id: 'ad', name: 'Administração' },
+  ];
+  const cab = [null, 'REGISTRO', 'FUNCIONÁRIOS', 'CARGO', 'SETOR', 'SALÁRIO', 'DATA DE ADMISSÃO', 'HORÁRIO', 'STATUS ATUAL'];
+  const linha = (nome: string, cargo: string, setor: string, hor: string, adm: string, st = 'ATIVO') =>
+    [null, 1, nome, cargo, setor, 1000, adm, hor, st];
+  const rodar = (rows: unknown[][]) => previewEmployeeRows(
+    [[], ...[cab, ...rows]] as never,
+    { units, sectors: sec, existing: [], defaultUnit: units[1] },
+  );
+
+  it('acha o cabeçalho na 2ª linha, usa a unidade padrão, turno pelo horário e pula inativos', () => {
+    const r = rodar([
+      linha('Ana', 'GARÇONETE', 'SALÃO', '17h00 às 00h55', '2020-01-10'),
+      linha('Bia', 'BARMAN I', 'SALÃO', '10h30 às 18h00', '2020-01-10'),
+      linha('Caio', 'APRENDIZ COZINHA', 'COZINHA/APRENDIZ', '08h00 às 14h00', '2020-01-10'),
+      linha('Davi', 'AUX', 'ADM', '08h00 às 18h00', '2020-01-10', 'INATIVO'),
+    ]);
+    expect(r.fileErrors).toEqual([]);
+    expect(r.rows.map((x) => x.fullName)).toEqual(['Ana', 'Bia', 'Caio']);
+    expect(r.rows.every((x) => x.unitId === 'u2' && x.status === 'OK')).toBe(true);
+    expect(r.rows[0]).toMatchObject({ shift: 'NOITE', sectorId: 'sa', line: 3 });
+    expect(r.rows[1]).toMatchObject({ shift: 'DIA', sectorId: 'sb' });
+    expect(r.rows[2]).toMatchObject({ isApprentice: true, sectorId: 'co' });
+    expect(r.notes.join(' ')).toContain('1 linha');
+  });
+
+  it('admitido há pouco tempo entra como colaborador novo', () => {
+    const hoje = new Date(Date.now() - 10 * 86_400_000).toISOString();
+    const r = rodar([linha('Eva', 'GARÇOM', 'SALÃO', '10h30 às 18h00', hoje)]);
+    expect(r.rows[0].track).toBe('NOVO');
+  });
+
+  it('sem unidade na planilha nem escolhida, pede a unidade', () => {
+    const r = previewEmployeeRows([cab, linha('Ana', 'X', 'ADM', '', '2020-01-10')] as never, { units, sectors: sec, existing: [] });
+    expect(r.fileErrors[0]).toContain('Unidade');
+  });
+});
+
+describe('detecção de unidade e turno', () => {
+  it('lê a unidade do nome do arquivo', () => {
+    expect(inferUnitFromFileName('CADASTRO GERAL DE FUNCIONÁRIOS ASO - PP C.xlsx', units)?.id).toBe('u1');
+    expect(inferUnitFromFileName('CADASTRO GERAL DE FUNCIONARIOS E ASO - JK..xlsx', units)?.id).toBe('u2');
+    expect(inferUnitFromFileName('lista.xlsx', units)).toBeNull();
+  });
+  it('turno pelo horário', () => {
+    expect(shiftFromSchedule('17h30 às 00h30')).toBe('NOITE');
+    expect(shiftFromSchedule('23h00 às 07h00')).toBe('NOITE');
+    expect(shiftFromSchedule('08h10 às 16h30')).toBe('DIA');
+    expect(shiftFromSchedule('INTERMEDIÁRIO')).toBe('DIA');
   });
 });
