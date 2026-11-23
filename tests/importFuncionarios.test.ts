@@ -141,3 +141,25 @@ describe('detecção de unidade e turno', () => {
     expect(shiftFromSchedule('INTERMEDIÁRIO')).toBe('DIA');
   });
 });
+
+describe('subsetor pelo cargo e departamento (cadastro geral)', () => {
+  const sec = [
+    { id: 'sa', name: 'Salão - Atendimento' }, { id: 'sb', name: 'Salão - Bar' }, { id: 'sg', name: 'Salão - Gerente' },
+    { id: 'af', name: 'Administração - Financeiro' }, { id: 'ar', name: 'Administração - RH' },
+    { id: 'ac', name: 'Administração - Compras e Almoxarifado' }, { id: 'am', name: 'Administração - Manutenção' },
+  ];
+  const cab = ['FUNCIONÁRIOS', 'CARGO', 'SETOR', 'DEPARTAMENTO', 'STATUS ATUAL'];
+  const setorDe = (cargo: string, setor: string, dep: string) =>
+    previewEmployeeRows([cab, ['Fulano', cargo, setor, dep, 'ATIVO']] as never, { units, sectors: sec, existing: [], defaultUnit: units[0] }).rows[0];
+  it('gerente de salão vai para Gerente, garçom para Atendimento, barman para Bar', () => {
+    expect(setorDe('GERENTE DE SALÃO I', 'SALÃO', 'GERENTE').sectorId).toBe('sg');
+    expect(setorDe('GARÇOM', 'SALÃO', 'GARÇONS').sectorId).toBe('sa');
+    expect(setorDe('BARMAN I', 'SALÃO', 'GARÇONS').sectorId).toBe('sb');
+  });
+  it('ADM usa o departamento; sem pista vira erro em vez de chute', () => {
+    expect(setorDe('ASSISTENTE DE RECURSOS HUMANOS', 'ADM', 'RH').sectorId).toBe('ar');
+    expect(setorDe('ALMOXARIFE', 'ADM', 'ALMOXARIFADO').sectorId).toBe('ac');
+    expect(setorDe('GERENTE OPERACIONAL', 'ADM', 'COMPRAS').sectorId).toBe('ac');
+    expect(setorDe('MOTOQUEIRO', 'ADM', 'MOTOBOY').status).toBe('ERRO');
+  });
+});

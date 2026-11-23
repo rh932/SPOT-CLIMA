@@ -120,7 +120,7 @@ export async function readXlsxMatrix(buffer: ArrayBuffer): Promise<Cell[][]> {
 
 // ------------------------------------------------------------- validação --
 
-const HEADERS: Record<'nome' | 'unidade' | 'setor' | 'cargo' | 'turno' | 'admissao' | 'tipo' | 'horario' | 'status', string[]> = {
+const HEADERS: Record<'nome' | 'unidade' | 'setor' | 'cargo' | 'turno' | 'admissao' | 'tipo' | 'horario' | 'status' | 'departamento', string[]> = {
   nome: ['nome completo', 'nome', 'funcionario', 'funcionarios', 'colaborador'],
   unidade: ['unidade', 'loja'],
   setor: ['setor', 'area'],
@@ -129,6 +129,7 @@ const HEADERS: Record<'nome' | 'unidade' | 'setor' | 'cargo' | 'turno' | 'admiss
   admissao: ['data de admissao', 'admissao', 'data admissao'],
   tipo: ['tipo', 'tipo de colaborador', 'trilha'],
   horario: ['horario'],
+  departamento: ['departamento'],
   status: ['status atual', 'status', 'situacao'],
 };
 
@@ -160,14 +161,39 @@ export function inferUnitFromFileName(fileName: string, units: Lookup[]): Lookup
   return null;
 }
 
-/** Salão tem Bar e Atendimento no cadastro: o cargo decide (Barman, Chefe de Bar → Bar). */
-function pickSectorByRole(list: Lookup[], sectorName: string, role: string): Lookup | null {
+/** Palavras do cargo/departamento que indicam cada subsetor ("Salão - Bar", "Administração - RH"...). */
+const SUBSECTOR_HINTS: [RegExp, RegExp][] = [
+  [/\bbar\b/, /\bbar(man|woman|tender)?\b/],
+  [/\bgerente\b/, /\bgerente\b/],
+  [/\batendimento\b/, /\bgarcon(s|ete|etes)?\b|\batendimento\b/],
+  [/\brh\b/, /\brh\b|recursos humanos/],
+  [/\bfinanceiro\b/, /\bfinanceir[oa]\b/],
+  [/compras|almoxarifado/, /compras|almoxarif/],
+  [/manutencao/, /manutencao/],
+];
+
+/**
+ * Setor genérico do cadastro geral (SALÃO, ADM) que tem vários subsetores no
+ * sistema: o cargo (peso 2) e o departamento (peso 1) escolhem. Empate ou nenhuma
+ * pista = não adivinha (volta null e a linha vira "setor ambíguo").
+ */
+function pickSectorByRole(list: Lookup[], sectorName: string, role: string, department = ''): Lookup | null {
   const key = normalizeName(sectorName);
   const cands = list.filter((l) => normalizeName(l.name).includes(key));
   if (cands.length < 2) return null;
-  const bar = /\bbar(man|woman|tender)?\b|\bchefe de bar\b/.test(normalizeName(role));
-  const pick = cands.find((c) => /\bbar\b/.test(normalizeName(c.name)) === bar);
-  return pick ?? null;
+  const cargo = normalizeName(role);
+  const depto = normalizeName(department);
+  const scored = cands.map((c) => {
+    const n = normalizeName(c.name);
+    let score = 0;
+    for (const [sectorRe, textRe] of SUBSECTOR_HINTS) {
+      if (!sectorRe.test(n)) continue;
+      if (textRe.test(cargo)) score += 2;
+      if (textRe.test(depto)) score += 1;
+    }
+    return { c, score };
+  }).sort((a, b) => b.score - a.score);
+  return scored[0].score > 0 && scored[0].score > (scored[1]?.score ?? 0) ? scored[0].c : null;
 }
 
 function text(cell: Cell): string {
@@ -263,7 +289,7 @@ export function previewEmployeeRows(
   const idx = {
     nome: col('nome'), unidade: col('unidade'), setor: col('setor'), cargo: col('cargo'),
     turno: col('turno'), admissao: col('admissao'), tipo: col('tipo'),
-    horario: col('horario'), status: col('status'),
+    horario: col('horario'), status: col('status'), departamento: col('departamento'),
   };
   const faltando: string[] = ([['nome', 'Nome completo'], ['setor', 'Setor']] as const)
     .filter(([k]) => idx[k] < 0)
@@ -319,7 +345,7 @@ export function previewEmployeeRows(
     const isApprentice = apprentice;
     let sector = matchLookup(ctx.sectors, sectorName);
     if (!sector.item && sector.ambiguous) {
-      const porCargo = pickSectorByRole(ctx.sectors, sectorName, cargoRaw);
+      const porCargo = pickSectorByRole(ctx.sectors, sectorName, cargoRaw, text(get(idx.departamento)));
       if (porCargo) sector = { item: porCargo, ambiguous: false };
     }
     if (!sectorName) messages.push('Setor vazio.');
