@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: 'Spot Integra', statusBarStyle: 'black-translucent' },
 };
 
+// .sp liga o padrão visual novo (tokens, fontes e componentes) nesta área.
 export default function SurveyLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <div className="sp">{children}</div>;
 }

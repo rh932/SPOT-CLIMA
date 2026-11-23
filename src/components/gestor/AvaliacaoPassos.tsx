@@ -605,7 +605,7 @@ function Revisao({
 /* ───────────────────── Deslizar para enviar ─────────────────────
  * Arrastar o botão até o fim envia. Para teclado e leitor de tela, Enter ou
  * Espaço no botão envia direto. Um toque solto NÃO envia (evita envio sem querer). */
-function SlideEnviar({ onEnviar, desabilitado }: { onEnviar: () => void; desabilitado: boolean }) {
+export function SlideEnviar({ onEnviar, desabilitado }: { onEnviar: () => void; desabilitado: boolean }) {
   const pista = useRef<HTMLDivElement>(null);
   const [x, setX] = useState(0);
   const [arrastando, setArrastando] = useState(false);
