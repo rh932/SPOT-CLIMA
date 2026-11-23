@@ -253,7 +253,7 @@ export function NotificationBell({
         type="button"
         onClick={() => setOpen((v) => !v)}
         /* h-11/w-11: o sino era só o emoji, um alvo de ~16px no celular. */
-        className="relative h-11 w-11 -mx-2 flex items-center justify-center text-spot-sidebarText/75 hover:text-white transition text-base leading-none"
+        className="sino relative h-11 w-11 -mx-2 flex items-center justify-center text-spot-sidebarText/75 hover:text-white transition text-base leading-none"
         aria-label={unread > 0 ? `Avisos (${unread} não lidos)` : 'Avisos'}
         aria-expanded={open}
       >

@@ -5,6 +5,7 @@ import { statusLabel } from '@/lib/probation';
 import { COLOR_OPTIONS, COLOR_LABELS } from '@/lib/feedbackCycle';
 import { CabecalhoPagina } from '@/components/ui/CabecalhoPagina';
 import { ListaViva } from '@/components/ui/ListaViva';
+import { Ic } from '@/components/sp/Ic';
 import { SHIFT_LABEL, prazoBadge, isFeedbackCycle, awaitsSecond, type GestorEmployee } from './useGestorEmployees';
 
 /**
@@ -16,89 +17,113 @@ import { SHIFT_LABEL, prazoBadge, isFeedbackCycle, awaitsSecond, type GestorEmpl
  * olhava podia avaliar — e, quando não podia (Gestor Líder), não ia a lugar
  * nenhum, o que fazia a lista parecer quebrada.
  *
- * Na linguagem "Placa de serviço" cada pessoa é uma FICHA: papel claro com
- * filete de tinta e uma aba colorida à esquerda que diz o prazo de longe —
- * tomate para atrasado, amarelo para o que vence em até 7 dias, cinza para o
- * resto. A etiqueta em mono repete o prazo por escrito: cor sozinha não
- * carrega significado. A área de toque é a ficha inteira, bem acima de 44px.
+ * No padrão Spot Integra é a linha `.qrow`: no celular um cartão (nome, dados
+ * e etiquetas); no computador uma linha de tabela com colunas. O prazo sai
+ * sempre por escrito na etiqueta: cor sozinha nunca carrega significado.
  */
-/** Tom da aba a partir do selo de prazo (ver dueBadge em src/lib/probation). */
-function tomDoPrazo(className: string | undefined): 'atrasado' | 'perto' | 'longe' {
+type Tom = 'atrasado' | 'perto' | 'longe';
+
+/** Tom do prazo a partir do selo (ver dueBadge em src/lib/probation). */
+export function tomDoPrazo(className: string | undefined): Tom {
   if (!className) return 'longe';
   if (className.includes('C93A3A')) return 'atrasado';
   if (className.includes('gray-800')) return 'perto';
   return 'longe';
 }
 
-const ABA = { atrasado: 'bg-spot-danger', perto: 'bg-spot-yellow', longe: 'bg-spot-gray-300' } as const;
-const ETIQUETA = {
-  atrasado: 'bg-spot-dangerFill text-white',
-  perto: 'bg-spot-yellow text-spot-onYellow',
-  longe: 'border border-spot-gray-900 text-spot-gray-900',
-} as const;
+const ETIQUETA: Record<Tom, string> = { atrasado: 't-late', perto: 't-week', longe: 't-soft' };
+const AVATAR: Record<Tom, string> = { atrasado: 'late', perto: 'soon', longe: '' };
+
+export const iniciaisDe = (nome: string) =>
+  nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+
+/** Etapa em linguagem de gente: o que esta pessoa está fazendo agora. */
+export function etapaLabel(e: GestorEmployee): string {
+  if (awaitsSecond(e)) return '2ª avaliação (90 dias)';
+  if (isFeedbackCycle(e)) return 'Ciclo de feedback';
+  if (e.status === 'AWAITING_PERIOD_1') return '1ª avaliação (45 dias)';
+  if (e.status === 'AWAITING_PERIOD_2') return '2ª avaliação (90 dias)';
+  return statusLabel(e);
+}
+
+/** Cabeça da tabela no computador; combina com as colunas de `.qrow`. */
+export function EmployeeListHead() {
+  return (
+    <div className="qhead desk kick" aria-hidden="true">
+      <span>Colaborador</span>
+      <span>Setor · unidade · turno</span>
+      <span>Etapa</span>
+      <span>Prazo</span>
+      <span>Situação</span>
+      <span />
+    </div>
+  );
+}
 
 export function EmployeeCard({
-  employee, muted = false,
+  employee, muted = false, index = 0,
 }: { employee: GestorEmployee; muted?: boolean; index?: number }) {
   const badge = prazoBadge(employee);
   const tom = tomDoPrazo(badge?.className);
   const colorOption = employee.currentColor ? COLOR_OPTIONS.find((c) => c.value === employee.currentColor) : null;
+  const onde = [employee.sector?.name, employee.unit?.name, SHIFT_LABEL[employee.shift]].filter(Boolean).join(' · ');
+  const situacao = awaitsSecond(employee)
+    ? 'Efetivado no 1º período · falta a 2ª avaliação'
+    : isFeedbackCycle(employee) ? 'Efetivado · ciclo de feedback' : statusLabel(employee);
+  const segunda = employee.secondOpinion
+    ? `Você também pode avaliar o ${employee.secondOpinion.period === 'FIRST' ? '1º' : '2º'} período · até ${new Date(employee.secondOpinion.until).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}`
+    : null;
 
   return (
     <Link
       href={`/gestor/employees/${employee.id}`}
-      className={`group relative flex items-start justify-between gap-3 overflow-hidden rounded-xl2 border-[1.5px] bg-spot-white py-3.5 pl-5 pr-3.5 transition-[transform,box-shadow] duration-100 hover:-translate-y-px hover:shadow-[0_3px_0_rgb(var(--spot-gray-900))] ${
-        muted ? 'border-spot-gray-300' : 'border-spot-gray-900'
-      }`}
+      className={`qrow mk-opt ${muted ? 'is-muted' : ''}`}
+      style={{ ['--n' as string]: Math.min(index, 8) }}
     >
-      <span aria-hidden className={`absolute inset-y-0 left-0 w-[7px] ${ABA[tom]}`} />
-      <div className="min-w-0">
-        <p className="text-base font-semibold truncate">
-          {employee.fullName}
-        </p>
-        <p className="text-xs text-spot-gray-600 mt-0.5">
-          {employee.roleDescription} · {employee.sector?.name} · {employee.unit?.name} · {SHIFT_LABEL[employee.shift]}
-        </p>
-        <p className="text-xs text-spot-gray-600 mt-1 flex items-center gap-1.5">
+      <span className="who">
+        <span className={`av ${muted ? '' : AVATAR[tom]}`} aria-hidden="true">{iniciaisDe(employee.fullName)}</span>
+        <span className="info">
+          <b>{employee.fullName}</b>
+          <small>{employee.roleDescription}<span className="mob"> · {onde}</span></small>
+          <span className="tags">
+            {badge && <span className={`tag ${ETIQUETA[tom]}`}>{badge.label}</span>}
+            <span className="tag t-soft">{etapaLabel(employee)}</span>
+          </span>
           {colorOption && (
-            <>
-              <span aria-hidden className={`h-2 w-2 shrink-0 rounded-[1px] ${colorOption.dotClassName}`} />
+            <small className="cor-linha">
+              <span aria-hidden className={`cor-ponto ${colorOption.dotClassName}`} />
               {/* Por extenso: o tooltip de antes não aparece no toque nem no leitor de tela. */}
-              <span className="font-medium text-spot-gray-800">{COLOR_LABELS[colorOption.value]} ·</span>
-            </>
+              <b>{COLOR_LABELS[colorOption.value]}</b>
+            </small>
           )}
-          {awaitsSecond(employee)
-            ? 'Efetivado no 1º período · falta a 2ª avaliação'
-            : isFeedbackCycle(employee) ? 'Efetivado · ciclo de feedback' : statusLabel(employee)}
-        </p>
-        {employee.secondOpinion && (
-          <p className="text-xs font-semibold text-spot-gray-800 mt-1">
-            Você também pode avaliar o {employee.secondOpinion.period === 'FIRST' ? '1º' : '2º'} período
-            · até {new Date(employee.secondOpinion.until).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-          </p>
-        )}
-      </div>
-      {badge && (
-        <span className={`badge shrink-0 mt-0.5 ${ETIQUETA[tom]}`}>
-          {badge.label}
+          {segunda && <small className="seg-op">{segunda}</small>}
         </span>
-      )}
+      </span>
+      <span className="col">{onde}</span>
+      <span className="col">{etapaLabel(employee)}</span>
+      <span className="col">{badge ? <span className={`tag ${ETIQUETA[tom]}`}>{badge.label}</span> : '—'}</span>
+      <span className="col">{situacao}</span>
+      <span className="btn btn-ink act" aria-hidden="true">Abrir ficha</span>
+      <Ic n="right" s={18} className="chev" />
     </Link>
   );
 }
 
 /**
- * Lista de funcionários: fichas empilhadas, com respiro entre elas. Ao filtrar,
- * buscar ou reordenar, as fichas deslizam até o novo lugar (ver ListaViva).
+ * Lista de funcionários: linhas empilhadas, com respiro entre elas. Ao filtrar,
+ * buscar ou reordenar, as linhas deslizam até o novo lugar (ver ListaViva).
  */
-export function EmployeeList({ children }: { children: React.ReactNode }) {
-  return <ListaViva className="flex flex-col gap-2.5">{children}</ListaViva>;
+export function EmployeeList({ children, comCabeca = true }: { children: React.ReactNode; comCabeca?: boolean }) {
+  return (
+    <div className="queuebox-simples">
+      {comCabeca && <EmployeeListHead />}
+      <ListaViva className="queue">{children}</ListaViva>
+    </div>
+  );
 }
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl2 border-[1.5px] border-dashed border-spot-gray-300 text-center py-12 px-4 voz text-lg">{children}</div>
-  );
+  return <div className="vazio">{children}</div>;
 }
 
 /** Mantido para não quebrar as telas que já importavam daqui. */

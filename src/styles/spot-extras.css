@@ -15,3 +15,159 @@
 .sp .login .nlink{align-self:center;min-height:48px;color:var(--n-text-2);font-size:15px;text-decoration:underline;text-decoration-color:var(--c-accent);text-decoration-thickness:2px;text-underline-offset:6px}
 .sp .login .nlink:hover{color:var(--n-text)}
 .sp .login .gbtn-txt{width:auto;padding:0 14px;border-radius:14px;height:46px;font-size:14px;font-weight:600}
+
+/* ============================================================
+   PONTE DO VISUAL ANTIGO
+   Telas e componentes que ainda usam as cores e fontes "spot-*" do visual
+   anterior (Tailwind) passam a enxergar a paleta nova DENTRO da área .sp.
+   Só redeclara variáveis: nada muda fora de .sp (admin e pesquisa intactos).
+   O padrão novo é só claro, então estes valores valem também no escuro do
+   aparelho (a redeclaração aqui vence a do @media em :root).
+   Canais RGB, no formato que o Tailwind espera (ver `c()` em tailwind.config).
+   ============================================================ */
+.sp{
+  --spot-black:21 19 16; --spot-on-black:255 255 255;
+  --spot-yellow:242 184 0; --spot-yellow-dark:214 163 0; --spot-on-yellow:21 19 16;
+  --spot-white:243 243 241;  /* "papel" dos cartões antigos = cinza quente do padrão */
+  --spot-cream:255 255 255;  /* fundo da página = branco do padrão */
+  --spot-gray-50:248 247 244; --spot-gray-100:234 229 218; --spot-gray-200:226 220 207;
+  --spot-gray-300:207 200 184; --spot-gray-400:133 126 110; --spot-gray-500:107 100 87;
+  --spot-gray-600:74 68 56; --spot-gray-700:52 48 42; --spot-gray-800:34 32 27; --spot-gray-900:21 19 16;
+  --spot-danger:179 38 30; --spot-danger-dark:154 31 24;
+  --spot-success:31 122 72; --spot-warning:242 184 0; --spot-warning-ink:122 88 0;
+  --spot-sidebar:21 19 16; --spot-sidebar-text:255 255 255;
+  /* Famílias do Tailwind (font-sans / font-display) apontam para as novas. */
+  --font-sans:var(--font-text);
+}
+/* "Voz" (serifada itálica) do visual antigo vira o acento Newsreader. */
+.sp .font-display,.sp .voz{font-family:var(--font-accent);font-style:italic;font-weight:400}
+/* Bloco antigo (.card) no padrão novo: sem moldura, cinza quente. */
+.sp .card{border:0;box-shadow:none;border-radius:var(--r-card);min-width:0}
+.sp .card-plain{background:none;padding:0;border-radius:0}
+
+/* ---------- casca ---------- */
+.sp .nav{position:relative;isolation:isolate;text-decoration:none}
+.sp .nav[aria-current=page]{background:transparent}
+.sp .nav-marca{position:absolute;inset:0;border-radius:14px;background:var(--c-surface);z-index:-1}
+.sp .nav-t{line-height:1.25}
+.sp .side .grp{margin:18px 12px 6px}
+.sp .side .brand{flex:none}
+.sp .side .meb{flex:none}
+.sp .tabbar{grid-template-columns:repeat(var(--n,4),minmax(0,1fr))}
+.sp .tabbar a,.sp .tabbar button{border-radius:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;line-height:1.15;text-align:center;text-decoration:none;color:var(--c-text-2);transition:background .22s var(--ease),color .22s;min-width:0;padding:0}
+.sp .tabbar a>span,.sp .tabbar button>span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp .tabbar a[aria-current=page],.sp .tabbar button[aria-current=page]{background:var(--c-accent);color:var(--c-ink);font-weight:700}
+.sp .btn-sair{min-height:44px;padding:0 18px;font-size:14px}
+.sp .top .sino{background:var(--c-surface);color:var(--c-ink);border-radius:50%;width:44px;height:44px;margin:0}
+.sp .top .sino:hover{background:var(--c-line);color:var(--c-ink)}
+.sp .page>.mk-open{max-width:1240px;margin:0 auto}
+.sp .sheet-mais{max-height:88vh;overflow-y:auto}
+.sp .mais-cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sp .mais-cab h2{font-size:24px}
+.sp .mais-lista{display:flex;flex-direction:column;gap:8px}
+.sp .mais-item{display:flex;align-items:center;gap:14px;width:100%;min-height:60px;padding:8px 14px;border-radius:18px;background:var(--c-surface);text-decoration:none;text-align:left;font-weight:600;font-size:17px}
+.sp .mais-item[aria-current=page]{background:var(--c-accent)}
+.sp .mais-item .pi{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--c-surface-2);flex:none}
+.sp .mais-item .mais-t{flex:1;min-width:0}
+.sp .mais-item .chev{color:var(--c-text-3)}
+.sp .mais-sair{margin-top:6px;background:none;border:1.5px solid var(--c-line-input)}
+@media (min-width:960px){
+  .sp .sheet-mais,.sp .sheet-bd{display:none}
+  .sp .side nav{flex:1}
+}
+
+/* ---------- cabeçalho de página (telas antigas que usam CabecalhoPagina) ---------- */
+.sp .titulo-pagina{font-family:var(--font-display);font-weight:800;letter-spacing:-.035em;line-height:1.04;font-size:clamp(32px,3.2vw,48px);color:var(--c-text)}
+.sp .titulo-pagina::before{content:"";display:block;width:44px;height:4px;border-radius:2px;background:var(--c-accent);margin-bottom:14px}
+.sp .rotulo-mono{font-family:var(--font-mono);font-weight:500;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--c-text-2)}
+/* O subtítulo explica regras: texto de leitura, não voz itálica. */
+.sp .titulo-pagina+.voz{font-family:var(--font-text);font-style:normal;font-size:17px;line-height:1.5;color:var(--c-text-2);margin-top:8px}
+.sp .mut{color:var(--c-text-2)}
+.sp .c-bad{color:var(--c-bad)}
+.sp .c-active{color:var(--c-active-text)}
+
+/* ---------- avatares por situação ---------- */
+.sp .av.late{background:var(--c-bad-soft);color:var(--c-bad-text)}
+.sp .av.soon{background:var(--c-active-soft);color:var(--c-active-text)}
+.sp .av.ok{background:var(--c-ok-soft);color:var(--c-ok-text)}
+
+/* ---------- linhas de pessoa ---------- */
+.sp .qrow{color:inherit}
+.sp .qrow.is-muted{opacity:.88}
+.sp .qrow .cor-linha{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--c-text-2)}
+.sp .qrow .cor-linha b{font-weight:600;color:var(--c-ink)}
+.sp .cor-ponto{width:9px;height:9px;border-radius:50%;flex:none}
+.sp .qrow .seg-op{font-weight:600;color:var(--c-active-text)}
+.sp .vazio{padding:40px 20px;border-radius:var(--r-card);background:var(--c-surface);text-align:center;color:var(--c-text-2);font-size:17px;line-height:1.5}
+.sp .grupo-lista{margin-top:22px}
+.sp .grupo-rotulo{margin-bottom:10px}
+
+/* ---------- Início ---------- */
+.sp .hello-simples{margin-top:26px;margin-bottom:18px}
+.sp .hello-simples .accbar{margin-bottom:14px}
+.sp .hello-simples h1{font-size:clamp(32px,3.2vw,48px)}
+.sp .hello .ctx{flex-wrap:wrap}
+.sp .agenda-vazia{font-size:14px;color:var(--c-text-2)}
+.sp .agenda .it{text-decoration:none;color:inherit}
+.sp .mini-list .it{color:inherit}
+.sp .mini-vazio{padding:8px 0;font-size:15px}
+.sp .gauge .g0{stroke:var(--c-surface-2);stroke-dasharray:none;stroke-dashoffset:0}
+.sp .gauge .g1{stroke:var(--c-accent);animation:sp-gv 1.1s var(--ease) .45s forwards}
+.sp .gauge .g2{stroke:var(--c-active);animation:sp-gv 1.3s var(--ease) .45s forwards}
+@keyframes sp-gv{to{stroke-dashoffset:var(--to,251.3)}}
+.sp .legend i.l-concl{background:var(--c-accent)}
+.sp .legend i.l-rasc{background:var(--c-active)}
+.sp .legend{font-size:13px}
+.sp .stats2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sp .week .feed-link{display:inline-block;margin-top:14px;min-height:44px;line-height:44px}
+.sp .week .feed-nota{margin-top:6px;font-size:14px;color:var(--c-text-2)}
+.sp .resume-quem{display:flex;align-items:center;gap:12px;margin-top:12px}
+.sp .resume-quem small{color:var(--c-text-2)}
+.sp .bars .tr i.f-accent{background:var(--c-accent)}
+.sp .bars .tr i.f-active{background:var(--c-active)}
+.sp .bars .tr i.f-ink{background:var(--c-ink)}
+.sp .bars .tr i.f-text2{background:var(--c-text-2)}
+.sp .stack i.f-accent{background:var(--c-accent);color:var(--c-ink)}
+.sp .stack i.f-active{background:var(--c-active);color:var(--c-ink)}
+.sp .stack i.f-bad{background:var(--c-bad);color:#fff}
+.sp .res-nota{margin-top:12px;font-size:14px}
+.sp .tl .pin{text-decoration:none}
+.sp .tl .pin:focus-visible{outline-offset:2px}
+.sp .todos{margin-top:34px}
+.sp .todos .sechead{margin-top:0}
+.sp .todos-sub{margin:-2px 0 14px;font-size:16px;line-height:1.5;max-width:46em}
+@media (min-width:960px){
+  .sp .queuebox-simples .queue{background:var(--c-surface);border-radius:var(--r-card);padding:8px}
+  .sp .qhead{align-items:center}
+}
+.sp .qhead.kick{display:none}
+@media (min-width:960px){.sp .qhead.kick{display:grid}}
+
+/* ---------- Início em telas de computador mais estreitas (960 a 1279 px) ----------
+   O modelo foi desenhado a 1440 px. Abaixo de 1280 as colunas de 7/5/4/8 ficam
+   apertadas demais para o conteúdo real, então os blocos largos ocupam a linha toda. */
+@media (min-width:960px) and (max-width:1279px){
+  .sp .hello{grid-column:span 12}
+  .sp .cycle{grid-column:span 7}
+  .sp .week{grid-column:span 5}
+  .sp .timeline{grid-column:span 12}
+  .sp .queuebox{grid-column:span 12}
+  .sp .rightcol{grid-column:span 12;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+  .sp .split{grid-column:span 6}
+  .sp .cycle .stats3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sp .cycle{grid-template-columns:minmax(0,1fr)}
+  .sp .cycle .gauge{grid-row:auto}
+}
+@media (min-width:960px){
+  .sp .nav{font-size:15px;line-height:1.25}
+  .sp .week .rowhead{flex-wrap:wrap;gap:4px 12px}
+}
+
+/* Colunas da tabela de pessoas (o conteúdo real é mais comprido que o do modelo). */
+@media (min-width:960px){
+  .sp .qhead,.sp .qrow{grid-template-columns:minmax(0,2fr) minmax(0,1.5fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.2fr) 112px}
+  .sp .qhead>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sp .qrow .col{font-size:14px;line-height:1.35}
+}
+
+.sp .tabbar{padding:5px}
