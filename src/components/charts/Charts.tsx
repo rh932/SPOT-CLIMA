@@ -7,33 +7,29 @@ import {
 } from 'recharts';
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
-import { useModoEscuro } from '@/components/theme/useModoEscuro';
 
-// Faixas de favorabilidade (verde/amarelo/vermelho) são fixas de propósito —
-// mesma classificação usada em src/lib/calculations.ts, e legíveis nos dois
-// modos (são preenchimento, não texto).
-const FAVORABLE = '#2F7A4D';
-const NEUTRAL = '#E3B300';
-const UNFAVORABLE = '#D9442A';
-const PRIMARY = '#F5C400';
-const EXTRA_SERIES_COLORS = ['#3B82F6', '#D64545', '#8B5CF6'];
+// Tema dos gráficos no padrão Spot Integra (valores do PADRAO-VISUAL.md; o
+// Recharts recebe cor como atributo do SVG e não lê as variáveis do CSS, então
+// os hex ficam aqui, num lugar só, espelhando src/styles/spot-tokens.css).
+// Séries em âmbar, laranja, tinta e cinza. Verde só para "bom" e vermelho só
+// para "risco": as faixas de favorabilidade (src/lib/calculations.ts) seguem
+// essa regra, e o número ao lado de cada barra carrega o sentido por escrito.
+const FAVORABLE = '#1F7A48';
+const NEUTRAL = '#F2B800';
+const UNFAVORABLE = '#B3261E';
+const PRIMARY = '#F2B800';
+const EXTRA_SERIES_COLORS = ['#F26A21', '#B9B3A6', '#6B6457'];
 
-/*
- * O Recharts recebe cor como atributo do SVG, que não lê as variáveis do
- * globals.css — por isso o par claro/escuro é repetido aqui, com os mesmos
- * valores de lá. Sem isto, no modo escuro a série "tinta" (#0B0B0B) sumia no
- * fundo e os eixos saíam no #666 padrão da biblioteca (3:1 sobre o cartão).
- */
+/* A área do RH é só clara (padrão novo): uma paleta só. */
 const PALETA = {
-  claro: { tinta: '#16130F', grade: '#D6CDBC', eixo: '#504A3E', fundo: '#FBF8F1', texto: '#16130F' },
-  escuro: { tinta: '#EEE8DC', grade: '#363229', eixo: '#BAB2A2', fundo: '#201D19', texto: '#EEE8DC' },
+  claro: { tinta: '#151310', grade: '#EAE5DA', eixo: '#6B6457', fundo: '#FFFFFF', texto: '#151310' },
 };
 
 function usePaleta() {
-  const p = useModoEscuro() ? PALETA.escuro : PALETA.claro;
+  const p = PALETA.claro;
   return {
     ...p,
-    tick: (fontSize: number) => ({ fontSize, fill: p.eixo }),
+    tick: (fontSize: number) => ({ fontSize, fill: p.eixo, fontFamily: 'var(--font-mono)' }),
     tooltip: {
       contentStyle: { background: p.fundo, border: `1px solid ${p.grade}`, borderRadius: 10, color: p.texto, boxShadow: '0 8px 24px -8px rgba(0,0,0,0.25)', fontSize: 13 },
       cursor: { fill: p.grade, fillOpacity: 0.45 },
@@ -150,7 +146,7 @@ export function DimensionRadar({ data }: { data: { dimension: string; index: num
   const p = usePaleta();
   return (
     <ResponsiveContainer width="100%" height={320}>
-      <RadarChart data={data} outerRadius="75%">
+      <RadarChart data={data} outerRadius="62%">
         <PolarGrid stroke={p.grade} />
         <PolarAngleAxis dataKey="dimension" tick={p.tick(11)} />
         <PolarRadiusAxis angle={30} domain={[0, 100]} tick={p.tick(10)} />

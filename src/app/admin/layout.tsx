@@ -15,10 +15,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     // Confirmação de sucesso disponível em todo o painel — salvar sem
     // nenhum retorno visível era o que fazia a pessoa repetir a ação.
-    <ToastProvider>
-      <ConfirmProvider>
-        <AdminChrome>{children}</AdminChrome>
-      </ConfirmProvider>
-    </ToastProvider>
+    // .sp liga o padrão visual novo (tokens, fontes e componentes) nesta área. Envolve
+    // os provedores de propósito: aviso e confirmação são desenhados por eles.
+    <div className="sp">
+      <ToastProvider>
+        <ConfirmProvider>
+          <AdminChrome>{children}</AdminChrome>
+        </ConfirmProvider>
+      </ToastProvider>
+    </div>
   );
 }

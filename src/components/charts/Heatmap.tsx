@@ -53,7 +53,7 @@ export function Heatmap({ cells, rowLabel = 'Setor' }: { cells: HeatmapCell[]; r
 
   return (
     <div className="overflow-x-auto">
-      <table className="border-separate border-spacing-1 text-xs min-w-[640px]">
+      <table data-sem-cartao className="border-separate border-spacing-1 text-xs min-w-[640px]">
         <thead>
           <tr>
             <th className="text-left font-semibold text-spot-gray-600 px-2 py-1 sticky left-0 bg-spot-white">{rowLabel}</th>

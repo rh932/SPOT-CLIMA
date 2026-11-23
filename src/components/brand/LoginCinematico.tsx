@@ -45,6 +45,8 @@ type Props = {
   tituloExtra?: string;
   /** Voltar do painel extra. */
   onVoltarExtra?: () => void;
+  /** Atalho para a outra porta do sistema (ex.: gestor que entrou na tela do RH). */
+  outraArea?: { texto: string; rotulo: string; href: string };
   /** Mensagem fixa no fim da senha (ex.: como recuperar a senha). */
   dicaSenha?: string;
 };
@@ -165,6 +167,11 @@ export function LoginCinematico(p: Props) {
         <span className="lbl">{p.textoBotao ?? 'Entrar com e-mail corporativo'}</span>
         <Ic n="arrow" s={20} w={2.2} className="arr" />
       </button>
+      {p.outraArea && (
+        <a className="link-n" href={p.outraArea.href}>
+          {p.outraArea.texto} <u>{p.outraArea.rotulo}</u>
+        </a>
+      )}
       {p.acaoSecundaria && (
         <button type="button" className="link-n" onClick={() => p.acaoSecundaria?.onClick(email)}>
           {p.acaoSecundaria.rotulo} <u>{p.acaoSecundaria.destaque}</u>
