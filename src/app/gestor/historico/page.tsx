@@ -1,5 +1,6 @@
 'use client';
 
+import { Ic } from '@/components/sp/Ic';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { EmployeeCard, EmployeeList, EmptyState, PageHeader } from '../EmployeeCard';
@@ -197,44 +198,52 @@ export default function HistoricoPage() {
                 <Link href={`/gestor/employees/${unicaPessoa.id}`} className="btn-ghost text-xs py-1.5 px-3 min-h-10">Abrir a ficha</Link>
               </div>
             )}
-            <ListaViva className="border-t border-spot-gray-300" classeItem="border-b border-spot-gray-200 last:border-b-0">
-              {rows.map((row) => (
-                <Link
-                  key={row.key}
-                  href={`/gestor/employees/${row.employee.id}#avaliacao-${row.key}`}
-                  className="group flex items-center justify-between gap-4 flex-wrap py-4 transition-colors hover:bg-spot-white"
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate group-hover:underline underline-offset-4 decoration-spot-yellow decoration-2">
-                      {row.employee.fullName}
-                    </p>
-                    <p className="text-xs text-spot-gray-500">
-                      {row.employee.sector?.name} · {row.employee.unit?.name} · {SHIFT_LABEL[row.employee.shift]}
-                    </p>
-                    <p className="text-xs text-spot-gray-800 mt-0.5">Resultado: {row.result}</p>
-                    <p className="text-xs text-spot-gray-500 mt-0.5">
-                      Situação atual: {statusLabel(row.employee)}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-medium">{periodLabel(row)}</p>
-                    <p className="text-xs text-spot-gray-500">
-                      {tipoDoRegistro(row.period) === 'FEEDBACK' ? 'Feedback' : 'Avaliação de experiência'}
-                    </p>
-                    <p className="text-xs text-spot-gray-500">
-                      {new Date(row.evaluationDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                      {row.evaluator && ` · por ${row.evaluator}`}
-                    </p>
-                    {row.color && (
-                      <p className="text-xs text-spot-gray-500 mt-0.5 flex items-center justify-end gap-1.5">
-                        <span className={`h-2 w-2 rounded-full ${COLOR_OPTIONS.find((c) => c.value === row.color)?.dotClassName}`} />
-                        {COLOR_LABELS[row.color]}
-                      </p>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </ListaViva>
+            <div className="queuebox-simples">
+              <div className="qhead desk kick" aria-hidden="true">
+                <span>Colaborador</span><span>Setor · unidade · turno</span><span>Registro</span><span>Data</span><span>Resultado</span><span />
+              </div>
+              <ListaViva className="queue">
+                {rows.map((row, i) => {
+                  const data = new Date(row.evaluationDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                  const tipo = tipoDoRegistro(row.period) === 'FEEDBACK' ? 'Feedback' : 'Avaliação de experiência';
+                  const onde = [row.employee.sector?.name, row.employee.unit?.name, SHIFT_LABEL[row.employee.shift]].filter(Boolean).join(' · ');
+                  const cor = row.color ? COLOR_OPTIONS.find((c) => c.value === row.color) : null;
+                  return (
+                    <Link
+                      key={row.key}
+                      href={`/gestor/employees/${row.employee.id}#avaliacao-${row.key}`}
+                      className="qrow mk-opt"
+                      style={{ ['--n' as string]: Math.min(i, 8) }}
+                    >
+                      <span className="who">
+                        <span className="av ok" aria-hidden="true">{row.employee.fullName.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase()}</span>
+                        <span className="info">
+                          <b>{row.employee.fullName}</b>
+                          <small>{data}{row.evaluator && ` · por ${row.evaluator}`}<span className="mob"> · {onde}</span></small>
+                          <span className="tags">
+                            <span className="tag t-ok">{row.result}</span>
+                            <span className="tag t-soft">{periodLabel(row)}</span>
+                            <span className="tag t-soft">{tipo}</span>
+                          </span>
+                          {cor && (
+                            <small className="cor-linha">
+                              <span aria-hidden className={`cor-ponto ${cor.dotClassName}`} />
+                              <b>{COLOR_LABELS[row.color!]}</b>
+                            </small>
+                          )}
+                        </span>
+                      </span>
+                      <span className="col">{onde}</span>
+                      <span className="col">{periodLabel(row)}<br />{tipo}</span>
+                      <span className="col">{data}{row.evaluator && <><br />por {row.evaluator}</>}</span>
+                      <span className="col"><span className="tag t-ok">{row.result}</span><br />{statusLabel(row.employee)}</span>
+                      <span className="btn btn-ink act" aria-hidden="true">Abrir</span>
+                      <Ic n="right" s={18} className="chev" />
+                    </Link>
+                  );
+                })}
+              </ListaViva>
+            </div>
           </div>
         )}
       </AsyncSection>

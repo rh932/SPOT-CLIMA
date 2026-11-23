@@ -19,6 +19,7 @@ import {
   type TimelineEvaluation, type TimelineColorChange, type TimelineTraining, type TimelineEvent,
 } from '@/lib/employeeTimeline';
 import { SHIFT_LABEL } from '../../useGestorEmployees';
+import { Ic } from '@/components/sp/Ic';
 import { awaitsSecondEvaluation, colorUnlocked } from '@/lib/colorUnlock';
 import { EvaluationCard, type EvaluationRecord } from '@/components/EvaluationCard';
 import { ErrorState, LiveStatus, Skeleton, SkeletonCardList, ForbiddenState, ehSemAcesso } from '@/components/async';
@@ -178,19 +179,25 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
     <div className="flex flex-col gap-5">
       <Link
         href={e.status === 'TERMINATED' ? '/gestor/desligados' : '/gestor'}
-        className="text-sm text-spot-gray-500 hover:text-spot-gray-900 transition self-start"
+        className="ficha-voltar"
       >
-        {e.status === 'TERMINATED' ? '← Voltar para Desligados' : '← Voltar para a lista'}
+        <Ic n="left" s={18} w={2.2} />
+        {e.status === 'TERMINATED' ? 'Voltar para Desligados' : 'Voltar para a lista'}
       </Link>
 
-      <header>
-        <h1 className="titulo-pagina">{e.fullName}</h1>
-        <p className="text-spot-gray-500 text-sm mt-0.5">
-          {e.roleDescription} · {e.sector?.name} · {e.unit?.name} · {SHIFT_LABEL[e.shift]}
-        </p>
-        <p className="text-xs text-spot-gray-500 mt-1">
-          {statusLabel(e)} · admitido em {formatDate(e.admissionDate)}
-        </p>
+      <header className="ficha-cab">
+        <span className="av ink ficha-av" aria-hidden="true">
+          {e.fullName.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase()}
+        </span>
+        <div className="ficha-nome">
+          <h1 className="H">{e.fullName}</h1>
+          <p className="mut">{e.roleDescription} · {e.sector?.name}</p>
+        </div>
+        <div className="facts ficha-fatos">
+          <div><b>{e.unit?.name ?? '—'}</b><span>unidade</span></div>
+          <div><b>{SHIFT_LABEL[e.shift]}</b><span>turno</span></div>
+          <div><b>{formatDate(e.admissionDate)}</b><span>{statusLabel(e)}</span></div>
+        </div>
       </header>
 
       {/* 1. O que está pendente agora — a primeira coisa que o gestor precisa ver. */}

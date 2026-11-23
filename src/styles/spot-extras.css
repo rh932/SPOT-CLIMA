@@ -280,3 +280,18 @@
 .sp .modal-panel::before{content:"";display:block;width:40px;height:5px;border-radius:3px;background:var(--c-line-input);margin:0 auto 14px}
 .sp [role=alertdialog] h2{font-family:var(--font-display);font-weight:800;letter-spacing:-.03em;font-size:24px}
 @media (max-width:959px){.sp .toast-pilha{bottom:98px}}
+
+/* ---------- ficha do colaborador ---------- */
+.sp .ficha-voltar{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;min-height:48px;font-weight:600;font-size:16px;color:var(--c-text-2);text-decoration:none}
+.sp .ficha-voltar:hover{color:var(--c-ink)}
+.sp .ficha-cab{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px 16px;align-items:center}
+.sp .ficha-av{width:64px;height:64px;border-radius:20px;font-size:22px}
+.sp .ficha-nome h1{font-size:clamp(28px,3vw,40px);overflow-wrap:anywhere}
+.sp .ficha-nome p{font-size:16px;margin-top:2px}
+.sp .ficha-fatos{grid-column:1/-1;margin-top:0}
+.sp .ficha-fatos b{font-size:16px;overflow-wrap:anywhere}
+@media (min-width:960px){
+  .sp .ficha-cab{grid-template-columns:auto minmax(0,1fr) minmax(0,520px)}
+  .sp .ficha-fatos{grid-column:auto}
+}
+.sp .qrow .tags .tag{white-space:normal;height:auto;min-height:26px;padding:4px 10px;line-height:1.25;max-width:100%}
