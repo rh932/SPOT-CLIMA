@@ -88,7 +88,9 @@ export function PassosCadastro(p: PassosProps) {
       {node}
     </>
   );
-  const opcoes = (lista: { v: string; t: string; d?: string }[], valor: string, set: (v: string) => void) => (
+  const opcoes = (lista: { v: string; t: string; d?: string }[], valor: string, set: (v: string) => void) => lista.length === 0 && !p.carregando ? (
+    <p className="miss" role="alert"><Ic n="info" s={16} /> Nenhuma opção liberada para o seu acesso. Peça ao RH para incluir no seu cadastro.</p>
+  ) : (
     <div className="pass-opts" role="radiogroup">
       {lista.map((o) => (
         <button key={o.v} type="button" role="radio" aria-checked={valor === o.v} className="opt" onClick={() => escolher(() => set(o.v))}>
