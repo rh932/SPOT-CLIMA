@@ -146,7 +146,7 @@
 /* ---------- Início em telas de computador mais estreitas (960 a 1279 px) ----------
    O modelo foi desenhado a 1440 px. Abaixo de 1280 as colunas de 7/5/4/8 ficam
    apertadas demais para o conteúdo real, então os blocos largos ocupam a linha toda. */
-@media (min-width:960px) and (max-width:1279px){
+@media (min-width:960px) and (max-width:1599px){
   .sp .hello{grid-column:span 12}
   .sp .cycle{grid-column:span 7}
   .sp .week{grid-column:span 5}
@@ -386,7 +386,7 @@
   .sp .dash>.split-6{grid-column:span 6}
   .sp .admin-page .hello{grid-column:span 7}
 }
-@media (min-width:960px) and (max-width:1279px){
+@media (min-width:960px) and (max-width:1599px){
   .sp .dash>.split-7,.sp .dash>.split-5{grid-column:span 12}
   .sp .admin-page .hello{grid-column:span 12}
 }
@@ -461,3 +461,65 @@
   .sp .pesquisa-flow .aside-r{display:none}
 }
 .sp .done-hero p{padding:0 24px}
+
+/* ============================================================
+   RESPIRO NO COMPUTADOR (≥ 960 px)
+   O modelo foi desenhado a 1440 px com dados curtos; com nomes reais e telas
+   largas ficou apertado. Mais largura útil, mais espaço entre os blocos e
+   textos maiores dentro deles.
+   ============================================================ */
+@media (min-width:960px){
+  .sp .page{padding:0 40px 56px}
+  .sp .top{padding:24px 40px 0}
+  .sp .page>.mk-open{max-width:1560px}
+  .sp .dash{gap:24px;margin-top:24px}
+  .sp .card{padding:26px 28px}
+  .sp .hello{padding:34px 36px;column-gap:36px;grid-template-columns:minmax(0,1fr) minmax(280px,320px)}
+  .sp .hello .ctx{gap:10px;margin-bottom:22px}
+  .sp .hello .chip{height:40px;padding:0 16px;font-size:15px}
+  .sp .agenda{padding:20px;gap:12px}
+  .sp .agenda .it{font-size:15px;padding:8px 0;gap:12px}
+  .sp .agenda .it small{font-size:13px}
+  .sp .alert{padding:16px 18px;margin-top:22px}
+  .sp .alert .t b{font-size:16px}
+  .sp .cycle{gap:22px;padding:28px}
+  .sp .stats3{gap:12px}
+  .sp .stats3 .tile{padding:16px 18px}
+  .sp .stats3 .tile b{font-size:30px;line-height:1.1}
+  .sp .stats3 .tile span{font-size:15px}
+  .sp .rowhead{margin-bottom:18px}
+  .sp .rowhead b{font-size:17px}
+  .sp .week .stats3 .tile b{font-size:32px}
+  .sp .tl{gap:8px}
+  .sp .tl .day{min-height:150px;padding:14px 0;gap:8px}
+  .sp .tl .day b{font-size:18px}
+  .sp .tl .pin{width:32px;height:32px;font-size:11px}
+  .sp .sechead{margin:34px 0 16px}
+  .sp .sechead h2{font-size:24px}
+  .sp .queuebox .queue,.sp .queuebox-simples .queue{padding:12px;gap:10px}
+  .sp .qhead{padding:0 22px 10px;gap:20px}
+  .sp .qrow{padding:18px 22px;gap:20px;min-height:76px}
+  .sp .qrow .info b{font-size:17px}
+  .sp .qrow .info small{font-size:14px}
+  .sp .qrow .col{font-size:15px;line-height:1.4}
+  .sp .qrow .act{min-height:44px;padding:0 20px}
+  .sp .qhead,.sp .qrow{grid-template-columns:minmax(0,2.8fr) minmax(0,1.5fr) minmax(0,1.2fr) minmax(0,1.1fr) minmax(0,1.3fr) 124px}
+  .sp .rightcol{gap:24px}
+  .sp .mini-list .it{padding:14px 0;gap:14px}
+  .sp .mini-list .it small{font-size:14px}
+  .sp .split{padding:28px}
+  .sp .bars{gap:16px}
+  .sp .bars .b{font-size:15px;grid-template-columns:120px 1fr 40px}
+  .sp .bars .tr{height:14px}
+  .sp .todos{margin-top:48px}
+}
+@media (min-width:1280px){
+  .sp .page{padding:0 56px 64px}
+  .sp .top{padding:28px 56px 0}
+}
+@media (min-width:960px) and (max-width:1599px){
+  .sp .cycle{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}
+  .sp .cycle .stats3{grid-template-columns:1fr}
+  .sp .cycle .btn{grid-column:1/-1}
+  .sp .hello{grid-template-columns:minmax(0,1fr) minmax(300px,380px)}
+}
