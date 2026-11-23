@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/apiClient';
 import { ActionButton, useToast } from '@/components/async';
 import { scrollToFirstError } from '@/lib/scrollToError';
+import { PassosCadastro } from './PassosCadastro';
 import { TRACK_HINTS, TRACK_LABELS, type EmployeeTrack } from '@/lib/employeeCreate';
 
 interface Lookup { id: string; name: string }
@@ -48,6 +49,7 @@ export function CadastroFuncionario({ portal, soAntigo = false }: { portal: Port
   const [error, setError] = useState<string | null>(null);
   const [duplicado, setDuplicado] = useState(false);
   const [ultimo, setUltimo] = useState<string | null>(null);
+  const [fim, setFim] = useState(false);
 
   useEffect(() => {
     let vivo = true;
@@ -111,6 +113,7 @@ export function CadastroFuncionario({ portal, soAntigo = false }: { portal: Port
       });
       mostrar(`${fullName.trim()} cadastrado.`);
       setUltimo(fullName.trim());
+      setFim(true);
       // Mantém unidade/setor/turno: quem cadastra uma equipe inteira repete os mesmos.
       setFullName(''); setRoleDescription(''); setAttempted(false);
     } catch (err) {
@@ -128,6 +131,28 @@ export function CadastroFuncionario({ portal, soAntigo = false }: { portal: Port
   };
 
   const desabilitado = carregando || saving;
+
+  // Portal dos gestores: uma pergunta por vez (padrão Spot Integra). Mesmos campos,
+  // mesmas regras e a mesma chamada de envio do formulário abaixo (usado no admin).
+  if (portal === 'gestor') {
+    return (
+      <PassosCadastro
+        soAntigo={soAntigo}
+        carregando={carregando} saving={saving} error={error} duplicado={duplicado} ultimo={ultimo} fim={fim}
+        canChooseTrack={canChooseTrack} track={track} setTrack={setTrack}
+        fullName={fullName} setFullName={setFullName}
+        roleDescription={roleDescription} setRoleDescription={setRoleDescription}
+        admissionDate={admissionDate} setAdmissionDate={setAdmissionDate}
+        units={units} unitId={unitId} setUnitId={setUnitId}
+        sectors={sectors} sectorId={sectorId} setSectorId={setSectorId}
+        shifts={shifts} shift={shift} setShift={setShift}
+        errors={errors}
+        hoje={hojeISO()}
+        enviar={enviar}
+        proximo={() => { setFim(false); setUltimo(null); setError(null); setDuplicado(false); }}
+      />
+    );
+  }
 
   return (
     <form onSubmit={submit} className="bg-spot-white rounded-xl2 border border-spot-gray-200 p-5 sm:p-6 flex flex-col gap-4 max-w-2xl">
