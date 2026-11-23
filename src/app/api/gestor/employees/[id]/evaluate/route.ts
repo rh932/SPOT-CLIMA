@@ -39,8 +39,8 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
   try {
     const session = await requireGestor();
 
-    // Só o gestor do turno avalia: o Líder acompanha e cobra, o Treinador nem
-    // enxerga avaliação.
+    // Avaliam o gestor, o líder (PJ de um setor), os gerentes que avaliam e o
+    // PJ; o Treinador nem enxerga avaliação (ver canEvaluate).
     if (!canEvaluate(session.role)) {
       throw new ApiError(403, 'Quem preenche a avaliação é o gestor responsável pelo turno.');
     }

@@ -128,8 +128,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
   GERENTE: GESTAO_KEYS,
   /**
    * Gestor Líder: enxerga os dois lados da operação — avaliações E
-   * treinamentos. Continua sem executar nenhum dos dois (quem avalia é o
-   * gestor do turno, quem treina é o treinador): ele acompanha, cobra e é
+   * treinamentos. Avalia a equipe do próprio setor (é o PJ de um único
+   * setor) e conclui treinamentos; além disso acompanha, cobra e é
    * quem limpa a lista, por isso tem `employees.delete`. O escopo (várias
    * unidades/setores/turnos) é configurado pelo ADM.
    */
@@ -137,12 +137,14 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Role, PermissionKey[]> = {
     'employees.view',
     'employees.create',
     'employees.summary.view',
-    // Ele não avalia, mas corrige: é quem conserta uma cor errada sem
-    // depender do RH.
+    // Também corrige: é quem conserta uma cor errada sem depender do RH.
     'employees.color.edit',
     'employees.terminate',
     'employees.delete',
     'evaluations.view',
+    // O Líder é o PJ que cuida de um único setor: também avalia a equipe dele
+    // (decisão do RH em 23/11/2026; ver `canEvaluate` em src/lib/scope.ts).
+    'evaluations.create',
     'evaluations.history.view',
     'trainings.view',
     // Gerente treinador: também registra e conclui o treinamento.

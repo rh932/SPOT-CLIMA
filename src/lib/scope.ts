@@ -6,9 +6,9 @@
  * e turno (um dos seus). A regra estava repetida à mão em três rotas com
  * formas diferentes — aqui ela é única, pura e testável.
  *
- * Quem pode AVALIAR é outra coisa: só o GESTOR. O GESTOR_LIDER acompanha a
- * operação (normalmente vários setores e os dois turnos) para cobrar quem
- * está devendo avaliação, mas nunca preenche a avaliação no lugar do gestor.
+ * Quem pode AVALIAR é outra coisa: ver `canEvaluate` abaixo. O GESTOR_LIDER
+ * é o PJ que cuida de um único setor: acompanha, cobra e também avalia a
+ * própria equipe.
  */
 
 export interface GestorScope {
@@ -36,9 +36,13 @@ export function isInScope(scope: GestorScope, employee: ScopedEmployee): boolean
     && scope.scopedShifts.includes(employee.shift);
 }
 
-/** Só o GESTOR, o PJ e os Gerentes que avaliam (GERENTE e GERENTE_AVALIADOR) avaliam. O GESTOR_LIDER é somente-leitura no portal. */
+/**
+ * Quem avalia: o GESTOR, o PJ, o GESTOR_LIDER (o PJ que cuida de um único
+ * setor, decisão do RH em 23/11/2026) e os Gerentes que avaliam (GERENTE e
+ * GERENTE_AVALIADOR). Super Admin, RH e Treinador não avaliam pelo portal.
+ */
 export function canEvaluate(role: string): boolean {
-  return role === 'GESTOR' || role === 'GERENTE' || role === 'GERENTE_AVALIADOR' || role === 'PJ';
+  return role === 'GESTOR' || role === 'GESTOR_LIDER' || role === 'GERENTE' || role === 'GERENTE_AVALIADOR' || role === 'PJ';
 }
 
 /**

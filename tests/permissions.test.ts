@@ -34,15 +34,15 @@ describe('hasPermission', () => {
     expect(hasPermission('GESTOR', 'settings.manage')).toBe(false);
   });
 
-  it('GESTOR_LIDER enxerga avaliações E treinamentos, sem executar nenhum dos dois', () => {
+  it('GESTOR_LIDER (PJ de um único setor) enxerga e executa avaliações e treinamentos', () => {
     // Vê os dois lados da operação...
     expect(hasPermission('GESTOR_LIDER', 'evaluations.view')).toBe(true);
     expect(hasPermission('GESTOR_LIDER', 'evaluations.history.view')).toBe(true);
     expect(hasPermission('GESTOR_LIDER', 'trainings.view')).toBe(true);
     expect(hasPermission('GESTOR_LIDER', 'trainings.history.view')).toBe(true);
     expect(hasPermission('GESTOR_LIDER', 'reports.view')).toBe(true);
-    // ...quem avalia é o gestor do turno, mas ele também conclui treinamentos.
-    expect(hasPermission('GESTOR_LIDER', 'evaluations.create')).toBe(false);
+    // ...avalia a própria equipe (decisão do RH em 23/11/2026) e conclui treinamentos.
+    expect(hasPermission('GESTOR_LIDER', 'evaluations.create')).toBe(true);
     expect(hasPermission('GESTOR_LIDER', 'trainings.create')).toBe(true);
     // E nada de administração.
     expect(hasPermission('GESTOR_LIDER', 'users.manage')).toBe(false);

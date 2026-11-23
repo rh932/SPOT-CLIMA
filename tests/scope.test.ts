@@ -62,12 +62,12 @@ describe('hasCompleteScope', () => {
 });
 
 describe('canEvaluate', () => {
-  it('só o GESTOR avalia', () => {
+  it('o GESTOR avalia', () => {
     expect(canEvaluate('GESTOR')).toBe(true);
   });
 
-  it('Gestor Líder acompanha mas não avalia', () => {
-    expect(canEvaluate('GESTOR_LIDER')).toBe(false);
+  it('Gestor Líder (PJ de um único setor) avalia a própria equipe', () => {
+    expect(canEvaluate('GESTOR_LIDER')).toBe(true);
   });
 
   it('papéis administrativos não avaliam pelo portal do gestor', () => {
@@ -87,11 +87,11 @@ describe('SUPER_ADMIN no portal da operação', () => {
     expect(isInScope(SUPER, { unitId: PAULISTA, sectorId: SALAO, shift: 'DIA' })).toBe(true);
   });
 
-  // "Mesmo acesso que o Gestor Líder" inclui NÃO avaliar: quem preenche a
-  // avaliação é o gestor responsável pelo turno.
-  it('não avalia, igual ao Gestor Líder', () => {
+  // O Super Admin entra no portal para acompanhar, mas não preenche avaliação
+  // (o Líder passou a avaliar em 23/11/2026; o Super Admin continua de fora).
+  it('não avalia pelo portal', () => {
     expect(canEvaluate('SUPER_ADMIN')).toBe(false);
-    expect(canEvaluate('GESTOR_LIDER')).toBe(false);
+    expect(canEvaluate('GESTOR_LIDER')).toBe(true);
     expect(canEvaluate('GESTOR')).toBe(true);
   });
 });
