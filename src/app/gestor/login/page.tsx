@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { LoginCover } from '@/components/auth/LoginCover';
+import { LoginCinematico } from '@/components/brand/LoginCinematico';
 import { FirstAccessForm } from '@/components/auth/FirstAccessForm';
 import { MfaStepForm } from '@/components/auth/MfaStepForm';
 import { goAfterLogin } from '@/lib/loginRedirect';
@@ -18,11 +18,6 @@ export default function GestorLoginPage() {
 
 function GestorLoginForm() {
   const params = useSearchParams();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   // Conta com verificação em duas etapas: depois da senha, pede o código do app.
   const [segundaEtapa, setSegundaEtapa] = useState(false);
   // Primeiro acesso: a pessoa cria a própria senha com o código do RH.
@@ -37,116 +32,65 @@ function GestorLoginForm() {
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
   }, []);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  // O fetch e o redirecionamento são os mesmos de antes: a tela nova só
+  // entrega e-mail e senha e mostra o que voltar.
+  const submit = async ({ email, senha }: { email: string; senha: string }) => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
-        body: JSON.stringify({ email, password, portal: 'gestor' }),
+        body: JSON.stringify({ email, password: senha, portal: 'gestor' }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? 'Falha no login.');
       if (body.mfaRequired) {
         setSegundaEtapa(true);
-        setPassword('');
-        setLoading(false);
         return;
       }
       // Navegação de documento, não router.push — ver goAfterLogin().
       goAfterLogin(params.get('next'), '/gestor');
+      // Fica em "Entrando…" até a página trocar.
+      return await new Promise<never>(() => undefined);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro inesperado.');
-      setLoading(false);
+      return { erro: err instanceof Error ? err.message : 'Erro inesperado.' };
     }
   };
 
+  const extra = segundaEtapa ? (
+    <MfaStepForm
+      noite
+      onSuccess={() => goAfterLogin(params.get('next'), '/gestor')}
+      onBack={() => setSegundaEtapa(false)}
+    />
+  ) : primeiro ? (
+    <FirstAccessForm
+      noite
+      key={`${primeiro.email}|${primeiro.code}`}
+      initialEmail={primeiro.email}
+      initialCode={primeiro.code}
+      onBack={() => setPrimeiro(null)}
+    />
+  ) : null;
+
   return (
-    <LoginCover
-      eyebrow="Avaliações e Treinamentos"
-      title="A sua equipe, do primeiro dia em diante"
-      description="Avaliações de 45 e 90 dias, feedbacks e treinamentos dos colaboradores dos seus setores, unidades e turno — com o prazo de cada ciclo à vista."
-      sheetTitle={primeiro ? 'Primeiro acesso' : segundaEtapa ? 'Verificação em duas etapas' : 'Entrar'}
-      sheetSubtitle={primeiro ? 'Crie a sua senha para usar o portal.' : 'Acesso de Gestor, Líder, Treinador e Super Admin.'}
-      abrir={Boolean(primeiro)}
-      acaoSecundaria={{ rotulo: 'Primeiro acesso? Criar minha senha', onClick: () => setPrimeiro({ email, code: '' }) }}
-    >
-      {segundaEtapa ? (
-        <MfaStepForm
-          onSuccess={() => goAfterLogin(params.get('next'), '/gestor')}
-          onBack={() => setSegundaEtapa(false)}
-        />
-      ) : primeiro ? (
-        <FirstAccessForm
-          key={`${primeiro.email}|${primeiro.code}`}
-          initialEmail={primeiro.email}
-          initialCode={primeiro.code}
-          onBack={() => setPrimeiro(null)}
-        />
-      ) : (
-        <>
-          <form onSubmit={submit} className="flex flex-col gap-4">
-            <div>
-              <label className="label" htmlFor="gestor-email">E-mail</label>
-              <input
-                id="gestor-email"
-                type="email"
-                required
-                autoComplete="username"
-                className="input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="label" htmlFor="gestor-password">Senha</label>
-              <div className="relative">
-                <input
-                  id="gestor-password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  autoComplete="current-password"
-                  className="input pr-16"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                  className="absolute inset-y-0 right-0 px-3 text-xs font-medium text-spot-gray-500 hover:text-spot-gray-900 transition"
-                >
-                  {showPassword ? 'Ocultar' : 'Mostrar'}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <p role="alert" className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5">{error}</p>
-            )}
-
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-1">
-              {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
-
-          {/* O segundo caminho do painel: quem recebeu o código do RH e ainda não tem senha. */}
-          <button
-            type="button"
-            className="mt-5 w-full rounded-btn border border-spot-gray-300 min-h-11 px-4 text-sm font-semibold text-spot-gray-900 hover:bg-spot-gray-100 transition"
-            onClick={() => setPrimeiro({ email, code: '' })}
-          >
-            Primeiro acesso? Criar minha senha
-          </button>
-
-          <p className="text-xs text-spot-gray-500 mt-6 leading-relaxed">
-            Esqueceu a senha? Peça ao RH para gerar uma nova na aba Usuários.
-          </p>
-        </>
-      )}
-    </LoginCover>
+    <LoginCinematico
+      eyebrow="INTEGRA"
+      frase={{ linhas: ['Sua equipe,', 'do primeiro', 'dia em diante.'], destaque: 'primeiro' }}
+      subtitulo="Avaliações de 45 e 90 dias, feedbacks e treinamentos, no seu bolso."
+      rodape={[
+        { rotulo: '01 · PRAZOS', texto: 'Cada ciclo de 45 e 90 dias com o prazo à vista.' },
+        { rotulo: '02 · UMA PERGUNTA POR VEZ', texto: 'Avaliação rápida, salva enquanto você responde.' },
+        { rotulo: '03 · HISTÓRICO', texto: 'Tudo registrado para o RH na hora.' },
+      ]}
+      area={{ rotulo: 'Área do gestor', titulo: 'Acesse sua conta', texto: 'Use o e-mail corporativo cadastrado pelo RH.' }}
+      textoSeguro="Ambiente exclusivo para gestores Spot"
+      dicaSenha="Esqueceu a senha? Peça ao RH para gerar uma nova na aba Usuários."
+      onSubmit={submit}
+      acaoSecundaria={{ rotulo: 'Primeiro acesso?', destaque: 'Criar senha', onClick: (em) => setPrimeiro({ email: em, code: '' }) }}
+      painelExtra={extra}
+      tituloExtra={primeiro ? 'Primeiro acesso' : 'Verificação em duas etapas'}
+      onVoltarExtra={() => (segundaEtapa ? setSegundaEtapa(false) : setPrimeiro(null))}
+    />
   );
 }

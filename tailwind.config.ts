@@ -8,6 +8,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Padrão novo (gestores, depois admin e pesquisa): cada cor aponta
+        // para uma variável de src/styles/spot-tokens.css. Nunca hex em componente.
+        bg: 'var(--c-bg)',
+        surface: 'var(--c-surface)',
+        'surface-2': 'var(--c-surface-2)',
+        ink: 'var(--c-ink)',
+        'on-ink': 'var(--c-on-ink)',
+        muted: 'var(--c-text-2)',
+        faint: 'var(--c-text-3)',
+        line: 'var(--c-line)',
+        'line-input': 'var(--c-line-input)',
+        accent: 'var(--c-accent)',
+        'accent-soft': 'var(--c-accent-soft)',
+        'accent-text': 'var(--c-accent-text)',
+        active: 'var(--c-active)',
+        'active-line': 'var(--c-active-line)',
+        'active-soft': 'var(--c-active-soft)',
+        'active-text': 'var(--c-active-text)',
+        ok: 'var(--c-ok)',
+        'ok-soft': 'var(--c-ok-soft)',
+        'ok-text': 'var(--c-ok-text)',
+        bad: 'var(--c-bad)',
+        'bad-soft': 'var(--c-bad-soft)',
+        'bad-text': 'var(--c-bad-text)',
+        night: 'var(--n-bg)',
         spot: {
           // Toda cor é uma variável CSS definida em src/app/globals.css, com
           // um valor para o modo claro e outro para o escuro (que segue o

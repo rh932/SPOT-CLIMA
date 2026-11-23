@@ -14,7 +14,10 @@ export default function GestorLayout({ children }: { children: React.ReactNode }
     // nenhum retorno visível era o que fazia a pessoa repetir a ação.
     <ToastProvider>
       <ConfirmProvider>
-        <GestorChrome>{children}</GestorChrome>
+        {/* .sp liga o padrão visual novo (tokens, fontes e componentes) só nesta área. */}
+        <div className="sp">
+          <GestorChrome>{children}</GestorChrome>
+        </div>
       </ConfirmProvider>
     </ToastProvider>
   );

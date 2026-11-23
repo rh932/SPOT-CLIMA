@@ -1,0 +1,97 @@
+/* ============================================================
+   SPOT INTEGRA · TOKENS
+   Login: noite no salão (foto, tinta, âmbar).
+   Depois do login: BRANCO como cor principal, CINZA QUENTE (#F3F3F1) como
+   segunda cor (paleta C, escolhida em 23/11),
+   âmbar (marca) e laranja brasa (foco, seleção, "em andamento").
+   Use sempre os semânticos (--c-*) no código.
+
+   Palavra "troca": inverter as duas cores de fundo
+     --c-bg      -> var(--cream-50)   (creme mais claro vira principal)
+     --c-surface -> var(--white)      (branco vira segunda cor)
+     --c-surface-2 -> var(--cream-50)
+   ============================================================ */
+:root{
+  /* ---------- primitivos ---------- */
+  --ink-900:#151310;   /* tinta */
+  --ink-800:#22201B;
+  --ink-700:#34302A;
+  --ink-600:#4A4438;
+  --stone-600:#6B6457; /* texto de apoio: 5,2:1 no creme, 5,9:1 no branco */
+  --stone-500:#857E6E; /* placeholder */
+  --stone-300:#CFC8B8;
+  --stone-200:#E2DCCF;
+  --stone-150:#EAE5DA;
+  --stone-100:#F0ECE3;
+  --white:#FFFFFF;
+  --gray-100:#F3F3F1;  /* cinza quente: segunda cor (cartões, faixas) */
+  --cream-100:#F6F2E9; /* creme anterior (reserva) */
+  --cream-50:#FBF8F2;  /* creme claro: usado na "troca" */
+  --night-900:#120F0C; /* fundo do login */
+  --gold-500:#F2B800;  /* âmbar: marca, botão principal, concluído. 10:1 com tinta */
+  --gold-100:#FCF1CC; --gold-700:#7A5800; --gold-800:#6B4D00;
+  --orange-500:#F26A21;   /* laranja brasa: preenchimento de seleção (6:1 com tinta) */
+  --orange-600:#D24E0A;   /* laranja de contorno e foco (3,9:1 no creme) */
+  --orange-100:#FFE6D5; --orange-800:#A3410B;
+  --green-600:#1F7A48; --green-700:#1A6A3E; --green-100:#E3F1E8;
+  --red-600:#B3261E;   --red-700:#9A1F18;   --red-100:#FBE9E7;
+
+  /* ---------- semânticos ---------- */
+  --c-bg:var(--white);            /* fundo das telas */
+  --c-surface:var(--gray-100);    /* cartões e faixas */
+  --c-surface-2:var(--white);     /* blocos dentro dos cartões */
+  --c-text:var(--ink-900);
+  --c-text-2:var(--stone-600);
+  --c-text-3:var(--stone-500);
+  --c-line:var(--stone-150);
+  --c-line-soft:var(--stone-100);
+  --c-line-input:var(--stone-200);
+  --c-primary:var(--gold-500);    --c-on-primary:var(--ink-900);
+  --c-ink:var(--ink-900);         --c-on-ink:var(--white);
+  --c-accent:var(--gold-500);     --c-accent-soft:var(--gold-100); --c-accent-text:var(--gold-800);
+  --c-active:var(--orange-500);   --c-active-line:var(--orange-600); --c-active-soft:var(--orange-100); --c-active-text:var(--orange-800);
+  --c-ok:var(--green-600); --c-ok-text:var(--green-700); --c-ok-soft:var(--green-100);
+  --c-bad:var(--red-600);  --c-bad-text:var(--red-700);  --c-bad-soft:var(--red-100);
+  --focus-ring:0 0 0 4px rgba(242,106,33,.2);
+
+  /* login (escuro) */
+  --n-bg:var(--night-900); --n-surface:rgba(30,25,21,.92); --n-line:rgba(255,255,255,.16);
+  --n-text:#FFFFFF; --n-text-2:rgba(255,255,255,.72); --n-bad:#FF9A8F;
+
+  /* ---------- tipografia ----------
+     As famílias vêm de next/font (src/app/layout.tsx) em variáveis próprias
+     (--sp-jakarta, --sp-newsreader). Os nomes --font-* ficam presos a .sp
+     (abaixo) porque o admin e a pesquisa ainda usam --font-display e
+     --font-mono do visual antigo. */
+  --f-mono:var(--font-mono),ui-monospace,Menlo,monospace; /* DM Mono, já carregada no layout */
+
+  /* ---------- movimento: durações ---------- */
+  --t-tap:60ms; --t-fast:160ms; --t-base:250ms;
+  --c-on-accent:var(--ink-900);
+
+  /* ---------- espaço (base 4), forma ---------- */
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:20px; --s-6:24px; --s-8:32px; --s-10:40px; --s-12:48px;
+  --r-seg:10px; --r-input:16px; --r-btn:999px; --r-card:22px; --r-tile:14px;
+  --sh-1:0 1px 2px rgba(21,19,16,.04);
+  --sh-2:0 10px 30px rgba(21,19,16,.08);
+  --sh-gold:0 14px 36px rgba(242,184,0,.28);
+
+  /* ---------- movimento ---------- */
+  --ease:cubic-bezier(.2,.9,.25,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --cine:cubic-bezier(.2,.8,.2,1);
+
+  /* ---------- camadas e layout ---------- */
+  --z-nav:10; --z-sheet:20; --z-transition:50; --z-confetti:70;
+  --sidebar-w:256px;
+}
+
+/* Fontes do padrão novo, só dentro da área que usa o padrão. */
+.sp{
+  color-scheme:light; /* o padrão novo é só claro: controles nativos também */
+  --font-display:var(--sp-jakarta),system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-text:var(--sp-jakarta),system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-accent:var(--sp-newsreader),Georgia,serif;
+  --font-mono:var(--f-mono);
+  --f-sans:var(--font-text); --f-serif:var(--font-accent);
+}

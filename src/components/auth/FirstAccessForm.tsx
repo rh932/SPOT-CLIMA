@@ -22,8 +22,8 @@ async function enviar(body: Record<string, string>) {
 }
 
 export function FirstAccessForm({
-  initialEmail = '', initialCode = '', onBack,
-}: { initialEmail?: string; initialCode?: string; onBack: () => void }) {
+  initialEmail = '', initialCode = '', onBack, noite = false,
+}: { initialEmail?: string; initialCode?: string; onBack: () => void; /** Visual da tela de entrada nova (fundo escuro). */ noite?: boolean }) {
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState(initialCode);
   const [password, setPassword] = useState('');
@@ -78,10 +78,57 @@ export function FirstAccessForm({
   };
 
   if (conferindo) {
-    return <p className="text-sm text-spot-gray-500" role="status">Conferindo o seu link de primeiro acesso...</p>;
+    return <p className={noite ? 'ntext' : 'text-sm text-spot-gray-500'} role="status">Conferindo o seu link de primeiro acesso...</p>;
   }
 
   const pelolink = Boolean(nome);
+
+  if (noite) {
+    return (
+      <form onSubmit={submit} className="nform">
+        <p className="ntext">
+          {pelolink
+            ? <>Olá, <strong>{nome}</strong>! Crie a sua senha para entrar no Spot Integra.</>
+            : 'Use o e-mail e o código de primeiro acesso que o RH mandou para você, e crie a sua senha.'}
+        </p>
+        {!pelolink && (
+          <>
+            <label className="nlabel" htmlFor="pa-email">E-mail</label>
+            <div className="nfield">
+              <input id="pa-email" type="email" required autoComplete="username" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <label className="nlabel" htmlFor="pa-codigo">Código de primeiro acesso</label>
+            <div className="nfield">
+              <input id="pa-codigo" required autoComplete="one-time-code" autoCapitalize="characters" placeholder="Ex.: ABCD-EFGH" style={{ textTransform: 'uppercase', letterSpacing: '.15em' }} value={code} onChange={(e) => setCode(e.target.value)} />
+            </div>
+          </>
+        )}
+        {pelolink && <input type="email" autoComplete="username" value={email} readOnly hidden />}
+        <label className="nlabel" htmlFor="pa-senha">Crie a sua senha</label>
+        <div className={`nfield ${curta ? 'bad' : ''}`}>
+          <input id="pa-senha" type={show ? 'text' : 'password'} required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} aria-describedby="pa-senha-dica" />
+          <button type="button" className="gbtn-n gbtn-txt" onClick={() => setShow((v) => !v)} aria-pressed={show} aria-label={show ? 'Ocultar a senha' : 'Mostrar a senha em texto'}>
+            {show ? 'Ocultar' : 'Ver'}
+          </button>
+        </div>
+        <p id="pa-senha-dica" className={curta ? 'nerr' : 'nhint'}>No mínimo 8 caracteres. É só sua: não compartilhe.</p>
+        <label className="nlabel" htmlFor="pa-confirma">Repita a senha</label>
+        <div className={`nfield ${diferentes ? 'bad' : ''}`}>
+          <input id="pa-confirma" type={show ? 'text' : 'password'} required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        </div>
+        {diferentes && <p className="nerr">As duas senhas não são iguais.</p>}
+        {error && <p role="alert" className="nerr">{error}</p>}
+        {jaAtivo ? (
+          <button type="button" className="btn btn-gold btn-block press" onClick={onBack}>Entrar com a minha senha</button>
+        ) : (
+          <button type="submit" disabled={salvando} className="btn btn-gold btn-block press">
+            {salvando ? 'Criando a senha…' : 'Criar senha e entrar'}
+          </button>
+        )}
+        <button type="button" className="nlink" onClick={onBack}>Já tenho senha: voltar para entrar</button>
+      </form>
+    );
+  }
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">

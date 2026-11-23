@@ -1,0 +1,17 @@
+/* ============================================================
+   SPOT INTEGRA · EXTRAS
+   O que o sistema oficial tem e o modelo não tinha. Mesma linguagem do
+   padrão, sempre sob .sp e só com tokens. Escrito à mão (não vem do modelo).
+   ============================================================ */
+
+/* ---------- entrada: formulários que ocupam o painel (MFA, primeiro acesso) ---------- */
+.sp .login .nform{display:flex;flex-direction:column;gap:6px}
+.sp .login .nform .btn{margin-top:14px}
+.sp .login .nh3{font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:6px}
+.sp .login .ntext{color:var(--n-text-2);font-size:16px;line-height:1.5}
+.sp .login .ntext strong{color:var(--n-text);font-weight:700}
+.sp .login .nlabel{display:block;font-weight:700;font-size:15px;margin:14px 0 2px}
+.sp .login .nhint{margin:4px 4px 0;font-size:14px;color:var(--n-text-2)}
+.sp .login .nlink{align-self:center;min-height:48px;color:var(--n-text-2);font-size:15px;text-decoration:underline;text-decoration-color:var(--c-accent);text-decoration-thickness:2px;text-underline-offset:6px}
+.sp .login .nlink:hover{color:var(--n-text)}
+.sp .login .gbtn-txt{width:auto;padding:0 14px;border-radius:14px;height:46px;font-size:14px;font-weight:600}

@@ -1,3 +1,9 @@
+/* Padrão novo (gestores): tokens, movimento e componentes sob .sp. Os @import vêm primeiro (exigência do CSS). */
+@import "../styles/spot-tokens.css";
+@import "../styles/spot-motion.css";
+@import "../styles/spot-app.css";
+@import "../styles/spot-extras.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -184,7 +190,7 @@
   }
   /* Foco sempre visível para quem navega por teclado — o `focus:outline-none`
      dos campos tira o contorno padrão, e sem isto não sobra nenhuma pista. */
-  :focus-visible {
+  *:focus-visible:not(.sp *) {
     @apply outline-none ring-2 ring-spot-yellow ring-offset-2 ring-offset-spot-white rounded-sm;
   }
 }

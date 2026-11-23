@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Bricolage_Grotesque, DM_Mono, IBM_Plex_Sans, Instrument_Serif } from 'next/font/google';
+import { Bricolage_Grotesque, DM_Mono, IBM_Plex_Sans, Instrument_Serif, Newsreader, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 
 /*
@@ -50,6 +50,27 @@ const capa = IBM_Plex_Sans({
   display: 'swap',
 });
 
+/*
+ * Padrão visual Spot Integra (área dos gestores; depois admin e pesquisa).
+ * Plus Jakarta Sans é display e texto; Newsreader itálica é o acento pessoal
+ * ("Boa noite,"). O mono do padrão é a DM Mono que já está acima. As
+ * variáveis ligam em --font-* só dentro de .sp (src/styles/spot-tokens.css).
+ */
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--sp-jakarta',
+  display: 'swap',
+});
+
+const newsreader = Newsreader({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  style: 'italic',
+  variable: '--sp-newsreader',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Spot Integra — Pesquisa de Clima Organizacional',
   description: 'Sistema de Pesquisa de Clima Organizacional do Restaurante Spot',
@@ -79,7 +100,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${display.variable} ${sans.variable} ${mono.variable} ${capa.variable}`}>
+    <html lang="pt-BR" className={`${display.variable} ${sans.variable} ${mono.variable} ${capa.variable} ${jakarta.variable} ${newsreader.variable}`}>
       <body>{children}</body>
     </html>
   );

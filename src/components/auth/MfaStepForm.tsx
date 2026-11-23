@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
  * desafio de 5 minutos. Aqui vai o código de 6 dígitos do app autenticador —
  * ou, sem o celular, um código de recuperação.
  */
-export function MfaStepForm({ onSuccess, onBack }: { onSuccess: () => void; onBack: () => void }) {
+export function MfaStepForm({ onSuccess, onBack, noite = false }: { onSuccess: () => void; onBack: () => void; /** Visual da tela de entrada nova (fundo escuro). */ noite?: boolean }) {
   const [code, setCode] = useState('');
   const [recuperacao, setRecuperacao] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +56,45 @@ export function MfaStepForm({ onSuccess, onBack }: { onSuccess: () => void; onBa
       inputRef.current?.focus();
     }
   };
+
+  if (noite) {
+    return (
+      <form onSubmit={submit} className="nform">
+        <h3 className="nh3">Verificação em duas etapas</h3>
+        <p className="ntext">
+          {recuperacao
+            ? 'Digite um dos códigos de recuperação que você guardou quando ligou a verificação. Cada um vale uma vez.'
+            : 'Abra o app autenticador no celular e digite o código de 6 dígitos do Spot Integra.'}
+        </p>
+        <label className="nlabel" htmlFor="mfa-codigo">{recuperacao ? 'Código de recuperação' : 'Código do app'}</label>
+        <div className={`nfield ${error ? 'bad' : ''}`}>
+          <input
+            ref={inputRef}
+            id="mfa-codigo"
+            required
+            autoComplete="one-time-code"
+            inputMode={recuperacao ? 'text' : 'numeric'}
+            pattern={recuperacao ? undefined : '\\d{6}'}
+            maxLength={recuperacao ? 9 : 6}
+            autoCapitalize={recuperacao ? 'characters' : 'off'}
+            placeholder={recuperacao ? 'Ex.: ABCD-EFGH' : '000000'}
+            style={{ textAlign: 'center', letterSpacing: '.3em', textTransform: 'uppercase' }}
+            value={code}
+            onChange={(e) => setCode(recuperacao ? e.target.value : e.target.value.replace(/\D/g, ''))}
+          />
+        </div>
+        {error && <p role="alert" className="nerr">{error}</p>}
+        {aviso && <p role="status" className="nhint">{aviso}</p>}
+        <button type="submit" disabled={enviando} className="btn btn-gold btn-block press">
+          {enviando ? 'Conferindo…' : 'Confirmar e entrar'}
+        </button>
+        <button type="button" className="nlink" onClick={() => { setRecuperacao((v) => !v); setCode(''); setError(null); }}>
+          {recuperacao ? 'Usar o código do app' : 'Estou sem o celular: usar código de recuperação'}
+        </button>
+        <button type="button" className="nlink" onClick={onBack}>Voltar para o e-mail e a senha</button>
+      </form>
+    );
+  }
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
