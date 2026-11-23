@@ -171,3 +171,96 @@
 }
 
 .sp .tabbar{padding:5px}
+
+/* ============================================================
+   COMPONENTES ANTIGOS NA LINGUAGEM NOVA (dentro de .sp)
+   Botões, campos e etiquetas do visual anterior ficam com o desenho do padrão:
+   botão pílula, campo de 16 px de raio, etiqueta com texto.
+   ============================================================ */
+.sp .btn-primary,.sp .btn-secondary,.sp .btn-ghost,.sp .btn-danger{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 24px;
+  border:0;border-radius:var(--r-btn);box-shadow:none;font-weight:700;font-size:16px;text-decoration:none;transform:none;
+  transition:transform var(--t-tap) var(--ease),background var(--t-fast),box-shadow var(--t-fast),color var(--t-fast)}
+.sp .btn-primary:active,.sp .btn-secondary:active,.sp .btn-ghost:active,.sp .btn-danger:active{transform:translateY(2px) scale(.98);box-shadow:none}
+.sp .btn-primary{background:var(--c-primary);color:var(--c-on-primary);box-shadow:var(--sh-gold)}
+.sp .btn-primary:hover{background:#FFC814}
+.sp .btn-secondary{background:var(--c-ink);color:var(--c-on-ink)}
+.sp .btn-secondary:hover{background:var(--ink-800)}
+.sp .btn-danger{background:var(--c-bad);color:#fff}
+.sp .btn-danger:hover{background:var(--c-bad-text)}
+.sp .btn-ghost{background:var(--c-surface);color:var(--c-text);font-weight:600}
+.sp .btn-ghost:hover{background:var(--c-line)}
+.sp .btn-primary:disabled,.sp .btn-secondary:disabled,.sp .btn-danger:disabled,.sp .btn-ghost:disabled{opacity:.5;box-shadow:none}
+
+.sp .input{min-height:56px;border:1.5px solid var(--c-line-input);border-radius:var(--r-input);background:var(--c-bg);padding:0 16px;font-size:17px;color:var(--c-text)}
+.sp textarea.input{padding:14px 16px;min-height:116px}
+.sp .input::placeholder{color:var(--c-text-3)}
+.sp .input:hover{border-color:var(--c-line-input)}
+.sp .input:focus{outline:none;border-color:var(--c-active-line);box-shadow:var(--focus-ring)}
+.sp select.input{padding-right:40px}
+.sp .label{font-family:var(--font-text);font-size:16px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--c-text);margin-bottom:8px}
+
+.sp .badge{height:26px;padding:0 10px;border-radius:8px;border:0;font-family:var(--font-text);font-size:13px;font-weight:700;text-transform:none;letter-spacing:0;background:var(--c-surface-2);color:var(--c-ink)}
+.sp :is(.badge-excellent,.badge-good,.badge-attention,.badge-critical,.badge-very-critical){border:0;color:var(--c-ink)}
+
+/* Tamanhos de texto: o padrão pede leitura de 16 px; metadado denso fica em 14. */
+.sp .text-xs{font-size:.875rem;line-height:1.4}
+.sp .text-sm{font-size:1rem;line-height:1.5}
+
+/* ============================================================
+   FICHA DE AVALIAÇÃO EM PASSOS (components/gestor/AvaliacaoPassos)
+   Tela cheia por cima da casca, como o fluxo do modelo.
+   ============================================================ */
+.sp .flow-ov{position:fixed;inset:0;z-index:30;overflow-y:auto;background:var(--c-bg);-webkit-overflow-scrolling:touch}
+.sp .segs-n{grid-template-columns:repeat(var(--n,6),minmax(0,1fr))}
+.sp .rail .st{width:100%;text-align:left;cursor:pointer}
+.sp .rail .st:hover{background:var(--c-surface)}
+.sp .rail .st-t{line-height:1.25}
+.sp .stage h1{overflow-wrap:anywhere}
+.sp .pass-avisos{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.sp .aviso-card{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:18px;background:var(--c-accent-soft);color:var(--c-ink);font-size:16px;line-height:1.45}
+.sp .aviso-card.aviso-col{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:6px}
+.sp .pass-data{margin-top:22px;max-width:320px}
+.sp .pass-data .field input{font-size:18px}
+.sp .pass-acoes{margin-top:auto;padding-top:24px;display:flex;flex-direction:column;gap:8px}
+.sp .pass-acoes-lin{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.sp .stage .grades+.miss,.sp .stage .answers+.miss{margin-top:12px}
+.sp .pass-livre{margin-top:18px}
+.sp .pass-livre.pass-erro{outline:2px solid var(--c-bad);outline-offset:6px;border-radius:var(--r-card)}
+.sp .pass-opts{display:flex;flex-direction:column;gap:8px}
+.sp .pass-opts .opt{margin-bottom:0;min-height:60px;font-size:17px}
+.sp .pass-area{min-height:200px;font-size:18px}
+.sp .pass-area-p{min-height:96px}
+.sp .opt-cor{align-items:flex-start;padding-top:14px;padding-bottom:14px}
+.sp .opt-corpo{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sp .opt-linha{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sp .opt-desc{font-size:15px;font-weight:400}
+.sp .stage-rev{flex:1;padding:8px 20px 24px}
+.sp .slide-nota{margin-top:12px;font-size:14px}
+.sp .slide-nota-m{margin:14px 4px 120px;font-size:14px}
+.sp .stage-rev .verdict .big{font-size:44px;overflow-wrap:anywhere}
+.sp .slide .knob:disabled{opacity:.6;cursor:default}
+.sp .slide .knob:focus-visible{outline-offset:2px}
+.sp .done .nextq{border:0;cursor:pointer}
+.sp .done .mini-list .it{background:none;border:0;cursor:pointer;color:inherit}
+@media (min-width:960px){
+  .sp .slide-nota-m{display:none}
+  .sp .stage-rev{padding:8px 32px 40px}
+  .sp .stage-rev .verdict .big{font-size:60px}
+  .sp .pass-acoes{margin-top:28px}
+}
+@media (max-width:959px){
+  .sp .slide-nota{display:none}
+  .sp .stage-rev .vbox{align-items:center;text-align:center}
+}
+
+/* A animação de entrada da tela NÃO pode reter transform ao terminar: até um
+   transform identidade faz o elemento virar "caixa" de qualquer filho
+   position:fixed (a ficha de avaliação em tela cheia, as folhas de baixo). */
+.sp .mk-open{animation-fill-mode:backwards}
+
+.sp .flow .saved{display:none}
+@media (min-width:960px){.sp .flow .saved{display:flex}}
+@media (max-width:959px){
+  .sp .stage-rev .vbox{display:flex;flex-direction:column;align-items:center;text-align:center}
+}

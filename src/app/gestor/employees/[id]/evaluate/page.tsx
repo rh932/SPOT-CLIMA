@@ -4,9 +4,10 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch, ApiClientError } from '@/lib/apiClient';
 import {
-  EVALUATION_DIMENSIONS, CLASSIFICATION_OPTIONS, CONCLUSION_OPTIONS,
+  EVALUATION_DIMENSIONS, CLASSIFICATION_OPTIONS, CONCLUSION_OPTIONS, RATING_LABELS,
   type RatingOption, type SubAnswerOption,
 } from '@/data/evaluationBank';
+import { Ic } from '@/components/sp/Ic';
 import { UniformeCard } from '@/components/gestor/UniformeCard';
 import { PerguntasExtrasCard, type PerguntaExtra } from '@/components/gestor/PerguntasExtrasCard';
 import { setorAvaliaUniforme } from '@/data/uniforme';
@@ -14,12 +15,12 @@ import { RoteiroPdiForm } from '@/components/gestor/RoteiroPdiForm';
 import {
   CHAVES_ROTEIRO, unidadeUsaRoteiroPdi, dataRevisaoPdi, type PilarRoteiro, type PlanoRoteiro,
 } from '@/data/roteiroPdi';
-import { EvaluationDimensionCard } from '@/components/gestor/EvaluationDimensionCard';
+import { AvaliacaoPassos, type PassoLivre } from '@/components/gestor/AvaliacaoPassos';
+import { AvaliacaoEnviada } from '@/components/gestor/AvaliacaoEnviada';
 import { COLOR_OPTIONS, COLOR_INTERVAL_DAYS, COLOR_LABELS, nextFeedbackDate, feedbackOrdinalLabel, type FeedbackColor } from '@/lib/feedbackCycle';
 import { FeedbacksAnteriores } from '@/components/gestor/FeedbacksAnteriores';
 import type { EvaluationRecord } from '@/components/EvaluationCard';
-import { ActionButton, ErrorState, SkeletonForm, LiveStatus, useToast, ForbiddenState, ehSemAcesso } from '@/components/async';
-import { scrollToFirstError } from '@/lib/scrollToError';
+import { ErrorState, SkeletonForm, LiveStatus, ForbiddenState, ehSemAcesso } from '@/components/async';
 import { saoPauloIsoDate } from '@/lib/probation';
 import { nextEvaluationPeriod, type PeriodoAvaliacao } from '@/lib/colorUnlock';
 
@@ -118,7 +119,6 @@ function EvaluateForm() {
   // ficava parada no formulário durante a transição do App Router — parecia
   // que o envio não tinha funcionado.
   const [enviado, setEnviado] = useState(false);
-  const { mostrar } = useToast();
 
   const carregar = useCallback(() => {
     setLoading(true);
@@ -357,11 +357,8 @@ function EvaluateForm() {
 
   const submit = async () => {
     if (invalid) {
+      // A ficha em passos já leva a pessoa até a primeira pergunta que falta.
       setAttempted(true);
-      // O defeito que isto conserta: a ficha tem 8 dimensões e o botão fica no
-      // rodapé. Marcar de vermelho uma dimensão lá em cima não aparece na tela
-      // de quem clicou — e o gestor repetia o clique achando que travou.
-      scrollToFirstError();
       return;
     }
     if (submitting) return;
@@ -415,12 +412,10 @@ function EvaluateForm() {
         }
       }
       await apiFetch(`/api/gestor/employees/${employee.id}/evaluate`, { method: 'POST', body: JSON.stringify(payload) });
-      // Confirma e SEGURA o estado de envio: a navegação do App Router ainda
-      // vai buscar a rota, e durante esses segundos a tela continua sendo esta.
+      // Confirma e SEGURA o estado de envio: a tela de "Avaliação enviada"
+      // só aparece depois que o servidor respondeu OK.
       setEnviado(true);
       try { localStorage.removeItem(chaveRascunho); } catch { /* sem armazenamento */ }
-      mostrar(`Avaliação de ${employee.fullName} registrada.`);
-      router.push('/gestor');
       router.refresh();
       return;
     } catch (e) {
@@ -435,61 +430,24 @@ function EvaluateForm() {
     }
   };
 
-  return (
-    <div className="flex flex-col gap-6 pb-10">
-      <div>
-        <h1 className="titulo-pagina">{employee.fullName}</h1>
-        <p className="text-spot-gray-500 text-sm">
-          {employee.roleDescription} · {employee.sector?.name} · {employee.unit?.name}
-        </p>
-        <p className="text-xs text-spot-gray-500 mt-1">
-          {period === 'FIRST'
-            ? '1º ciclo de experiência (45 dias)'
-            : period === 'SECOND'
-              ? '2º ciclo de experiência (90 dias)'
-              : `${feedbackOrdinalLabel(numeroDoFeedback)}${employee.currentColor ? ` · classificação atual: ${COLOR_LABELS[employee.currentColor]}` : ''}`}
-          {' — '}
-          {isFeedback ? 'previsto para ' : 'vencimento '}
-          {formatDate(dueDate)}
-        </p>
-      </div>
+  const primeiroNome = employee.fullName.split(' ')[0];
+  const rotuloClassif = CLASSIFICATION_OPTIONS.find((o) => o.value === classification)?.label.replace(/\.$/, '') ?? '';
+  const rotuloConclusao = CONCLUSION_OPTIONS.find((o) => o.value === conclusion)?.label.replace(/\.$/, '') ?? '';
+  const texto = (v: string) => v.trim() || '';
 
-      {isFeedback && <FeedbacksAnteriores feedbacks={feedbacksAnteriores} />}
+  // Cada campo que a ficha já tinha vira uma tela. O conteúdo é o mesmo de
+  // antes (mesmos campos, mesmas regras de obrigatório); só muda a ordem de
+  // apresentação: uma coisa por vez.
+  const grupoFinal = 'Avaliação final';
+  const passos: PassoLivre[] = [];
 
-      {rascunhoRestaurado && (
-        <div role="status" className="card border-l-[3px] border-spot-yellow flex flex-wrap items-center justify-between gap-3 text-sm text-spot-gray-800">
-          <p>Retomamos o que você já tinha preenchido. O rascunho fica só neste aparelho.</p>
-          <button type="button" className="btn-ghost" onClick={descartarRascunho}>Começar do zero</button>
-        </div>
-      )}
-
-      {segunda && (
-        <div className="card border-l-[3px] border-spot-yellow text-sm text-spot-gray-800 leading-relaxed">
-          <p className="font-semibold">Segunda resposta deste período</p>
-          <p className="mt-1">
-            {segunda.firstEvaluator ?? 'Outro gestor'} avaliou em {formatDate(segunda.firstDate)}
-            {segunda.firstConclusion && <> e concluiu <strong>{CONCLUSAO[segunda.firstConclusion]}</strong></>}.
-            As duas respostas ficam na ficha, e a situação segue a avaliação com a data mais recente — avaliando com a data de hoje, se você concluir diferente, é a sua que passa a valer.
-          </p>
-        </div>
-      )}
-
-      <div className="card">
-        <label className="block">
-          <span className="label">Data desta avaliação</span>
-          <input
-            type="date"
-            className="input max-w-xs"
-            value={evaluationDate}
-            onChange={(e) => setEvaluationDate(e.target.value)}
-            // Mesma faixa que o servidor aceita: da admissão até hoje.
-            min={employee.admissionDate ? String(employee.admissionDate).slice(0, 10) : undefined}
-            max={saoPauloIsoDate()}
-          />
-        </label>
-      </div>
-
-      {usaRoteiro && (
+  if (usaRoteiro) {
+    passos.push({
+      id: 'roteiro', grupo: 'Roteiro de feedback', kick: 'Roteiro de feedback', titulo: `Roteiro de feedback de ${primeiroNome}`,
+      descricao: 'Dê uma nota a cada item e monte o plano de desenvolvimento.',
+      completo: !roteiroIncompleto,
+      resumo: [['Itens com nota', `${CHAVES_ROTEIRO.filter((k) => notasRoteiro[k]).length} de ${CHAVES_ROTEIRO.length}`]],
+      node: (
         <RoteiroPdiForm
           notas={notasRoteiro}
           onNota={(k, v) => setNotasRoteiro((prev) => ({ ...prev, [k]: v }))}
@@ -499,187 +457,230 @@ function EvaluateForm() {
           onPlano={setPlanoRoteiro}
           revisaoEm={evaluationDate ? new Date(dataRevisaoPdi(evaluationDate) + 'T12:00:00').toLocaleDateString('pt-BR') : null}
           mostrarErro={attempted}
-          primeiroNome={employee.fullName.split(' ')[0]}
+          primeiroNome={primeiroNome}
         />
-      )}
-
-      {!usaRoteiro && EVALUATION_DIMENSIONS.map((d) => (
-        <div
-          key={d.key}
-          data-erro={
-            attempted && (!ratings[d.key] || d.subQuestions.some((sq) => !subAnswers[d.key][sq.key]))
-              ? 'true'
-              : undefined
-          }
-        >
-        <EvaluationDimensionCard
-          dimension={d}
-          rating={ratings[d.key]}
-          subAnswers={subAnswers[d.key]}
-          onRatingChange={(v) => setRatings((prev) => ({ ...prev, [d.key]: v }))}
-          onSubAnswerChange={(key, v) => setSubAnswers((prev) => ({ ...prev, [d.key]: { ...prev[d.key], [key]: v } }))}
-          showError={attempted && (!ratings[d.key] || d.subQuestions.some((sq) => !subAnswers[d.key][sq.key]))}
+      ),
+    });
+  }
+  if (usaUniforme) {
+    passos.push({
+      id: 'uniforme', grupo: 'Uniforme', kick: 'Uniforme', titulo: 'Como está o uniforme?',
+      completo: !uniformeIncompleto,
+      resumo: [['Nota do uniforme', uniformRating ? RATING_LABELS[uniformRating] : ''], ['Observação', texto(uniformNotes)]],
+      node: <UniformeCard rating={uniformRating} onRating={setUniformRating} notes={uniformNotes} onNotes={setUniformNotes} mostrarErro={attempted} />,
+    });
+  }
+  if (perguntasExtras.length > 0) {
+    passos.push({
+      id: 'extras', grupo: 'Perguntas do setor', kick: 'Perguntas do setor', titulo: 'Perguntas do seu setor',
+      descricao: 'Aprovadas pelo RH para este setor.',
+      completo: !extrasIncompletas,
+      resumo: perguntasExtras.map((q): [string, string] => [q.text, texto(customAnswers[q.id] ?? '')]),
+      node: (
+        <PerguntasExtrasCard
+          perguntas={perguntasExtras}
+          respostas={customAnswers}
+          onResposta={(id, v) => setCustomAnswers((prev) => ({ ...prev, [id]: v }))}
+          mostrarErro={attempted}
         />
+      ),
+    });
+  }
+  passos.push({
+    id: 'fav', grupo: grupoFinal, kick: `${grupoFinal} · 1`, titulo: `Quais os aspectos MAIS favoráveis de ${primeiroNome}?`,
+    completo: Boolean(favorableAspects.trim()),
+    resumo: [['Aspectos mais favoráveis', texto(favorableAspects)]],
+    node: (
+      <label className="block">
+        <span className="sr">Aspectos mais favoráveis do funcionário</span>
+        <textarea className="input pass-area" value={favorableAspects} onChange={(e) => setFavorableAspects(e.target.value)} aria-invalid={attempted && !favorableAspects.trim() ? true : undefined} />
+      </label>
+    ),
+  });
+  passos.push({
+    id: 'unf', grupo: grupoFinal, kick: `${grupoFinal} · 2`, titulo: `Quais os aspectos MENOS favoráveis de ${primeiroNome}?`,
+    completo: Boolean(unfavorableAspects.trim()),
+    resumo: [['Aspectos menos favoráveis', texto(unfavorableAspects)]],
+    node: (
+      <label className="block">
+        <span className="sr">Aspectos menos favoráveis do funcionário</span>
+        <textarea className="input pass-area" value={unfavorableAspects} onChange={(e) => setUnfavorableAspects(e.target.value)} aria-invalid={attempted && !unfavorableAspects.trim() ? true : undefined} />
+      </label>
+    ),
+  });
+  passos.push({
+    id: 'classif', grupo: grupoFinal, kick: `${grupoFinal} · 3`, titulo: `De maneira geral, como ${primeiroNome} pode ser classificado?`,
+    completo: Boolean(classification),
+    resumo: [['Classificação', rotuloClassif]],
+    node: (
+      <fieldset className="min-w-0 border-0 p-0 m-0">
+        <legend className="sr">De maneira geral, como o funcionário pode ser classificado</legend>
+        <div className="pass-opts">
+          {CLASSIFICATION_OPTIONS.map((opt) => (
+            <button key={opt.value} type="button" role="radio" aria-checked={classification === opt.value} className="opt" onClick={() => setClassification(opt.value)}>
+              <span className="d"><Ic n="check" s={14} w={3.2} /></span>{opt.label}
+            </button>
+          ))}
         </div>
-      ))}
-
-      {usaUniforme && (
-        <UniformeCard rating={uniformRating} onRating={setUniformRating} notes={uniformNotes} onNotes={setUniformNotes} mostrarErro={attempted} />
-      )}
-
-      <PerguntasExtrasCard
-        perguntas={perguntasExtras}
-        respostas={customAnswers}
-        onResposta={(id, v) => setCustomAnswers((prev) => ({ ...prev, [id]: v }))}
-        mostrarErro={attempted}
-      />
-
-      <div className="card flex flex-col gap-4" data-erro={attempted && finalIncomplete ? 'true' : undefined}>
-        <p className="font-sans text-lg font-extrabold tracking-tight text-spot-gray-900">Avaliação final</p>
-        <div>
-          <label className="block">
-            <span className="label">Quais os aspectos MAIS favoráveis do funcionário?</span>
-            <textarea className="input min-h-[90px] resize-y" value={favorableAspects} onChange={(e) => setFavorableAspects(e.target.value)} />
-          </label>
-        </div>
-        <div>
-          <label className="block">
-            <span className="label">Quais os aspectos MENOS favoráveis do funcionário?</span>
-            <textarea className="input min-h-[90px] resize-y" value={unfavorableAspects} onChange={(e) => setUnfavorableAspects(e.target.value)} />
-          </label>
-        </div>
-        {/* <fieldset>/<legend> no lugar de um <label> solto: label rotula UM
-            controle, e aqui sao varias opcoes. Sem o grupo, o leitor de tela
-            anunciava "Promover, botao de opcao" sem nunca dizer a pergunta. */}
+      </fieldset>
+    ),
+  });
+  if (!isFeedback) {
+    passos.push({
+      id: 'conclusao', grupo: grupoFinal, kick: `${grupoFinal} · 4`, titulo: 'E a sua conclusão?',
+      completo: Boolean(conclusion),
+      resumo: [['Conclusão', rotuloConclusao]],
+      node: (
         <fieldset className="min-w-0 border-0 p-0 m-0">
-          <legend className="label">De maneira geral, como o funcionário pode ser classificado:</legend>
-          <div className="flex flex-col gap-2 mt-2">
-            {CLASSIFICATION_OPTIONS.map((opt) => (
-              <label key={opt.value} className={`flex items-center gap-2.5 min-h-11 rounded-btn border px-3.5 py-2.5 cursor-pointer transition ${classification === opt.value ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'}`}>
-                <input type="radio" name="classification" className="accent-spot-black" checked={classification === opt.value} onChange={() => setClassification(opt.value)} />
-                <span className="text-sm">{opt.label}</span>
-              </label>
+          <legend className="sr">Conclusão da avaliação</legend>
+          <div className="pass-opts">
+            {conclusionOptions.map((opt) => (
+              <button key={opt.value} type="button" role="radio" aria-checked={conclusion === opt.value} className="opt" onClick={() => setConclusion(opt.value)}>
+                <span className="d"><Ic n="check" s={14} w={3.2} /></span>{opt.label}
+              </button>
             ))}
           </div>
         </fieldset>
-        {!isFeedback && (
+      ),
+    });
+  }
+  passos.push({
+    id: 'desenv', grupo: 'Desenvolvimento', kick: 'Desenvolvimento · opcional', titulo: 'Quer registrar algo sobre o desenvolvimento?',
+    descricao: 'Opcional. Alimenta o histórico e a indicação de treinamento.',
+    opcional: true,
+    completo: Boolean(developmentPoints.trim() || guidance.trim() || trainingNeeds.trim()),
+    resumo: [['Pontos de desenvolvimento', texto(developmentPoints)], ['Orientações dadas', texto(guidance)], ['Necessidade de treinamento', texto(trainingNeeds)]],
+    node: (
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="label">Pontos de desenvolvimento</span>
+          <textarea className="input pass-area-p" value={developmentPoints} onChange={(e) => setDevelopmentPoints(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="label">Orientações dadas ao colaborador</span>
+          <textarea className="input pass-area-p" value={guidance} onChange={(e) => setGuidance(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="label">Necessidade de treinamento</span>
+          <textarea className="input pass-area-p" placeholder="Ex.: precisa melhorar conhecimento sobre atendimento." value={trainingNeeds} onChange={(e) => setTrainingNeeds(e.target.value)} />
+        </label>
+      </div>
+    ),
+  });
+  if (needsColor) {
+    passos.push({
+      id: 'cor', grupo: 'Cor do feedback', kick: 'Classificação por cor', titulo: `Em qual cor ${primeiroNome} fica?`,
+      descricao: `A cor define de quanto em quanto tempo ${primeiroNome} recebe o próximo feedback.`,
+      completo: Boolean(color),
+      resumo: [['Cor', color ? COLOR_LABELS[color] : ''], ['Motivo da mudança', texto(colorReason)]],
+      node: (
+        <div className="flex flex-col gap-4">
           <fieldset className="min-w-0 border-0 p-0 m-0">
-            <legend className="label">CONCLUSÃO</legend>
-            <div className="flex flex-col gap-2 mt-2">
-              {conclusionOptions.map((opt) => (
-                <label key={opt.value} className={`flex items-center gap-2.5 min-h-11 rounded-btn border px-3.5 py-2.5 cursor-pointer transition ${conclusion === opt.value ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'}`}>
-                  <input type="radio" name="conclusion" className="accent-spot-black" checked={conclusion === opt.value} onChange={() => setConclusion(opt.value)} />
-                  <span className="text-sm">{opt.label}</span>
-                </label>
+            <legend className="sr">Classificação por cor</legend>
+            <div className="pass-opts">
+              {COLOR_OPTIONS.map((opt) => (
+                <button key={opt.value} type="button" role="radio" aria-checked={color === opt.value} className="opt opt-cor" onClick={() => setColor(opt.value)}>
+                  <span className="d"><Ic n="check" s={14} w={3.2} /></span>
+                  <span className="opt-corpo">
+                    <span className="opt-linha">
+                      <span aria-hidden className={`cor-ponto ${opt.dotClassName}`} />
+                      <b>{opt.label}</b>
+                      <span className="mut">a cada {COLOR_INTERVAL_DAYS[opt.value]} dias</span>
+                    </span>
+                    <span className="mut opt-desc">{opt.description}</span>
+                  </span>
+                </button>
               ))}
             </div>
           </fieldset>
-        )}
-        {attempted && finalIncomplete && <p className="text-xs text-spot-danger">Preencha todos os campos da avaliação final.</p>}
-      </div>
-
-      <div className="card flex flex-col gap-4">
-        <div>
-          <p className="font-sans text-lg font-extrabold tracking-tight text-spot-gray-900">Desenvolvimento</p>
-          <p className="text-xs text-spot-gray-500 mt-0.5">Opcional — alimenta o histórico e a indicação de treinamento.</p>
-        </div>
-        <div>
-          <label className="block">
-            <span className="label">Pontos de desenvolvimento</span>
-            <textarea className="input min-h-[80px] resize-y" value={developmentPoints} onChange={(e) => setDevelopmentPoints(e.target.value)} />
-          </label>
-        </div>
-        <div>
-          <label className="block">
-            <span className="label">Orientações dadas ao colaborador</span>
-            <textarea className="input min-h-[80px] resize-y" value={guidance} onChange={(e) => setGuidance(e.target.value)} />
-          </label>
-        </div>
-        <div>
-          <label className="block">
-            <span className="label">Necessidade de treinamento</span>
-            <textarea
-              className="input min-h-[80px] resize-y"
-              placeholder="Ex.: precisa melhorar conhecimento sobre atendimento."
-              value={trainingNeeds}
-              onChange={(e) => setTrainingNeeds(e.target.value)}
-            />
-          </label>
-        </div>
-      </div>
-
-      {needsColor && (
-        <div className="card flex flex-col gap-4" data-erro={attempted && !color ? 'true' : undefined}>
-          <div>
-            <p className="font-sans text-lg font-extrabold tracking-tight text-spot-gray-900">Classificação por cor</p>
-            <p className="text-xs text-spot-gray-500 mt-0.5">
-              A cor define de quanto em quanto tempo {employee.fullName.split(' ')[0]} recebe o próximo feedback.
-            </p>
-          </div>
-          <fieldset className="min-w-0 border-0 p-0 m-0 flex flex-col gap-2">
-            <legend className="sr-only">Classificação por cor</legend>
-            {COLOR_OPTIONS.map((opt) => (
-              <label
-                key={opt.value}
-                className={`flex items-start gap-2.5 min-h-11 rounded-btn border px-3.5 py-2.5 cursor-pointer transition ${color === opt.value ? 'border-spot-black bg-spot-gray-50' : 'border-spot-gray-300 hover:border-spot-gray-500'}`}
-              >
-                <input type="radio" name="color" className="accent-spot-black mt-1" checked={color === opt.value} onChange={() => setColor(opt.value)} />
-                <span>
-                  <span className="flex items-center gap-2 text-sm font-semibold">
-                    <span className={`h-2.5 w-2.5 rounded-full ${opt.dotClassName}`} />
-                    {opt.label}
-                    <span className="text-xs font-normal text-spot-gray-500">a cada {COLOR_INTERVAL_DAYS[opt.value]} dias</span>
-                  </span>
-                  <span className="block text-xs text-spot-gray-500 mt-0.5">{opt.description}</span>
-                </span>
-              </label>
-            ))}
-          </fieldset>
           {previewNextDate && (
-            <p className="text-xs text-spot-gray-600">
-              Próximo feedback será agendado para <strong>{previewNextDate.toLocaleDateString('pt-BR')}</strong>.
-            </p>
+            <p className="mut">Próximo feedback será agendado para <strong>{previewNextDate.toLocaleDateString('pt-BR')}</strong>.</p>
           )}
           {employee.currentColor && color && color !== employee.currentColor && (
-            <div>
-              <label className="block">
-                <span className="label">Por que a classificação mudou?</span>
-                <textarea
-                  className="input min-h-[70px] resize-y"
-                  placeholder={`De ${COLOR_LABELS[employee.currentColor]} para ${COLOR_LABELS[color]} — registre o motivo.`}
-                  value={colorReason}
-                  onChange={(e) => setColorReason(e.target.value)}
-                />
-              </label>
+            <label className="block">
+              <span className="label">Por que a classificação mudou?</span>
+              <textarea
+                className="input pass-area-p"
+                placeholder={`De ${COLOR_LABELS[employee.currentColor]} para ${COLOR_LABELS[color]} — registre o motivo.`}
+                value={colorReason}
+                onChange={(e) => setColorReason(e.target.value)}
+              />
+            </label>
+          )}
+        </div>
+      ),
+    });
+  }
+
+  const periodoLabel = period === 'FIRST'
+    ? '1º ciclo de experiência (45 dias)'
+    : period === 'SECOND'
+      ? '2º ciclo de experiência (90 dias)'
+      : `${feedbackOrdinalLabel(numeroDoFeedback)}${employee.currentColor ? ` · classificação atual: ${COLOR_LABELS[employee.currentColor]}` : ''}`;
+
+  if (enviado) {
+    return (
+      <AvaliacaoEnviada
+        id={employee.id}
+        nome={employee.fullName}
+        periodoLabel={periodoLabel}
+        resultado={isFeedback ? (color ? COLOR_LABELS[color] : 'Feedback') : rotuloConclusao}
+        onVoltar={() => { router.push('/gestor'); router.refresh(); }}
+        onProxima={(id) => { router.push(`/gestor/employees/${id}`); router.refresh(); }}
+      />
+    );
+  }
+
+  return (
+    <AvaliacaoPassos
+      nome={employee.fullName}
+      primeiroNome={primeiroNome}
+      cargoLinha={[employee.roleDescription, employee.sector?.name, employee.unit?.name].filter(Boolean).join(' · ')}
+      periodoLabel={periodoLabel}
+      prazoTexto={`${isFeedback ? 'previsto para ' : 'vencimento '}${formatDate(dueDate)}`}
+      dimensoes={usaRoteiro ? [] : EVALUATION_DIMENSIONS}
+      ratings={ratings}
+      subAnswers={subAnswers}
+      onRating={(dim, v) => setRatings((prev) => ({ ...prev, [dim]: v }))}
+      onSub={(dim, key, v) => setSubAnswers((prev) => ({ ...prev, [dim]: { ...prev[dim], [key]: v } }))}
+      evaluationDate={evaluationDate}
+      onDate={setEvaluationDate}
+      // Mesma faixa que o servidor aceita: da admissão até hoje.
+      dataMin={employee.admissionDate ? String(employee.admissionDate).slice(0, 10) : undefined}
+      dataMax={saoPauloIsoDate()}
+      passos={passos}
+      restaurado={rascunhoRestaurado}
+      avisos={
+        <>
+          {isFeedback && <FeedbacksAnteriores feedbacks={feedbacksAnteriores} />}
+          {rascunhoRestaurado && (
+            <div role="status" className="aviso-card">
+              <p>Retomamos o que você já tinha preenchido. O rascunho fica só neste aparelho.</p>
+              <button type="button" className="btn btn-ghost" onClick={descartarRascunho}>Começar do zero</button>
             </div>
           )}
-          {attempted && !color && <p className="text-xs text-spot-danger">Escolha a classificação por cor.</p>}
-        </div>
-      )}
-
-      {submitError && (
-        <p role="alert" className="text-sm text-spot-danger bg-spot-white border-l-[3px] border-spot-danger px-3 py-2.5">
-          {submitError}
-        </p>
-      )}
-      {attempted && invalid && !submitError && (
-        <p role="alert" className="text-sm text-spot-gray-800 bg-spot-white border-l-[3px] border-spot-warning px-3 py-2.5">
-          Faltam campos obrigatórios
-          {dimensionsIncomplete.length > 0 && ` em ${dimensionsIncomplete.length} dimensão(ões)`}
-          {roteiroIncompleto && ' no roteiro (falta nota em algum item)'}
-          {uniformeIncompleto && ' no uniforme (falta a nota)'}
-          {extrasIncompletas && ' nas perguntas do setor'}
-          . A tela levou você até o primeiro deles.
-        </p>
-      )}
-      <ActionButton
-        className="btn-primary w-full"
-        pending={submitting || enviado}
-        pendingLabel={enviado ? 'Enviada! Voltando ao painel...' : 'Enviando...'}
-        onClick={submit}
-      >
-        Enviar avaliação
-      </ActionButton>
-    </div>
+          {segunda && (
+            <div className="aviso-card aviso-col">
+              <p><b>Segunda resposta deste período</b></p>
+              <p>
+                {segunda.firstEvaluator ?? 'Outro gestor'} avaliou em {formatDate(segunda.firstDate)}
+                {segunda.firstConclusion && <> e concluiu <strong>{CONCLUSAO[segunda.firstConclusion]}</strong></>}.
+                As duas respostas ficam na ficha, e a situação segue a avaliação com a data mais recente — avaliando com a data de hoje, se você concluir diferente, é a sua que passa a valer.
+              </p>
+            </div>
+          )}
+        </>
+      }
+      veredito={
+        isFeedback
+          ? { rotulo: 'Classificação', valor: color ? COLOR_LABELS[color] : 'Feedback', selo: rotuloClassif || undefined }
+          : { rotulo: 'Sua conclusão', valor: rotuloConclusao, selo: rotuloClassif || undefined }
+      }
+      enviando={submitting}
+      erroEnvio={submitError}
+      onEnviar={submit}
+      onTentou={() => setAttempted(true)}
+      onSair={() => router.push(`/gestor/employees/${employee.id}`)}
+    />
   );
 }
