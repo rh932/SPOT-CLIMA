@@ -7,6 +7,7 @@
  *
  *   npx tsx scripts/import-cadastro-geral.ts --arquivo "<planilha.xlsx>" --unidade Paulista
  *   npx tsx scripts/import-cadastro-geral.ts --arquivo "<planilha.xlsx>" --unidade Paulista --gravar
+ *   --setor-de-para "CAIXA=Delivery"   usa outro setor para um setor da planilha que não existe no sistema
  */
 import 'dotenv/config';
 import fs from 'node:fs';
@@ -38,6 +39,12 @@ async function main() {
 
   const b = fs.readFileSync(arquivo);
   const matrix = await readXlsxMatrix(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer);
+  const dePara = arg('setor-de-para')?.split('=');
+  if (dePara?.length === 2) {
+    const hr = matrix.findIndex((r, i) => i < 10 && r.some((c) => String(c ?? '').trim().toUpperCase() === 'SETOR'));
+    const ci = hr >= 0 ? matrix[hr].findIndex((c) => String(c ?? '').trim().toUpperCase() === 'SETOR') : -1;
+    if (ci >= 0) for (let i = hr + 1; i < matrix.length; i++) if (String(matrix[i]?.[ci] ?? '').trim().toUpperCase() === dePara[0].trim().toUpperCase()) matrix[i][ci] = dePara[1].trim();
+  }
   const prev = previewEmployeeRows(matrix, { units, sectors, existing, defaultUnit });
 
   console.log(`Banco: ${units.length} unidades, ${existing.length} colaboradores. Setores: ${sectors.map((s) => s.name).join(', ')}`);
