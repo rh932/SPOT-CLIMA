@@ -264,3 +264,19 @@
 @media (max-width:959px){
   .sp .stage-rev .vbox{display:flex;flex-direction:column;align-items:center;text-align:center}
 }
+
+@media (min-width:960px) and (max-width:1359px){
+  .sp .grades{grid-template-columns:repeat(auto-fit,minmax(104px,1fr));margin-top:28px}
+  .sp .gr{height:150px;font-size:19px;padding:16px}
+  .sp .stage h1{font-size:34px}
+  .sp .fgrid{grid-template-columns:240px minmax(0,1fr) 300px}
+}
+
+/* ============================================================
+   CONFIRMAÇÕES E AVISOS: folha de baixo (padrão) em vez de caixa no meio
+   ============================================================ */
+.sp .modal-overlay{align-items:flex-end;padding:0;background:rgba(21,19,16,.45);z-index:calc(var(--z-sheet) + 40)}
+.sp .modal-panel{width:100%;max-width:560px;max-height:92dvh;overflow-y:auto;margin:0 auto;border-radius:28px 28px 0 0;padding:10px 20px 28px;background:var(--c-bg);box-shadow:0 -10px 40px rgba(0,0,0,.12);animation:sp-sheetup .42s var(--spring) both}
+.sp .modal-panel::before{content:"";display:block;width:40px;height:5px;border-radius:3px;background:var(--c-line-input);margin:0 auto 14px}
+.sp [role=alertdialog] h2{font-family:var(--font-display);font-weight:800;letter-spacing:-.03em;font-size:24px}
+@media (max-width:959px){.sp .toast-pilha{bottom:98px}}

@@ -362,7 +362,7 @@ export function AvaliacaoPassos(p: AvaliacaoPassosProps) {
       <div className="stage swap-in" style={{ ['--dir' as string]: dir }}>
         <span className="kick">Etapa {etapaAtual + 1} · {d.name}</span>
         <h1 className="H" tabIndex={-1} data-foco>
-          Como está {p.primeiroNome}, de modo geral, em {d.name.toLowerCase()}?
+          Como está {p.primeiroNome}, de modo geral?
         </h1>
         <p className="desc">{d.gradedQuestion}</p>
         <div className="grades" role="radiogroup" aria-label={`Nota geral: ${d.name}`}>

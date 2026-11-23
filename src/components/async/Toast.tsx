@@ -36,7 +36,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       {/* `bottom` no celular: é onde o polegar está e onde ficam os botões de
           ação, então a confirmação nasce perto de onde a pessoa clicou. */}
-      <div className="fixed inset-x-0 bottom-0 sm:bottom-4 z-[60] flex flex-col items-center gap-2 p-4 pointer-events-none print:hidden">
+      <div className="toast-pilha fixed inset-x-0 bottom-0 sm:bottom-4 z-[60] flex flex-col items-center gap-2 p-4 pointer-events-none print:hidden">
         {avisos.map((a) => <ToastItem key={a.id} aviso={a} onFechar={() => fechar(a.id)} />)}
       </div>
     </ToastContext.Provider>
