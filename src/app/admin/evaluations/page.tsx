@@ -94,6 +94,16 @@ export default function AdminEvaluationsHistoryPage() {
   const temFiltro = Boolean(busca || unidade || setor || periodo || avaliador);
   const colaboradores = new Set(rows.map((r) => r.employee?.id)).size;
 
+  const exportar = () => {
+    const p = new URLSearchParams();
+    if (busca.trim()) p.set('q', busca.trim());
+    if (unidade) p.set('unidade', unidade);
+    if (setor) p.set('setor', setor);
+    if (periodo) p.set('tipo', periodo);
+    if (avaliador) p.set('avaliador', avaliador);
+    window.location.assign(`/api/admin/evaluations/export?${p.toString()}`);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -149,9 +159,16 @@ export default function AdminEvaluationsHistoryPage() {
       </div>
 
       {!loading && !error && (
-        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-spot-gray-500">
-          {rows.length} {rows.length === 1 ? 'avaliação' : 'avaliações'} · {colaboradores} {colaboradores === 1 ? 'colaborador' : 'colaboradores'}
-        </p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-spot-gray-500">
+            {rows.length} {rows.length === 1 ? 'avaliação' : 'avaliações'} · {colaboradores} {colaboradores === 1 ? 'colaborador' : 'colaboradores'}
+          </p>
+          {rows.length > 0 && (
+            <button type="button" className="btn-secondary" onClick={exportar}>
+              Exportar para Excel{temFiltro ? ' (com os filtros)' : ''}
+            </button>
+          )}
+        </div>
       )}
 
       <RefreshingBar visible={reloading} />

@@ -477,3 +477,6 @@
 }@media (prefers-reduced-motion:reduce){:where(.sp) *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 .sp .logo-w img{clip-path:none}
 }
+/* Foto do colaborador sobre as iniciais (components/ui/FotoColaborador). */
+.sp .av{position:relative;overflow:hidden}
+.sp .av .foto-av{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}

@@ -13,6 +13,7 @@ import {
   pgEnum,
   uniqueIndex,
   index,
+  customType,
 } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
@@ -657,6 +658,23 @@ export const probationaryEmployees = pgTable('probationary_employees', {
   statusIdx: index('probationary_employees_status_idx').on(table.status),
   nextFeedbackDueDateIdx: index('probationary_employees_next_feedback_due_date_idx').on(table.nextFeedbackDueDate),
 }));
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType: () => 'bytea',
+});
+
+// Foto do colaborador, trazida do Convênia pelo script de importação
+// (scripts/import-fotos-convenia.ts). Fica em tabela própria, separada do
+// cadastro, para as listas não carregarem os bytes: só a rota da foto lê daqui.
+// A imagem já vem reduzida (JPEG ~256px, poucos KB); o limite de 512 KB é uma
+// trava de segurança, não o tamanho esperado.
+export const employeePhotos = pgTable('employee_photos', {
+  employeeId: text('employee_id').primaryKey().references(() => probationaryEmployees.id, { onDelete: 'cascade' }),
+  contentType: text('content_type').notNull().default('image/jpeg'),
+  data: bytea('data').notNull(),
+  source: text('source').notNull().default('CONVENIA'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
 
 export const performanceEvaluations = pgTable('performance_evaluations', {
   id: id(),

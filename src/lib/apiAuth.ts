@@ -5,7 +5,7 @@ import * as schema from '@/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { fingerprintMatches } from './sessionFingerprint';
 import { errorForLog } from './dbErrors';
-import type { GestorScope, TreinadorScope } from './scope';
+import { turnosEfetivos, type GestorScope, type TreinadorScope } from './scope';
 import {
   hasPermission, permissionsFor, GESTOR_PORTAL_ROLES, hasUnrestrictedScope,
   type PermissionKey, type Role,
@@ -122,7 +122,7 @@ export async function requireGestor(): Promise<GestorSession> {
     role: admin.role,
     scopedUnitIds: admin.scopedUnits.map((u) => u.unitId),
     scopedSectorIds: admin.scopedSectors.map((s) => s.sectorId),
-    scopedShifts: admin.scopedShifts.map((s) => s.shift),
+    scopedShifts: turnosEfetivos(admin.role, admin.scopedShifts.map((s) => s.shift)),
   };
 }
 

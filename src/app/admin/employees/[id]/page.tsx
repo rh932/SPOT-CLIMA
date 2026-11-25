@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/apiClient';
 import { EmployeeDeleteButton } from '@/components/EmployeeDeleteButton';
 import { EvaluationCard, type EvaluationRecord } from '@/components/EvaluationCard';
 import { LinhaDoTempo } from '@/components/LinhaDoTempo';
+import { FotoColaborador } from '@/components/ui/FotoColaborador';
 import { buildEmployeeTimeline, type TimelineEvaluation } from '@/lib/employeeTimeline';
 import { pendingDueDate, dueBadge, statusLabel, type DueDateFields } from '@/lib/probation';
 import { statusFromEvaluations, type TerminationReason } from '@/lib/termination';
@@ -118,7 +119,13 @@ export default function EmployeeDetailPage() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="titulo-pagina">{employee.fullName}</h1>
+        <div className="flex items-center gap-3">
+          <span className="av ink ficha-av" aria-hidden="true">
+            {employee.fullName.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase()}
+            <FotoColaborador employeeId={employee.id} portal="admin" />
+          </span>
+          <h1 className="titulo-pagina">{employee.fullName}</h1>
+        </div>
         <p className="text-spot-gray-500 text-sm">
           {employee.roleDescription} · {employee.sector?.name} · {employee.unit?.name} · {SHIFT_LABEL[employee.shift]}
         </p>

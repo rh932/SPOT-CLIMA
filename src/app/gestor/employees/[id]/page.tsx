@@ -9,6 +9,7 @@ import { LinhaDoTempo } from '@/components/LinhaDoTempo';
 import { TerminationSection } from '@/components/TerminationSection';
 import { voarParaAba } from '@/lib/vooParaAba';
 import type { TerminationReason } from '@/lib/termination';
+import { FotoColaborador } from '@/components/ui/FotoColaborador';
 import { dueBadge, pendingDueDate, statusLabel } from '@/lib/probation';
 import {
   COLOR_OPTIONS, COLOR_LABELS, COLOR_INTERVAL_DAYS, colorChangePreview,
@@ -188,6 +189,7 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
       <header className="ficha-cab">
         <span className="av ink ficha-av" aria-hidden="true">
           {e.fullName.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase()}
+          <FotoColaborador employeeId={e.id} portal="gestor" />
         </span>
         <div className="ficha-nome">
           <h1 className="H">{e.fullName}</h1>

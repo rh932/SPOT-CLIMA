@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isInScope, hasCompleteScope, canEvaluate } from '../src/lib/scope';
+import { isInScope, hasCompleteScope, canEvaluate, turnosEfetivos } from '../src/lib/scope';
 
 const SALAO = 'sector-salao';
 const COZINHA = 'sector-cozinha';
@@ -93,5 +93,44 @@ describe('SUPER_ADMIN no portal da operação', () => {
     expect(canEvaluate('SUPER_ADMIN')).toBe(false);
     expect(canEvaluate('GESTOR_LIDER')).toBe(true);
     expect(canEvaluate('GESTOR')).toBe(true);
+  });
+});
+
+describe('turnosEfetivos — gerentes veem os dois turnos', () => {
+  it('Gerente, Gerente avaliador e Gerente treinador enxergam dia e noite, mesmo com um turno só na conta', () => {
+    for (const role of ['GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR']) {
+      expect(turnosEfetivos(role, ['DIA'])).toEqual(['DIA', 'NOITE']);
+      expect(turnosEfetivos(role, [])).toEqual(['DIA', 'NOITE']);
+    }
+  });
+
+  it('os demais perfis seguem o turno cadastrado', () => {
+    expect(turnosEfetivos('GESTOR', ['DIA'])).toEqual(['DIA']);
+    expect(turnosEfetivos('PJ', ['NOITE'])).toEqual(['NOITE']);
+    expect(turnosEfetivos('TREINADOR', ['DIA', 'NOITE'])).toEqual(['DIA', 'NOITE']);
+  });
+
+  it('com os dois turnos, o gerente enxerga colaborador do noturno', () => {
+    const escopo = { scopedUnitIds: [PAULISTA], scopedSectorIds: [SALAO], scopedShifts: turnosEfetivos('GERENTE', ['DIA']) };
+    expect(isInScope(escopo, { unitId: PAULISTA, sectorId: SALAO, shift: 'NOITE' })).toBe(true);
+  });
+});
+
+describe('turnosEfetivos — gerentes veem os dois turnos', () => {
+  it('Gerente, Gerente avaliador e Gerente treinador enxergam dia e noite, mesmo com um turno só na conta', () => {
+    for (const role of ['GERENTE', 'GERENTE_AVALIADOR', 'GERENTE_TREINADOR']) {
+      expect(turnosEfetivos(role, ['DIA'])).toEqual(['DIA', 'NOITE']);
+      expect(turnosEfetivos(role, [])).toEqual(['DIA', 'NOITE']);
+    }
+  });
+
+  it('os demais perfis seguem o turno cadastrado', () => {
+    expect(turnosEfetivos('GESTOR', ['DIA'])).toEqual(['DIA']);
+    expect(turnosEfetivos('PJ', ['NOITE'])).toEqual(['NOITE']);
+  });
+
+  it('com os dois turnos, o gerente enxerga colaborador do noturno', () => {
+    const escopo = { scopedUnitIds: [PAULISTA], scopedSectorIds: [SALAO], scopedShifts: turnosEfetivos('GERENTE', ['DIA']) };
+    expect(isInScope(escopo, { unitId: PAULISTA, sectorId: SALAO, shift: 'NOITE' })).toBe(true);
   });
 });

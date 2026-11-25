@@ -6,6 +6,7 @@ import { notificationPayload, type NotificationType } from './pushPayload';
 import { activityEmployeeId, activityMessage, activityTargets, type ActivityEvent } from './notificationEvents';
 import type { NotifiableAdmin } from './notificationTargets';
 import { errorForLog } from './dbErrors';
+import { turnosEfetivos } from './scope';
 
 /**
  * Entrega de avisos: grava no sino e toca o celular. É o único caminho — a
@@ -33,7 +34,7 @@ export async function loadNotifiableAdmins(): Promise<NotifiableAdminWithName[]>
     active: a.active,
     scopedUnitIds: a.scopedUnits.map((u) => u.unitId),
     scopedSectorIds: a.scopedSectors.map((s) => s.sectorId),
-    scopedShifts: a.scopedShifts.map((s) => s.shift),
+    scopedShifts: turnosEfetivos(a.role, a.scopedShifts.map((s) => s.shift)),
   }));
 }
 

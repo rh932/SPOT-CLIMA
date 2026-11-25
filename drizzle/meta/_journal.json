@@ -218,6 +218,13 @@
       "when": 1795000000000,
       "tag": "0030_feedback_vermelho_30_dias",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795637597654,
+      "tag": "0031_foto_colaborador",
+      "breakpoints": true
     }
   ]
 }

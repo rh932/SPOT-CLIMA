@@ -6,6 +6,7 @@ import { COLOR_OPTIONS, COLOR_LABELS } from '@/lib/feedbackCycle';
 import { CabecalhoPagina } from '@/components/ui/CabecalhoPagina';
 import { ListaViva } from '@/components/ui/ListaViva';
 import { Ic } from '@/components/sp/Ic';
+import { FotoColaborador } from '@/components/ui/FotoColaborador';
 import { SHIFT_LABEL, prazoBadge, isFeedbackCycle, awaitsSecond, type GestorEmployee } from './useGestorEmployees';
 
 /**
@@ -81,7 +82,7 @@ export function EmployeeCard({
       style={{ ['--n' as string]: Math.min(index, 8) }}
     >
       <span className="who">
-        <span className={`av ${muted ? '' : AVATAR[tom]}`} aria-hidden="true">{iniciaisDe(employee.fullName)}</span>
+        <span className={`av ${muted ? '' : AVATAR[tom]}`} aria-hidden="true">{iniciaisDe(employee.fullName)}<FotoColaborador employeeId={employee.id} portal="gestor" /></span>
         <span className="info">
           <b>{employee.fullName}</b>
           <small>{employee.roleDescription}<span className="mob"> · {onde}</span></small>

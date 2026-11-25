@@ -23,6 +23,19 @@ export interface ScopedEmployee {
   shift: string;
 }
 
+/**
+ * Gerentes (GERENTE, GERENTE_AVALIADOR, GERENTE_TREINADOR) cuidam do salão
+ * inteiro: enxergam o turno do dia E o da noite, seja qual for o turno
+ * marcado na conta (decisão do RH em 25/11/2026). Os demais perfis seguem o
+ * turno cadastrado. Aplicada na leitura, para valer também para as contas
+ * que já existem, sem mexer no banco.
+ */
+export function turnosEfetivos(role: string, turnos: string[]): string[] {
+  return role === 'GERENTE' || role === 'GERENTE_AVALIADOR' || role === 'GERENTE_TREINADOR'
+    ? ['DIA', 'NOITE']
+    : turnos;
+}
+
 /** O escopo está completo o suficiente para o painel funcionar? */
 export function hasCompleteScope(scope: GestorScope): boolean {
   return scope.scopedUnitIds.length > 0
