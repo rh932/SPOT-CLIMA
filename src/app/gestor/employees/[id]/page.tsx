@@ -252,7 +252,8 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
           <p className="text-sm text-spot-gray-800 leading-relaxed">
             {data.secondOpinion.firstEvaluator ?? 'Outro gestor'} avaliou em {formatDate(data.secondOpinion.firstDate)}
             {data.secondOpinion.firstConclusion && <> e concluiu <strong>{CONCLUSAO[data.secondOpinion.firstConclusion]}</strong></>}.
-            {' '}Você também pode avaliar este período até {formatDate(data.secondOpinion.until)}.
+            {' '}Este período já está avaliado: sua resposta é um complemento opcional, aceita até {formatDate(data.secondOpinion.until)}.
+            {' '}Isso não é o prazo da próxima avaliação do colaborador.
           </p>
           <p className="text-xs text-spot-gray-500">
             As duas respostas ficam na ficha. A situação segue a avaliação com a data mais recente.

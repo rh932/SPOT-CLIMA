@@ -72,7 +72,7 @@ export function EmployeeCard({
     ? 'Efetivado no 1º período · falta a 2ª avaliação'
     : isFeedbackCycle(employee) ? 'Efetivado · ciclo de feedback' : statusLabel(employee);
   const segunda = employee.secondOpinion
-    ? `Você também pode avaliar o ${employee.secondOpinion.period === 'FIRST' ? '1º' : '2º'} período · até ${new Date(employee.secondOpinion.until).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}`
+    ? `O ${employee.secondOpinion.period === 'FIRST' ? '1º' : '2º'} período já foi avaliado. Resposta extra opcional (não é o prazo da avaliação) até ${new Date(employee.secondOpinion.until).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}`
     : null;
 
   return (
