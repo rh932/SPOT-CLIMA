@@ -2,7 +2,7 @@
 
 import { apiFetch } from '@/lib/apiClient';
 import { useAsyncData } from '@/components/async';
-import { daysUntilDueDay, dueBadge, pendingDueDate, type DueBadge, type DueDateFields } from '@/lib/probation';
+import { daysUntilDueDay, dueBadge, evaluatorDueDate, pendingDueDate, type DueBadge, type DueDateFields } from '@/lib/probation';
 import type { FeedbackColor } from '@/lib/feedbackCycle';
 import { awaitsSecondEvaluation } from '@/lib/colorUnlock';
 
@@ -193,7 +193,9 @@ export function prazoBadge(e: GestorEmployee): DueBadge | null {
     const atraso = -(daysUntilDue(e) ?? 0) - FEEDBACK_FILL_DAYS;
     return { label: `Atrasado (${atraso}d)`, className: 'text-[#C93A3A] font-semibold' };
   }
-  return dueBadge(openDueDate(e));
+  const due = openDueDate(e);
+  // Avaliação de experiência: o gestor é cobrado pelo prazo com folga de 2 dias.
+  return dueBadge(due && isExperience(e) ? evaluatorDueDate(due) : due);
 }
 
 /**

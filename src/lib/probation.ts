@@ -114,7 +114,20 @@ export function dueBadge(due: Date | null, now: Date = new Date()): DueBadge | n
   return { label: `Vence em ${days}d`, className: 'text-spot-gray-500' };
 }
 
-export type EvaluationConclusion = 'DEMITIR' | 'EFETIVAR' | 'EXTENDER';
+/**
+ * Folga entre o prazo de quem avalia e o último dia do contrato. O gestor vê e
+ * é cobrado pelo prazo com folga: se o contrato vence em 6 dias, para ele
+ * vence em 4. Sobram 2 dias para o RH corrigir um esquecimento antes de o
+ * contrato virar indeterminado. O RH continua vendo o prazo real.
+ */
+export const EVALUATION_BUFFER_DAYS = 2;
+
+/** Último dia para o gestor preencher: o fim do contrato menos a folga. */
+export function evaluatorDueDate(due: string | Date): Date {
+  return new Date(utcDay(due) - EVALUATION_BUFFER_DAYS * DAY_MS);
+}
+
+export type EvaluationConclusion ='DEMITIR' | 'EFETIVAR' | 'EXTENDER';
 export type EvaluationPeriod = 'FIRST' | 'SECOND';
 export type EmployeeStatus = 'HIRED' | 'TERMINATED' | 'AWAITING_PERIOD_2';
 

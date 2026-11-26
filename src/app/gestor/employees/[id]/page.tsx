@@ -10,7 +10,7 @@ import { TerminationSection } from '@/components/TerminationSection';
 import { voarParaAba } from '@/lib/vooParaAba';
 import type { TerminationReason } from '@/lib/termination';
 import { FotoColaborador } from '@/components/ui/FotoColaborador';
-import { dueBadge, pendingDueDate, statusLabel } from '@/lib/probation';
+import { dueBadge, evaluatorDueDate, pendingDueDate, statusLabel } from '@/lib/probation';
 import {
   COLOR_OPTIONS, COLOR_LABELS, COLOR_INTERVAL_DAYS, colorChangePreview,
   daysBetween, feedbackStatusBadge, type FeedbackColor,
@@ -160,9 +160,11 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
     : emExperiencia
       ? pendingDueDate(e)
       : (noCicloDeFeedback ? new Date(e.nextFeedbackDueDate!) : null);
-  const diasParaPrazo = prazoAberto ? daysBetween(new Date(), prazoAberto) : null;
+  // Avaliação de experiência: o gestor vê o prazo com folga de 2 dias; o fim real do contrato aparece abaixo.
+  const prazoGestor = prazoAberto && emExperiencia ? evaluatorDueDate(prazoAberto) : prazoAberto;
+  const diasParaPrazo = prazoGestor ? daysBetween(new Date(), prazoGestor) : null;
   const badgePrazo = emExperiencia
-    ? dueBadge(prazoAberto)
+    ? dueBadge(prazoGestor)
     : feedbackStatusBadge({ nextDueDate: prazoAberto, completed: e.status === 'TERMINATED' });
 
   const colorOption = e.currentColor ? COLOR_OPTIONS.find((c) => c.value === e.currentColor) ?? null : null;
@@ -212,10 +214,17 @@ export default function EmployeeFilePage(props: { params: Promise<{ id: string }
         </div>
 
         {prazoAberto ? (
-          <p className="font-sans text-2xl font-extrabold tracking-tight leading-snug">
-            {formatDate(prazoAberto)}
-            <span className="text-spot-gray-500 font-normal text-base"> — {prazoEmPalavras(diasParaPrazo!)}</span>
-          </p>
+          <>
+            <p className="font-sans text-2xl font-extrabold tracking-tight leading-snug">
+              {formatDate(prazoGestor!)}
+              <span className="text-spot-gray-500 font-normal text-base"> — {prazoEmPalavras(diasParaPrazo!)}</span>
+            </p>
+            {emExperiencia && (
+              <p className="text-xs text-spot-gray-500">
+                Seu prazo para preencher. O contrato de experiência vence em {formatDate(prazoAberto)}.
+              </p>
+            )}
+          </>
         ) : (
           <p className="text-sm text-spot-gray-600">
             {e.status === 'TERMINATED'

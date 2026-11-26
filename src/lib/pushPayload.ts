@@ -22,6 +22,12 @@ export interface PushPayload {
    * colaborador, e o celular não acumula três avisos do mesmo assunto.
    */
   tag: string;
+  /**
+   * Aviso de prioridade (avaliação de experiência a preencher): o service
+   * worker o mantém na tela até a pessoa dispensar e vibra mais forte. Só vai
+   * no payload quando verdadeiro.
+   */
+  urgent?: boolean;
 }
 
 /** SYSTEM_ALERT: falha da rotina diária, só para o Super Admin (ver src/lib/cronStatus.ts). */
@@ -88,6 +94,7 @@ export function notificationPayload({
     body: message,
     url: notificationUrl(type, employeeId, portal),
     tag: notificationTag(type, employeeId),
+    ...(type === 'EVALUATION_REMINDER' ? { urgent: true } : {}),
   };
 }
 

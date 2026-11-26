@@ -54,7 +54,7 @@ describe('link e mensagem de primeiro acesso', () => {
     for (const code of ['ABCD-EFGH', null]) {
       const m = accessMessage({ name: 'Ana', email: 'ana.lima@spot.com', role: 'GESTOR', firstAccessCode: code }, origin);
       expect(m).toContain('Para ativar os avisos no celular:');
-      expect(m).toContain('não são repetitivos');
+      expect(m).toContain('um aviso por dia');
       expect(m).toContain('Adicionar à Tela de Início');
       expect(m).toContain('"Ativar"');
     }
@@ -65,7 +65,7 @@ describe('o que a mensagem promete sobre os avisos', () => {
   it('os dias citados na mensagem são os da rotina — mudou um, mude o outro', () => {
     expect([...REMINDER_OFFSETS]).toEqual([7, 3, 1, 0, -1, -7]);
     const m = accessMessage({ name: 'Ana', email: 'ana.lima@spot.com', role: 'GESTOR', firstAccessCode: null }, 'https://x.app');
-    expect(m).toContain('só 6 lembretes automáticos: 7, 3 e 1 dia antes do prazo, no próprio dia e, se atrasar, 1 e 7 dias depois');
+    expect(m).toContain('Os avisos de feedback são 7, 3 e 1 dia antes, no dia e, se atrasar, 1 e 7 dias depois');
   });
   it('treinador e RH recebem o texto do que chega para eles', () => {
     expect(accessMessage({ name: 'Bia', email: 'b@spot.com', role: 'TREINADOR', firstAccessCode: null }, 'https://x.app')).toContain('formulário de treinamento');
@@ -78,7 +78,7 @@ describe('mensagem do grupo dos gestores', () => {
     const { groupMessage } = await import('../src/lib/userAccess');
     const m = groupMessage('https://spot-clima.vercel.app');
     expect(m).toContain('Site: https://spot-clima.vercel.app/gestor/login');
-    expect(m).toContain('só 6 lembretes automáticos: 7, 3 e 1 dia antes do prazo, no próprio dia e, se atrasar, 1 e 7 dias depois');
+    expect(m).toContain('Os avisos de feedback são 7, 3 e 1 dia antes, no dia e, se atrasar, 1 e 7 dias depois');
     expect(m).toContain('Adicionar à Tela de Início');
     expect(m).not.toContain('primeiro-acesso');
     expect(m).not.toMatch(/[A-Z0-9]{4}-[A-Z0-9]{4}/);

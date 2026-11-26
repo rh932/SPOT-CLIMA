@@ -231,6 +231,26 @@ export function dueReminderOffset(dueDate: Date, now: Date = new Date()): Remind
 }
 
 /**
+ * Aviso diário da avaliação de experiência. `offset` é a distância até o prazo
+ * DO GESTOR (fim do contrato menos EVALUATION_BUFFER_DAYS): 0 = último dia
+ * para preencher, negativo = atrasado. O texto diz, também, quanto falta para
+ * o contrato de fato vencer, que é o que está em jogo.
+ */
+export function evaluationDailyMessage(employeeName: string, offset: number, kind: string, bufferDays = 2): string {
+  const avaliacao = `a avaliação ${kind} de ${employeeName}`;
+  const contrato = offset + bufferDays;
+  const contratoTxt = contrato > 1 ? `O contrato vence em ${contrato} dias.`
+    : contrato === 1 ? 'O contrato vence amanhã.'
+      : contrato === 0 ? 'O contrato vence HOJE.'
+        : 'O contrato já venceu.';
+  if (offset > 1) return `Faltam ${offset} dias para preencher ${avaliacao}. Faça agora, não deixe para depois.`;
+  if (offset === 1) return `Amanhã é o último dia para preencher ${avaliacao}.`;
+  if (offset === 0) return `HOJE é o último dia para preencher ${avaliacao}. ${contratoTxt}`;
+  const dias = Math.abs(offset);
+  return `ATRASADA há ${dias} ${dias === 1 ? 'dia' : 'dias'}: preencha ${avaliacao} agora. ${contratoTxt}`;
+}
+
+/**
  * Texto do lembrete. `kind` completa "a avaliação ___": "de feedback" no ciclo
  * permanente, "de 45 dias" / "de 90 dias" na experiência.
  */

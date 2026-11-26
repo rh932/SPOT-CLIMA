@@ -38,7 +38,10 @@ self.addEventListener('push', (event) => {
       tag: payload.tag || 'spot-clima',
       renotify: Boolean(payload.tag),
       // Vibração curta: no salão, com barulho, o toque sozinho passa batido.
-      vibrate: [120, 60, 120],
+      vibrate: payload.urgent ? [300, 120, 300, 120, 300] : [120, 60, 120],
+      // Prioridade: o aviso fica na tela até a pessoa tocar ou dispensar,
+      // em vez de sumir sozinho. Só para o que não pode ser esquecido.
+      requireInteraction: Boolean(payload.urgent),
       data: { url: payload.url || '/' },
     });
     // Quem está com o sistema aberto vê o número do sino subir na hora, sem

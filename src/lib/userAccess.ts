@@ -144,7 +144,7 @@ export function accessMessage(u: Pick<AccessUser, 'name' | 'email' | 'role' | 'f
   const sobreAvisos = u.role === 'TREINADOR' || u.role === 'GERENTE_TREINADOR'
     ?'Sobre os avisos: são poucos. Chegam quando um novo formulário de treinamento é criado. Deixe sempre permitido para não perder nenhum.'
     : gestor
-      ? 'Sobre os avisos: eles não são repetitivos. Cada avaliação da sua equipe gera só 6 lembretes automáticos: 7, 3 e 1 dia antes do prazo, no próprio dia e, se atrasar, 1 e 7 dias depois (o RH pode mandar um lembrete extra, se precisar). Você também é avisado quando alguém da sua equipe é cadastrado ou avaliado. Deixe os avisos sempre permitidos para não perder nenhuma data de avaliação.'
+      ? 'Sobre os avisos: avaliação de experiência em aberto gera um aviso por dia, de propósito, a partir de 10 dias antes do fim do contrato, e ele só para quando você preenche. Seu prazo tem 2 dias de folga em relação ao contrato. Os avisos de feedback são 7, 3 e 1 dia antes, no dia e, se atrasar, 1 e 7 dias depois. Você também é avisado quando alguém da sua equipe é cadastrado ou avaliado. Deixe os avisos sempre permitidos para não perder nenhuma data de avaliação.'
       : 'Sobre os avisos: são poucos. Chegam quando há movimentação nas equipes (avaliação registrada, cadastro ou treinamento). Deixe sempre permitido para acompanhar sem precisar abrir o site.';
   const fim = [
     '',
@@ -201,7 +201,7 @@ export function groupMessage(origin: string): string {
     '• Nos setores com dois gestores, os dois podem avaliar o mesmo período',
     '',
     '*3. Avisos no celular (importante!)*',
-    'Os avisos não são repetitivos. Cada avaliação gera só 6 lembretes automáticos: 7, 3 e 1 dia antes do prazo, no próprio dia e, se atrasar, 1 e 7 dias depois. Vocês também são avisados quando alguém da equipe é cadastrado ou avaliado. Deixem sempre permitido para não perder nenhuma data.',
+    'Avaliação de experiência em aberto gera um aviso por dia, de propósito, a partir de 10 dias antes do fim do contrato, e ele só para quando for preenchida. O prazo de quem avalia tem 2 dias de folga em relação ao contrato. Os avisos de feedback são 7, 3 e 1 dia antes, no dia e, se atrasar, 1 e 7 dias depois. Vocês também são avisados quando alguém da equipe é cadastrado ou avaliado. Deixem sempre permitido para não perder nenhuma data.',
     '',
     'Como ativar:',
     ...COMO_ATIVAR_NO_CELULAR,

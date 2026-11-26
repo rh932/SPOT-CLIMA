@@ -2,7 +2,8 @@ import { usesFeedbackCycle } from './feedbackParticipation';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
 import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
-import { daysBetween, dueReminderOffset, reminderMessage } from './feedbackCycle';
+import { daysBetween, dueReminderOffset, evaluationDailyMessage, reminderMessage } from './feedbackCycle';
+import { EVALUATION_BUFFER_DAYS } from './probation';
 import { notificationTargets } from './notificationTargets';
 import { loadNotifiableAdmins, type NotificationRow } from './notify';
 import { awaitsSecondEvaluation } from './colorUnlock';
@@ -20,6 +21,10 @@ import { awaitsSecondEvaluation } from './colorUnlock';
  */
 
 export const JANELA_AGORA = 7;
+/** Dias antes do fim do contrato em que a avaliação sobe para o gestor (espelha EVALUATION_OPENS_DAYS da tela). */
+const EVALUATION_OPENS_DAYS = 10;
+/** Depois de tantos dias de atraso o aviso diário para: passou disso, o caso é do RH, não de mais um toque. */
+const ATRASO_MAXIMO_DIAS = 30;
 
 export interface ReminderPlan {
   /** Colaboradores com prazo em aberto olhados. */
@@ -107,9 +112,21 @@ export async function buildReminderRows(mode: 'rotina' | 'agora', now: Date = ne
 
   const pendentes = candidatos
     .map((c) => {
-      const offset = mode === 'rotina'
-        ? dueReminderOffset(c.dueDate, now)
-        : (() => { const d = daysBetween(now, c.dueDate); return d <= JANELA_AGORA ? d : null; })();
+      let offset: number | null;
+      if (c.type === 'EVALUATION_REMINDER') {
+        // Avaliação de experiência: aviso TODO DIA, do momento em que ela sobe
+        // para o gestor até ele preencher (some sozinha quando o status muda).
+        // O offset é a distância até o prazo do gestor (contrato − folga), e
+        // muda a cada dia: é isso que faz o unique de `notifications` deixar
+        // passar um aviso novo por dia sem repetir o do mesmo dia.
+        const d = daysBetween(now, c.dueDate) - EVALUATION_BUFFER_DAYS;
+        const limite = mode === 'rotina' ? EVALUATION_OPENS_DAYS - EVALUATION_BUFFER_DAYS : JANELA_AGORA;
+        offset = d <= limite && d >= -ATRASO_MAXIMO_DIAS ? d : null;
+      } else {
+        offset = mode === 'rotina'
+          ? dueReminderOffset(c.dueDate, now)
+          : (() => { const d = daysBetween(now, c.dueDate); return d <= JANELA_AGORA ? d : null; })();
+      }
       return { ...c, offset };
     })
     .filter((c): c is typeof c & { offset: number } => c.offset !== null);
@@ -129,7 +146,9 @@ export async function buildReminderRows(mode: 'rotina' | 'agora', now: Date = ne
       employeeId: employee.id,
       dueDate,
       offsetDays: offset,
-      message: reminderMessage(employee.fullName, offset, kind),
+      message: type === 'EVALUATION_REMINDER'
+        ? evaluationDailyMessage(employee.fullName, offset, kind, EVALUATION_BUFFER_DAYS)
+        : reminderMessage(employee.fullName, offset, kind),
     }));
   });
 
