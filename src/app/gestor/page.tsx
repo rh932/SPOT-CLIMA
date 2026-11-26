@@ -1,5 +1,6 @@
 'use client';
 
+import { FotoColaborador } from '@/components/ui/FotoColaborador';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -240,7 +241,7 @@ export default function GestorDashboardPage() {
                 const t = tagPrazo(e);
                 return (
                   <Link key={e.id} href={`/gestor/employees/${e.id}`} className="it">
-                    <span className={`av ${t.tom === 'atrasado' ? 'late' : 'soon'}`} style={{ width: 34, height: 34, borderRadius: 11, fontSize: 12 }}>{iniciaisDe(e.fullName)}</span>
+                    <span className={`av ${t.tom === 'atrasado' ? 'late' : 'soon'}`} style={{ width: 34, height: 34, borderRadius: 11, fontSize: 12 }}>{iniciaisDe(e.fullName)}<FotoColaborador employeeId={e.id} portal="gestor" /></span>
                     <span><b>{e.fullName.split(' ')[0]}</b><small>{t.b?.label ?? ''} · {etapaLabel(e)}</small></span>
                     <Ic n="right" s={16} />
                   </Link>
@@ -358,7 +359,7 @@ export default function GestorDashboardPage() {
               <section className="card resume" data-stick>
                 <span className="kick" style={{ color: 'var(--c-active-text)' }}>Continuar de onde parou</span>
                 <div className="resume-quem">
-                  <span className="av wip">{iniciaisDe(rascunhoPrincipal.fullName)}</span>
+                  <span className="av wip">{iniciaisDe(rascunhoPrincipal.fullName)}<FotoColaborador employeeId={rascunhoPrincipal.id} portal="gestor" /></span>
                   <span style={{ flex: 1 }}>
                     <b style={{ display: 'block' }}>{rascunhoPrincipal.fullName}</b>
                     <small className="mut">Rascunho salvo às {hhmm(rascunhos[0].t)}</small>
@@ -375,7 +376,7 @@ export default function GestorDashboardPage() {
                 {urgent.length === 0 && <p className="mut mini-vazio">Nenhuma avaliação atrasada.</p>}
                 {urgent.slice(0, 3).map((e) => (
                   <Link key={e.id} href={`/gestor/employees/${e.id}`} className="it">
-                    <span className="av late" style={{ width: 38, height: 38, borderRadius: 12, fontSize: 13 }}>{iniciaisDe(e.fullName)}</span>
+                    <span className="av late" style={{ width: 38, height: 38, borderRadius: 12, fontSize: 13 }}>{iniciaisDe(e.fullName)}<FotoColaborador employeeId={e.id} portal="gestor" /></span>
                     <span><b style={{ fontSize: 15 }}>{e.fullName}</b><small>{prazoBadge(e)?.label}</small></span>
                     <Ic n="right" s={16} />
                   </Link>
@@ -390,7 +391,7 @@ export default function GestorDashboardPage() {
                   const c = v.conclusion ? CONCLUSAO_ROTULO[v.conclusion] : null;
                   return (
                     <div key={v.id} className="it">
-                      <span className="av ok" style={{ width: 38, height: 38, borderRadius: 12, fontSize: 13 }}>{iniciaisDe(e.fullName)}</span>
+                      <span className="av ok" style={{ width: 38, height: 38, borderRadius: 12, fontSize: 13 }}>{iniciaisDe(e.fullName)}<FotoColaborador employeeId={e.id} portal="gestor" /></span>
                       <span>
                         <b style={{ fontSize: 15 }}>{e.fullName}</b>
                         <small>{new Date(v.evaluationDate).toLocaleDateString('pt-BR', { timeZone: 'UTC', day: '2-digit', month: '2-digit' })} · {v.period === 'FIRST' ? '45 dias' : v.period === 'SECOND' ? '90 dias' : 'Feedback'}</small>

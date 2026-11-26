@@ -1,5 +1,6 @@
 'use client';
 
+import { FotoColaborador } from '@/components/ui/FotoColaborador';
 import { useEffect, useRef } from 'react';
 import { Ic } from '@/components/sp/Ic';
 import { burst, center, sound } from '@/lib/motion';
@@ -62,7 +63,7 @@ export function AvaliacaoEnviada({
                   const tom = tomDoPrazo(b?.className);
                   return (
                     <button key={e.id} type="button" className="it" onClick={() => onProxima(e.id)}>
-                      <span className="av" style={{ width: 38, height: 38, borderRadius: 12, fontSize: 13 }}>{iniciaisDe(e.fullName)}</span>
+                      <span className="av" style={{ width: 38, height: 38, borderRadius: 12, fontSize: 13 }}>{iniciaisDe(e.fullName)}<FotoColaborador employeeId={e.id} portal="gestor" /></span>
                       <span><b style={{ fontSize: 15 }}>{e.fullName}</b><small>{etapaLabel(e)}</small></span>
                       {b && <span className={`tag ${tom === 'atrasado' ? 't-late' : tom === 'perto' ? 't-week' : 't-soft'}`}>{b.label}</span>}
                     </button>

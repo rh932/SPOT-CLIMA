@@ -1,5 +1,6 @@
 'use client';
 
+import { FotoColaborador } from '@/components/ui/FotoColaborador';
 import { Ic } from '@/components/sp/Ic';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -216,7 +217,7 @@ export default function HistoricoPage() {
                       style={{ ['--n' as string]: Math.min(i, 8) }}
                     >
                       <span className="who">
-                        <span className="av ok" aria-hidden="true">{row.employee.fullName.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase()}</span>
+                        <span className="av ok" aria-hidden="true">{row.employee.fullName.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase()}<FotoColaborador employeeId={row.employee.id} portal="gestor" /></span>
                         <span className="info">
                           <b>{row.employee.fullName}</b>
                           <small>{data}{row.evaluator && ` · por ${row.evaluator}`}<span className="mob"> · {onde}</span></small>
