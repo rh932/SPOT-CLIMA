@@ -634,6 +634,7 @@ function EvaluateForm() {
   return (
     <AvaliacaoPassos
       nome={employee.fullName}
+      employeeId={params.id}
       primeiroNome={primeiroNome}
       cargoLinha={[employee.roleDescription, employee.sector?.name, employee.unit?.name].filter(Boolean).join(' · ')}
       periodoLabel={periodoLabel}

@@ -1,5 +1,6 @@
 'use client';
 
+import { FotoColaborador } from '@/components/ui/FotoColaborador';
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { Ic, type NomeIcone } from '@/components/sp/Ic';
 import { usePainelModal } from '@/components/forms/usePainelModal';
@@ -54,6 +55,8 @@ type Tela =
 
 export interface AvaliacaoPassosProps {
   nome: string;
+  /** Código do colaborador, para a foto. */
+  employeeId?: string;
   primeiroNome: string;
   /** Ex.: "Garçom · Salão · Consolação". */
   cargoLinha: string;
@@ -221,7 +224,10 @@ export function AvaliacaoPassos(p: AvaliacaoPassosProps) {
         <span className="saved"><i />RASCUNHO NESTE APARELHO</span>
       </div>
       <div className="pchip">
-        <span className="av ink" aria-hidden="true">{p.nome.split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase()}</span>
+        <span className="av ink" aria-hidden="true">
+          {p.nome.split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase()}
+          {p.employeeId && <FotoColaborador employeeId={p.employeeId} portal="gestor" />}
+        </span>
         <span style={{ fontSize: 15 }}>
           <b style={{ fontWeight: 600 }}>{p.nome}</b>{' '}
           <span className="mut">· {p.periodoLabel} · {p.prazoTexto}</span>
@@ -550,6 +556,7 @@ function Revisao({
         <div className="vbox">
           <span className="av ink" style={{ width: 56, height: 56, borderRadius: 18, fontSize: 18 }} aria-hidden="true">
             {p.nome.split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase()}
+            {p.employeeId && <FotoColaborador employeeId={p.employeeId} portal="gestor" />}
           </span>
           <p className="mut" style={{ marginTop: 12, fontSize: 15 }}>
             {p.periodoLabel} de <b style={{ color: 'var(--c-ink)', fontWeight: 600 }}>{p.nome}</b>
