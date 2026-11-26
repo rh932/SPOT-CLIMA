@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Bricolage_Grotesque, DM_Mono, IBM_Plex_Sans, Instrument_Serif, Newsreader, Plus_Jakarta_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
 /*
@@ -18,34 +18,43 @@ import './globals.css';
  * `capa` (IBM Plex Sans) só existe para as capas de entrada (login e capa da
  * pesquisa), que ficaram fora do redesenho por decisão do usuário.
  *
- * `next/font` baixa e hospeda as fontes junto do app: sem request para o
- * Google em runtime (importa num PWA que roda no wifi do salão) e sem o pulo
- * de layout do FOUT.
+ * As fontes ficam em src/fonts e entram por `next/font/local`: sem request
+ * para o Google em runtime (importa num PWA que roda no wifi do salão), sem o
+ * pulo de layout do FOUT e sem depender do Google no build. O `next/font/google`
+ * quebrou o deploy na Vercel em 26/11/2026 (URL da fonte sem extensão).
  */
-const sans = Bricolage_Grotesque({
-  subsets: ['latin'],
+const sans = localFont({
+  src: '../fonts/bricolage-grotesque-latin-wght-normal.woff2',
+  weight: '200 800',
   variable: '--font-sans',
   display: 'swap',
 });
 
-const display = Instrument_Serif({
-  subsets: ['latin'],
-  weight: '400',
-  style: ['normal', 'italic'],
+const display = localFont({
+  src: [
+    { path: '../fonts/instrument-serif-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/instrument-serif-latin-400-italic.woff2', weight: '400', style: 'italic' },
+  ],
   variable: '--font-display',
   display: 'swap',
 });
 
-const mono = DM_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500'],
+const mono = localFont({
+  src: [
+    { path: '../fonts/dm-mono-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/dm-mono-latin-500-normal.woff2', weight: '500', style: 'normal' },
+  ],
   variable: '--font-mono',
   display: 'swap',
 });
 
-const capa = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+const capa = localFont({
+  src: [
+    { path: '../fonts/ibm-plex-sans-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/ibm-plex-sans-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: '../fonts/ibm-plex-sans-latin-600-normal.woff2', weight: '600', style: 'normal' },
+    { path: '../fonts/ibm-plex-sans-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-capa',
   display: 'swap',
 });
@@ -56,17 +65,23 @@ const capa = IBM_Plex_Sans({
  * ("Boa noite,"). O mono do padrão é a DM Mono que já está acima. As
  * variáveis ligam em --font-* só dentro de .sp (src/styles/spot-tokens.css).
  */
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+const jakarta = localFont({
+  src: [
+    { path: '../fonts/plus-jakarta-sans-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/plus-jakarta-sans-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: '../fonts/plus-jakarta-sans-latin-600-normal.woff2', weight: '600', style: 'normal' },
+    { path: '../fonts/plus-jakarta-sans-latin-700-normal.woff2', weight: '700', style: 'normal' },
+    { path: '../fonts/plus-jakarta-sans-latin-800-normal.woff2', weight: '800', style: 'normal' },
+  ],
   variable: '--sp-jakarta',
   display: 'swap',
 });
 
-const newsreader = Newsreader({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  style: 'italic',
+const newsreader = localFont({
+  src: [
+    { path: '../fonts/newsreader-latin-400-italic.woff2', weight: '400', style: 'italic' },
+    { path: '../fonts/newsreader-latin-500-italic.woff2', weight: '500', style: 'italic' },
+  ],
   variable: '--sp-newsreader',
   display: 'swap',
 });
