@@ -245,7 +245,10 @@ export default function TreinamentoPage() {
             <span className="badge badge-attention">Reforço pendente</span>
           )}
           {e.trainings.some((t) => t.closure === 'DEFINITIVO') && (
-            <span className="badge bg-spot-black text-spot-onBlack">Encerrado em definitivo</span>
+            <span className="badge bg-spot-black text-spot-onBlack">
+              {e.trainings.filter((t) => t.closure === 'DEFINITIVO').map((t) => t.trainingType?.name).filter(Boolean).join(', ') || 'Treinamento'}
+              {' '}encerrado
+            </span>
           )}
         </div>
       </button>
@@ -704,6 +707,22 @@ function TrainingForm({
             </select>
           </label>
           {attempted && missingType && <p className="text-xs text-spot-danger mt-1">Selecione o tipo de treinamento.</p>}
+          {encerrados.size > 0 && (
+            <div className="mt-3 rounded-btn border border-spot-gray-200 bg-spot-white p-3 text-xs text-spot-gray-700" role="note">
+              {employee.trainings
+                .filter((t) => t.closure === 'DEFINITIVO')
+                .map((t) => (
+                  <p key={t.id}>
+                    <strong>{t.trainingType?.name ?? 'Treinamento'}</strong> foi encerrado em definitivo
+                    {t.trainer ? ` por ${t.trainer.name}` : ''} em {new Date(t.trainingDate).toLocaleDateString('pt-BR')}.
+                  </p>
+                ))}
+              <p className="mt-1">
+                Por isso ele não pode ser escolhido. Para voltar a treinar, peça ao RH ou ao Líder para reabrir.
+                O encerramento não baixa a avaliação de experiência: se ela estiver atrasada, preencha-a à parte.
+              </p>
+            </div>
+          )}
           {type?.description && <p className="text-xs text-spot-gray-500 mt-2">{type.description}</p>}
         </div>
 
