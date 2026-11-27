@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Spinner } from './async';
-import { ehIOS, usePush } from './usePush';
+import { ehAndroid, ehIOS, usePush } from './usePush';
 import { PushPassoAPasso } from './PushPassoAPasso';
 
 /** Por quanto tempo o "Agora não" esconde o convite neste aparelho. */
@@ -61,6 +61,8 @@ export function PushPrompt({ portal }: { portal: 'admin' | 'gestor' }) {
       {estado === 'bloqueado' ? (
         ehIOS() ? (
           <PushPassoAPasso tipo="desbloquear" compacto />
+        ) : ehAndroid() ? (
+          <PushPassoAPasso tipo="desbloquear-android" compacto />
         ) : (
           <p className="text-xs text-spot-gray-600 leading-snug mt-1">
             Os avisos estão bloqueados neste aparelho. Toque no cadeado ao lado do endereço (ou em

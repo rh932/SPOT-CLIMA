@@ -43,13 +43,38 @@ const DESBLOQUEAR: { titulo: string; detalhe: string }[] = [
   { titulo: 'Ligue "Permitir Notificações"', detalhe: 'Depois volte ao app do Spot e toque em "Já liberei, recarregar".' },
 ];
 
-export function PushPassoAPasso({ tipo, compacto = false }: { tipo: 'instalar' | 'desbloquear'; compacto?: boolean }) {
-  const passos = tipo === 'instalar' ? INSTALAR : DESBLOQUEAR;
+// Android (Chrome): não precisa instalar nada, só liberar a permissão do site.
+// Os nomes dos menus variam um pouco conforme a marca do aparelho.
+const DESBLOQUEAR_ANDROID: { titulo: string; detalhe: string }[] = [
+  {
+    titulo: 'Toque no ícone ao lado do endereço',
+    detalhe: 'No alto da tela, no Chrome. Pode ser um cadeado ou um ícone de ajustes.',
+  },
+  { titulo: 'Abra "Permissões" ou "Configurações do site"', detalhe: 'O nome muda conforme o celular.' },
+  { titulo: 'Em "Notificações", escolha "Permitir"', detalhe: 'Depois volte ao Spot e toque em "Já liberei, recarregar".' },
+  {
+    titulo: 'Ainda não chegou aviso?',
+    detalhe: 'Nos Ajustes do celular, vá em Apps, Chrome e Notificações, e confira se estão ligadas.',
+  },
+];
+
+const TITULO = {
+  instalar: 'No iPhone, faça assim:',
+  desbloquear: 'Para liberar os avisos no iPhone:',
+  'desbloquear-android': 'Para liberar os avisos no Android:',
+} as const;
+
+const PASSOS = {
+  instalar: INSTALAR,
+  desbloquear: DESBLOQUEAR,
+  'desbloquear-android': DESBLOQUEAR_ANDROID,
+} as const;
+
+export function PushPassoAPasso({ tipo, compacto = false }: { tipo: keyof typeof PASSOS; compacto?: boolean }) {
+  const passos = PASSOS[tipo];
   return (
     <div className="mt-3">
-      <p className="text-sm font-semibold">
-        {tipo === 'instalar' ? 'No iPhone, faça assim:' : 'Para liberar os avisos no iPhone:'}
-      </p>
+      <p className="text-sm font-semibold">{TITULO[tipo]}</p>
       <ol className={`mt-2 flex flex-col ${compacto ? 'gap-2' : 'gap-3'}`}>
         {passos.map((p, i) => (
           <li key={p.titulo} className="flex gap-3">

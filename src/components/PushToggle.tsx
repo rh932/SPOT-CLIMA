@@ -1,7 +1,7 @@
 'use client';
 
 import { Spinner } from './async';
-import { ehIOS, usePush } from './usePush';
+import { ehAndroid, ehIOS, usePush } from './usePush';
 import { PushPassoAPasso } from './PushPassoAPasso';
 
 /**
@@ -33,6 +33,8 @@ export function PushToggle({ portal }: { portal: 'admin' | 'gestor' }) {
 
       {estado === 'bloqueado' && (ehIOS()
         ? <PushPassoAPasso tipo="desbloquear" compacto />
+        : ehAndroid()
+        ? <PushPassoAPasso tipo="desbloquear-android" compacto />
         : aviso('Os avisos estão bloqueados para este site. Libere nas configurações do navegador e volte aqui.'))}
 
       {(estado === 'ligado' || estado === 'desligado') && (

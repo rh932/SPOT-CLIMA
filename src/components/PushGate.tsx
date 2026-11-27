@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { Spinner } from './async';
-import { ehIOS, usePush } from './usePush';
+import { ehAndroid, ehIOS, usePush } from './usePush';
 import { PushPassoAPasso } from './PushPassoAPasso';
 
 /**
@@ -56,6 +56,11 @@ export function PushGate({ portal, onSair }: { portal: 'admin' | 'gestor'; onSai
           <>
             <p className="text-sm text-spot-gray-700 leading-snug mt-3">Os avisos estão bloqueados neste iPhone.</p>
             <PushPassoAPasso tipo="desbloquear" />
+          </>
+        ) : ehAndroid() ? (
+          <>
+            <p className="text-sm text-spot-gray-700 leading-snug mt-3">Os avisos estão bloqueados neste celular.</p>
+            <PushPassoAPasso tipo="desbloquear-android" />
           </>
         ) : (
           <p className="text-sm text-spot-gray-700 leading-snug mt-3">
