@@ -3,7 +3,8 @@
 import { useRef } from 'react';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { Spinner } from './async';
-import { usePush } from './usePush';
+import { ehIOS, usePush } from './usePush';
+import { PushPassoAPasso } from './PushPassoAPasso';
 
 /**
  * Trava a tela até o aviso no celular ser ligado neste aparelho.
@@ -43,25 +44,26 @@ export function PushGate({ portal, onSair }: { portal: 'admin' | 'gestor'; onSai
       exit={{ clipPath: 'circle(0% at 92% 28px)', opacity: 0.5, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } }}
       transition={{ duration: 0.2 }}
     >
-      <div className="w-full max-w-md bg-spot-white rounded-xl2 border-l-[3px] border-l-spot-yellow p-6 shadow-xl">
+      {/* Os passos do iPhone são longos: no celular pequeno a caixa rola, em vez de cortar o botão de sair. */}
+      <div className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto bg-spot-white rounded-xl2 border-l-[3px] border-l-spot-yellow p-6 shadow-xl">
         <h2 id="push-gate-titulo" className="text-lg font-bold">Ative os avisos para continuar</h2>
         <p className="text-sm text-spot-gray-600 leading-snug mt-2">
           Treinamento novo, avaliação pendente e mudanças na sua equipe chegam como aviso no aparelho.
           Para quem avalia, ele é obrigatório: é por ele que você fica sabendo a tempo.
         </p>
 
-        {e === 'bloqueado' && (
+        {e === 'bloqueado' && (ehIOS() ? (
+          <>
+            <p className="text-sm text-spot-gray-700 leading-snug mt-3">Os avisos estão bloqueados neste iPhone.</p>
+            <PushPassoAPasso tipo="desbloquear" />
+          </>
+        ) : (
           <p className="text-sm text-spot-gray-700 leading-snug mt-3">
             Os avisos estão bloqueados neste aparelho. Toque no cadeado ao lado do endereço (ou em
             Configurações do site), libere as Notificações e recarregue a página.
           </p>
-        )}
-        {e === 'instalar' && (
-          <p className="text-sm text-spot-gray-700 leading-snug mt-3">
-            No iPhone, toque em Compartilhar e escolha &quot;Adicionar à Tela de Início&quot;. Depois abra o
-            Spot Integra por esse ícone e ligue os avisos.
-          </p>
-        )}
+        ))}
+        {e === 'instalar' && <PushPassoAPasso tipo="instalar" />}
 
         <div className="flex flex-wrap items-center gap-2 mt-5">
           {e === 'desligado' && (

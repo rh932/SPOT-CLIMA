@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Spinner } from './async';
-import { usePush } from './usePush';
+import { ehIOS, usePush } from './usePush';
+import { PushPassoAPasso } from './PushPassoAPasso';
 
 /** Por quanto tempo o "Agora não" esconde o convite neste aparelho. */
 const ADIAR_DIAS = 7;
@@ -58,15 +59,16 @@ export function PushPrompt({ portal }: { portal: 'admin' | 'gestor' }) {
     >
       <p className="text-sm font-bold">Receba os avisos no celular</p>
       {estado === 'bloqueado' ? (
-        <p className="text-xs text-spot-gray-600 leading-snug mt-1">
-          Os avisos estão bloqueados neste aparelho. Toque no cadeado ao lado do endereço (ou em
-          Configurações do site), libere as Notificações e recarregue a página.
-        </p>
+        ehIOS() ? (
+          <PushPassoAPasso tipo="desbloquear" compacto />
+        ) : (
+          <p className="text-xs text-spot-gray-600 leading-snug mt-1">
+            Os avisos estão bloqueados neste aparelho. Toque no cadeado ao lado do endereço (ou em
+            Configurações do site), libere as Notificações e recarregue a página.
+          </p>
+        )
       ) : estado === 'instalar' ? (
-        <p className="text-xs text-spot-gray-600 leading-snug mt-1">
-          No iPhone, toque em Compartilhar e escolha &quot;Adicionar à Tela de Início&quot;. Depois abra o
-          Spot Integra por esse ícone e ligue os avisos no sino.
-        </p>
+        <PushPassoAPasso tipo="instalar" compacto />
       ) : (
         <p className="text-xs text-spot-gray-600 leading-snug mt-1">
           Treinamento novo, avaliação pendente ou registrada e cada mudança na sua equipe chegam na hora,

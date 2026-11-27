@@ -1,7 +1,8 @@
 'use client';
 
 import { Spinner } from './async';
-import { usePush } from './usePush';
+import { ehIOS, usePush } from './usePush';
+import { PushPassoAPasso } from './PushPassoAPasso';
 
 /**
  * Liga e desliga o aviso no celular (Web Push) para ESTE aparelho.
@@ -26,16 +27,13 @@ export function PushToggle({ portal }: { portal: 'admin' | 'gestor' }) {
 
   return (
     <div className="px-4 py-3 border-t border-spot-gray-100 bg-spot-gray-50">
-      {estado === 'instalar' && aviso(
-        'Para receber aviso neste iPhone, toque em Compartilhar e escolha "Adicionar à Tela de Início". '
-        + 'Depois abra o Spot Integra por esse ícone e volte aqui.',
-      )}
+      {estado === 'instalar' && <PushPassoAPasso tipo="instalar" compacto />}
 
       {estado === 'indisponivel' && aviso('Este navegador não consegue receber avisos no aparelho.')}
 
-      {estado === 'bloqueado' && aviso(
-        'Os avisos estão bloqueados para este site. Libere nas configurações do navegador e volte aqui.',
-      )}
+      {estado === 'bloqueado' && (ehIOS()
+        ? <PushPassoAPasso tipo="desbloquear" compacto />
+        : aviso('Os avisos estão bloqueados para este site. Libere nas configurações do navegador e volte aqui.'))}
 
       {(estado === 'ligado' || estado === 'desligado') && (
         <div className="flex flex-col gap-2">
