@@ -708,19 +708,32 @@ function TrainingForm({
           </label>
           {attempted && missingType && <p className="text-xs text-spot-danger mt-1">Selecione o tipo de treinamento.</p>}
           {encerrados.size > 0 && (
-            <div className="mt-3 rounded-btn border border-spot-gray-200 bg-spot-white p-3 text-xs text-spot-gray-700" role="note">
-              {employee.trainings
-                .filter((t) => t.closure === 'DEFINITIVO')
-                .map((t) => (
-                  <p key={t.id}>
-                    <strong>{t.trainingType?.name ?? 'Treinamento'}</strong> foi encerrado em definitivo
-                    {t.trainer ? ` por ${t.trainer.name}` : ''} em {new Date(t.trainingDate).toLocaleDateString('pt-BR')}.
+            <div className="mt-3 flex flex-col gap-3 text-xs text-spot-gray-700" role="note">
+              <div className="rounded-btn border border-spot-gray-200 bg-spot-white p-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500 mb-1">1 · Treinamento (esta tela)</p>
+                {employee.trainings
+                  .filter((t) => t.closure === 'DEFINITIVO')
+                  .map((t) => (
+                    <p key={t.id}>
+                      <strong>{t.trainingType?.name ?? 'Treinamento'}</strong> foi encerrado em definitivo
+                      {t.trainer ? ` por ${t.trainer.name}` : ''} em {new Date(t.trainingDate).toLocaleDateString('pt-BR')}.
+                    </p>
+                  ))}
+                <p className="mt-1">
+                  Por isso esse tipo não pode ser escolhido. Se o encerramento foi um engano ou você precisa treinar
+                  mais, peça ao <strong>RH ou ao Líder</strong> para reabrir.
+                </p>
+              </div>
+              {employee.prazoExperiencia && (
+                <div className="rounded-btn border border-spot-gray-200 bg-spot-white p-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-spot-gray-500 mb-1">2 · Avaliação de experiência (outra tela)</p>
+                  <p>
+                    É outra tarefa e <strong>não foi concluída pelo encerramento do treinamento</strong>. O contrato de experiência
+                    vence em {new Date(employee.prazoExperiencia).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}.
+                    Se ela aparece como atrasada, preencha-a em Início ou Pendências.
                   </p>
-                ))}
-              <p className="mt-1">
-                Por isso ele não pode ser escolhido. Para voltar a treinar, peça ao RH ou ao Líder para reabrir.
-                O encerramento não baixa a avaliação de experiência: se ela estiver atrasada, preencha-a à parte.
-              </p>
+                </div>
+              )}
             </div>
           )}
           {type?.description && <p className="text-xs text-spot-gray-500 mt-2">{type.description}</p>}
